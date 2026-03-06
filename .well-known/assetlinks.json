@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.snowmaxtop.twa",
+        "sha256_cert_fingerprints": ["A4:B4:79:A4:FF:FC:57:8D:50:2D:C8:45:C2:BE:91:78:6A:60:BA:C6:AC:14:0B:6E:53:46:6A:E6:3F:D6:00:A4"]
+      }
+    }]
