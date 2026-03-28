@@ -194,7 +194,7 @@
   .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; position: relative; z-index: 1; }
 
   .card {
-    display: grid; grid-template-columns: 82px 1fr; gap: 12px; padding: 12px;
+    display: grid; grid-template-columns: 65px 1fr; gap: 12px; padding: 12px;
     background: #13131c; border: 1px solid var(--border); border-radius: 4px;
     transition: border-color 0.2s, transform 0.2s; align-items: start;
   }
@@ -208,11 +208,15 @@
 
   /* ── CARD IMAGE ── */
   .card-img-wrap {
-    width: 82px; height: 115px; border-radius: 5px; overflow: hidden; cursor: zoom-in;
-    background: var(--surface2); flex-shrink: 0; box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+    width: 65px; border-radius: 5px; overflow: visible; cursor: zoom-in;
+    flex-shrink: 0; display: flex; flex-direction: column; gap: 4px;
+  }
+  .card-img-wrap .card-img-inner {
+    width: 65px; height: 91px; border-radius: 5px; overflow: hidden;
+    background: var(--surface2); box-shadow: 0 4px 14px rgba(0,0,0,0.5);
     transition: transform 0.25s, box-shadow 0.25s; display: flex; align-items: center; justify-content: center;
   }
-  .card:hover .card-img-wrap { transform: scale(1.08) rotate(-1deg); box-shadow: 0 8px 24px rgba(124,92,252,0.3); }
+  .card:hover .card-img-wrap .card-img-inner { transform: scale(1.08) rotate(-1deg); box-shadow: 0 8px 24px rgba(124,92,252,0.3); }
   .card-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .card-img-wrap .img-placeholder { font-family: 'DM Mono', monospace; font-size: 22px; color: var(--border); text-align: center; }
 
@@ -279,6 +283,24 @@
   .btn-sync-card.syncing { border-color: var(--yellow); color: var(--yellow); animation: syncpulse 0.8s infinite alternate; }
   .btn-sync-card.done { border-color: rgba(74,222,128,0.5); color: #4ade80; background: rgba(74,222,128,0.08); animation: none; }
   .pcr-sync-meta { font-size: 8px; color: var(--muted); font-family: 'DM Mono', monospace; opacity: 0.7; white-space: nowrap; margin-left: 6px; }
+  .enc-price-row { display: flex; gap: 6px; margin-top: 5px; padding-top: 5px; border-top: 1px solid var(--border); }
+  .enc-price-cell { display: flex; align-items: center; gap: 3px; flex: 1; }
+  .enc-price-cell span { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--text); }
+  /* ── Split button Souhaiter / Liste ── */
+  .enc-split-btn { display: flex; flex: 1; border-radius: 6px; overflow: visible; position: relative; }
+  .enc-split-btn .enc-split-main { flex: 1; border-radius: 6px 0 0 6px; border-right: none !important; }
+  .enc-split-btn .enc-split-arrow { flex: 0 0 22px; padding: 0; border-radius: 0 6px 6px 0; font-size: 10px; }
+  .enc-split-btn.active-want .enc-split-main,
+  .enc-split-btn.active-want .enc-split-arrow { background: rgba(251,146,60,0.12); border-color: rgba(251,146,60,0.4); color: var(--orange); }
+  .enc-split-btn.active-ship .enc-split-main,
+  .enc-split-btn.active-ship .enc-split-arrow { background: rgba(96,165,250,0.12); border-color: rgba(96,165,250,0.4); color: var(--blue); }
+  /* Dropdown liste */
+  .enc-list-dropdown { position: absolute; top: calc(100% + 4px); left: 0; min-width: 160px; z-index: 200;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4); overflow: hidden; }
+  .enc-list-dropdown-item { padding: 8px 12px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .enc-list-dropdown-item:hover { background: rgba(124,92,252,0.1); }
+  .enc-list-dropdown-item.active { color: var(--orange); }
   .btn-report {
     display: inline-flex; align-items: center; justify-content: center;
     font-size: 11px; padding: 2px 5px; border-radius: 2px; cursor: pointer;
@@ -447,7 +469,39 @@
   .dashboard-summary { display: flex; gap: 20px; margin-bottom: 24px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
   .dashboard-summary span { display: flex; align-items: center; gap: 5px; }
   .dashboard-summary strong { color: var(--text); font-size: 14px; }
-  .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+  .dashboard-grid { display: flex; flex-direction: column; gap: 10px; }
+  .dash-wl-banner {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    overflow: hidden; transition: border-color 0.2s;
+  }
+  .dash-wl-banner:hover { border-color: rgba(124,92,252,0.35); }
+  .dash-wl-header {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+    cursor: pointer; user-select: none;
+  }
+  .dash-wl-header:hover { background: rgba(124,92,252,0.04); }
+  .dash-wl-name { font-size: 13px; font-weight: 500; color: var(--text); flex: 1; }
+  .dash-wl-counters { display: flex; gap: 8px; font-size: 11px; font-family: 'DM Mono', monospace; align-items: center; }
+  .dash-wl-progress { height: 3px; background: var(--border); position: relative; }
+  .dash-wl-progress-fill { height: 100%; background: var(--green); transition: width 0.3s; }
+  .dash-wl-strip-wrap {
+    overflow-x: auto; padding: 8px 14px 12px;
+    scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+  }
+  .dash-wl-strip-wrap::-webkit-scrollbar { height: 4px; }
+  .dash-wl-strip-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .dash-wl-strip { display: flex; gap: 5px; flex-wrap: nowrap; }
+  .dash-wl-card {
+    flex-shrink: 0; width: 46px; height: 64px; border-radius: 4px; overflow: hidden;
+    background: var(--surface2); border: 2px solid transparent; box-sizing: border-box;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+  .dash-wl-card:hover { transform: translateY(-3px); }
+  .dash-wl-card img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.3s; }
+  .dash-wl-card.s-owned    { border-color: var(--green); }
+  .dash-wl-card.s-shipping { border-color: var(--blue); }
+  .dash-wl-card.s-wanted   { border-color: var(--orange); }
+  .dash-wl-card.s-missing  { border-color: transparent; opacity: 0.35; }
   .dash-series-title {
     grid-column: 1 / -1; font-family: 'DM Mono', monospace; font-size: 10px;
     text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); padding: 8px 0 4px;
@@ -1693,7 +1747,7 @@ function renderCard(set, card, showSetBadge) {
   const hidePrices = (status === 'owned' || status === 'wanted' || status === 'shipping') ? 'none' : 'flex';
 
   return '<div class="card' + (status === 'owned' ? ' is-owned' : status === 'shipping' ? ' is-shipping' : status === 'wanted' ? ' is-wanted' : '') + '" data-card-key="' + key + '">' +
-    '<div class="card-img-wrap" style="position:relative">' + buildImgTag(set, card) + '<button class="btn-remove-card" data-key="' + key + '" title="Retirer de la collection">✕</button>' + '</div>' +
+    '<div class="card-img-wrap" style="position:relative"><div class="card-img-inner">' + buildImgTag(set, card) + '</div><button class="btn-remove-card" data-key="' + key + '" title="Retirer de la collection">✕</button>' + '</div>' +
     '<div class="card-body">' +
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:4px">' +
         (showSetBadge ? '<span class="card-set-badge">' + set.id + '</span>' : '<span></span>') +
@@ -1794,32 +1848,50 @@ function buildDiscoverCardEl(dset, c, opts) {
   }
 
   div.innerHTML =
-    '<div class="card-img-wrap">' + imgHtml + '</div>' +
+    // ── Bloc 1 : Image + infos ──
+    '<div class="card-img-wrap"><div class="card-img-inner">' + imgHtml + '</div></div>' +
     '<div class="card-body">' +
-      '<div style="display:flex;align-items:center;justify-content:space-between;gap:4px">' +
+      '<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">' +
         '<span class="card-set-badge">' + dset.id + '</span>' +
-        (!opts.readOnly ? '<button class="btn-report' + (isReported(key) ? ' reported' : '') + '" onclick="toggleReport(\'' + key + '\',this)">' + (isReported(key) ? '⚑' : '⚐') + '</button>' : '') +
-      '</div>' +
-      '<div class="card-name">' + c.fr + (c.en && c.en !== c.fr ? ' <span class="card-name-en">(' + c.en + ')</span>' : '') + '</div>' +
-      '<div class="card-meta">' +
-        '<span class="card-num">#' + c.num + '</span>' +
         '<span class="rarity-badge rarity-' + c.rarity + '">' + c.rarity + '</span>' +
-      '</div>' +
-      listsHtml +
-      (opts.readOnly ? '' : '<div class="card-actions" style="align-items:center">') +
-        (st !== 'owned' && st !== 'shipping' ? '<button class="btn-status' + (st==='wanted'?' wanted':'') + '" data-key="' + key + '" data-status="wanted">♡ Souhaitée</button>' : '') +
-        (st !== 'owned' ? '<button class="btn-status' + (st==='shipping'?' shipping':'') + '" data-key="' + key + '" data-status="shipping">📦 En livraison</button>' : '') +
-        '<button class="btn-status' + (st==='owned'?' owned':'') + '" data-key="' + key + '" data-status="owned">✓ Possédée</button>' +
-        (st ? '<span class="card-comment-icon' + (comments[key] ? ' has-comment' : '') + '" data-comment-key="' + key + '" title="Commenter">?' +
+        '<span class="card-num">#' + c.num + '</span>' +
+        '<span style="flex:1"></span>' +
+        (!opts.readOnly ? '<button class="btn-report' + (isReported(key) ? ' reported' : '') + '" onclick="toggleReport(\'' + key + '\',this)">' + (isReported(key) ? '⚑' : '⚐') + '</button>' : '') +
+        (st ? '<span class="card-comment-icon' + (comments[key] ? ' has-comment' : '') + '" data-comment-key="' + key + '" title="Commenter" style="margin-left:2px">?' +
           (comments[key] ? '<span class="card-comment-tooltip">' + comments[key].replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>' : '') +
         '</span>' : '') +
-      (opts.readOnly ? '' : '</div>') +
-      (st && comments[key] !== undefined ? '' : '') +
-      (cmLinksHtml && st !== 'owned' ? '<div class="card-actions">' + cmLinksHtml + '</div>' : '') +
-      (c.cmUrl && (st === 'owned' || st === 'wanted' || (wishlistCards[key] && wishlistCards[key].length) || opts.removeWlId || opts.showLists) ?
-        '<div class="card-actions" style="margin-top:2px"><button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\',event)" style="width:100%;justify-content:center">⟳ Sync prix CM</button>' + buildPriceSyncMeta(key).replace('class="pcr-sync-meta"', 'class="pcr-sync-meta" data-sync-key="' + key + '"') + '</div>' : '') +
-      removeHtml +
+      '</div>' +
+      '<div class="card-name">' + c.fr + (c.en && c.en !== c.fr ? ' <span class="card-name-en">(' + c.en + ')</span>' : '') + '</div>' +
+      listsHtml +
     '</div>' +
+    // ── Bloc 2 : Statuts ──
+    (opts.readOnly ? '' :
+      '<div style="grid-column:1/-1;display:flex;gap:4px;padding:0 0 4px">' +
+        (opts.removeWlId ?
+          '<button class="btn-enc-remove" data-key="' + key + '" data-wl="' + opts.removeWlId + '" style="flex:1;font-size:10px;padding:6px 10px;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:6px;color:var(--red);cursor:pointer;text-align:center">✕ Retirer de cette liste</button>'
+          :
+          (st !== 'owned' && st !== 'shipping' ? '<button class="btn-status' + (st==='wanted'?' wanted':'') + '" data-key="' + key + '" data-status="wanted" style="flex:1">♡ Souhaitée</button>' : '')
+        ) +
+        (st !== 'owned' ? '<button class="btn-status' + (st==='shipping'?' shipping':'') + '" data-key="' + key + '" data-status="shipping" style="flex:1">📦 En livraison</button>' : '') +
+        '<button class="btn-status' + (st==='owned'?' owned':'') + '" data-key="' + key + '" data-status="owned" style="flex:1">✓ Possédée</button>' +
+      '</div>'
+    ) +
+    // ── Bloc 3 : CM + Sync ──
+    ((cmLinksHtml || c.cmUrl) && st !== 'owned' ?
+      '<div style="grid-column:1/-1;display:flex;gap:4px;padding:0 0 4px">' +
+        (cmLinksHtml ? cmLinksHtml : '') +
+        (c.cmUrl && (st === 'owned' || st === 'wanted' || (wishlistCards[key] && wishlistCards[key].length) || opts.removeWlId || opts.showLists) ?
+          '<button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\',event)" style="flex:1;justify-content:center">⟳ Sync</button>' +
+          buildPriceSyncMeta(key).replace('class="pcr-sync-meta"', 'class="pcr-sync-meta" data-sync-key="' + key + '"')
+          : '') +
+      '</div>' : '') +
+    // ── Bloc 3 (owned) : Sync uniquement ──
+    (c.cmUrl && st === 'owned' ?
+      '<div style="grid-column:1/-1;display:flex;gap:4px;padding:0 0 4px">' +
+        '<button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\',event)" style="flex:1;justify-content:center">⟳ Sync prix CM</button>' +
+        buildPriceSyncMeta(key).replace('class="pcr-sync-meta"', 'class="pcr-sync-meta" data-sync-key="' + key + '"') +
+      '</div>' : '') +
+    // ── Bloc 4 : Prix ──
     '<div class="card-prices" style="display:' + (st === 'owned' ? 'none' : 'block') + ';grid-column:1/-1">' +
       '<div class="prices-by-country">' + priceHtml + '</div>' +
     '</div>' +
@@ -2480,7 +2552,7 @@ function refreshEncGrid() {
     div.className = 'card enc-card' + (isOwned ? ' is-owned' : isShipping ? ' is-shipping' : isWanted ? ' is-wanted' : '');
     div.dataset.cardKey = key;
     div.innerHTML =
-      '<div class="card-img-wrap">' + discoverImgHtml(s.id, c.num, c.img) + '</div>' +
+      '<div class="card-img-wrap"><div class="card-img-inner">' + discoverImgHtml(s.id, c.num, c.img) + '</div></div>' +
       '<div class="card-body">' +
         '<span class="card-set-badge">' + s.id + '</span>' +
         '<div class="card-name">' + c.fr + (c.en && c.en !== c.fr ? ' <span class="card-name-en">(' + c.en + ')</span>' : '') + '</div>' +
@@ -2489,12 +2561,29 @@ function refreshEncGrid() {
           '<span class="rarity-badge rarity-' + c.rarity + '">' + c.rarity + '</span>' +
         '</div>' +
         '<div class="card-actions" style="gap:4px">' +
-          '<button class="btn-enc-want' + (isWanted ? ' active-want' : isShipping ? ' active-ship' : '') + '" data-key="' + key + '">' +
-            (isOwned ? '✓ Possédée' : isShipping ? '📦 En livraison' : isWanted ? '♡ Souhaitée' : '☆ Souhaiter') +
-          '</button>' +
+          (isOwned ? '' :
+            '<div class="enc-split-btn' + (isWanted ? ' active-want' : isShipping ? ' active-ship' : '') + '">' +
+              '<button class="enc-split-main btn-enc-want" data-key="' + key + '">' +
+                (isShipping ? '📦 En livraison' : isWanted ? '♡ Souhaitée' : '☆ Souhaiter') +
+              '</button>' +
+              '<button class="enc-split-arrow btn-enc-list" data-key="' + key + '" title="Choisir une liste">▾</button>' +
+            '</div>'
+          ) +
           '<button class="btn-enc-own' + (isOwned ? ' active-own' : '') + '" data-key="' + key + '">✓ Possédée</button>' +
-          (isOwned ? '' : '<button class="btn-enc-list" data-key="' + key + '" title="Ajouter à une liste">📋</button>') +
         '</div>' +
+        (function() {
+          var jp = prices[key + '__cm_jp_FR'] || '';
+          var kr = prices[key + '__cm_kr_FR'] || '';
+          var cn = prices[key + '__cm_cn_FR'] || '';
+          if (!jp && !kr && !cn) return '';
+          function cell(flag, val) {
+            return '<div class="enc-price-cell">' +
+              '<img src="https://flagcdn.com/w20/' + flag + '.png" style="width:12px;height:8px;object-fit:cover;border-radius:1px;opacity:0.8">' +
+              '<span>' + (val ? val + '€' : '—') + '</span>' +
+            '</div>';
+          }
+          return '<div class="enc-price-row">' + cell('jp', jp) + cell('kr', kr) + cell('cn', cn) + '</div>';
+        })() +
       '</div>';
     div.querySelector('.btn-enc-want').addEventListener('click', function() {
       var k = this.dataset.key;
@@ -2509,10 +2598,11 @@ function refreshEncGrid() {
       }
       saveState();
       var newSt = state[k] || '';
+      var splitBtn = div.querySelector('.enc-split-btn');
       div.classList.remove('is-wanted','is-shipping','is-owned');
       div.classList.toggle('is-wanted', newSt === 'wanted');
       this.textContent = newSt === 'wanted' ? '♡ Souhaitée' : '☆ Souhaiter';
-      this.classList.toggle('active-want', newSt === 'wanted');
+      if (splitBtn) { splitBtn.classList.toggle('active-want', newSt === 'wanted'); splitBtn.classList.remove('active-ship'); }
       updateSetStatsByKey(k);
       if (encStatus !== 'all') { div.style.opacity = '0.35'; setTimeout(function(){ div.remove(); }, 400); }
     });
@@ -2565,57 +2655,61 @@ function refreshEncGrid() {
         var k = this.dataset.key;
         var btn = this;
         // Close any other open popups
-        document.querySelectorAll('.enc-list-popup').forEach(function(p) { p.remove(); });
-        // Build popup
+        document.querySelectorAll('.enc-list-popup, .enc-list-dropdown').forEach(function(p) { p.remove(); });
+        // Build dropdown
         var popup = document.createElement('div');
-        popup.className = 'enc-list-popup';
+        popup.className = 'enc-list-dropdown';
         if (!wishlists.length) {
-          popup.innerHTML = '<div class="enc-list-popup-create" id="enc-popup-create">＋ Créer une liste</div>';
+          popup.innerHTML = '<div class="enc-list-dropdown-item" id="enc-popup-create">＋ Créer une liste</div>';
         } else {
           var html = '';
           wishlists.forEach(function(wl) {
-            var checked = isCardInWishlist(k, wl.id) ? ' checked' : '';
-            html += '<label class="enc-list-popup-item"><input type="checkbox" data-wl="' + wl.id + '"' + checked + '> ' + wl.name + '</label>';
+            var inList = isCardInWishlist(k, wl.id);
+            html += '<div class="enc-list-dropdown-item' + (inList ? ' active' : '') + '" data-wl="' + wl.id + '">' + (inList ? '✓ ' : '') + wl.name + '</div>';
           });
-          html += '<div class="enc-list-popup-create" id="enc-popup-create">＋ Nouvelle liste</div>';
+          html += '<div class="enc-list-dropdown-item" id="enc-popup-create" style="border-top:1px solid var(--border);color:var(--muted)">＋ Nouvelle liste</div>';
           popup.innerHTML = html;
         }
-        btn.parentNode.style.position = 'relative';
-        btn.parentNode.appendChild(popup);
-        // Checkbox changes
-        popup.querySelectorAll('input[type=checkbox]').forEach(function(cb) {
-          cb.addEventListener('change', function() {
-            if (cb.checked) { addCardToWishlist(k, cb.dataset.wl); }
-            else { removeCardFromWishlist(k, cb.dataset.wl); }
-            // Update want button if card just became wanted
+        // Attach to split btn container (has position:relative)
+        var container = btn.closest('.enc-split-btn') || btn.parentNode;
+        container.appendChild(popup);
+        // Click on list item
+        popup.querySelectorAll('.enc-list-dropdown-item[data-wl]').forEach(function(item) {
+          item.addEventListener('click', function(ev) {
+            ev.stopPropagation();
+            var wlId = this.dataset.wl;
+            if (isCardInWishlist(k, wlId)) { removeCardFromWishlist(k, wlId); }
+            else { addCardToWishlist(k, wlId); }
             var wantBtn = div.querySelector('.btn-enc-want');
+            var splitBtn = div.querySelector('.enc-split-btn');
             var curSt = state[k] || '';
-            if (curSt === 'wanted') {
-              div.classList.add('is-wanted');
-              if (wantBtn) { wantBtn.textContent = '♡ Souhaitée'; wantBtn.classList.add('active-want'); }
+            if (curSt === 'wanted' && wantBtn) {
+              wantBtn.textContent = '♡ Souhaitée';
+              if (splitBtn) splitBtn.classList.add('active-want');
             }
+            popup.remove();
           });
         });
-        // Create new list from popup
+        // Create new list
         var createBtn = popup.querySelector('#enc-popup-create');
         if (createBtn) {
-          createBtn.addEventListener('click', function() {
+          createBtn.addEventListener('click', function(ev) {
+            ev.stopPropagation();
             var name = prompt('Nom de la nouvelle liste :');
             if (name && name.trim()) {
               var newId = createWishlist(name.trim());
               addCardToWishlist(k, newId);
               popup.remove();
-              // Update want button
               var wantBtn = div.querySelector('.btn-enc-want');
-              var curSt = state[k] || '';
-              if (curSt === 'wanted') {
-                div.classList.add('is-wanted');
-                if (wantBtn) { wantBtn.textContent = '♡ Souhaitée'; wantBtn.classList.add('active-want'); }
+              var splitBtn = div.querySelector('.enc-split-btn');
+              if (state[k] === 'wanted' && wantBtn) {
+                wantBtn.textContent = '♡ Souhaitée';
+                if (splitBtn) splitBtn.classList.add('active-want');
               }
             }
           });
         }
-        // Close popup on outside click
+        // Close on outside click
         setTimeout(function() {
           document.addEventListener('click', function closePopup(ev) {
             if (!popup.contains(ev.target) && ev.target !== btn) {
@@ -2760,7 +2854,7 @@ function setNavActive(id) {
 function renderDashboard() {
   var main = document.getElementById('main');
 
-  // Count only tracked cards from DISCOVER_DB
+  // Global stats
   var totalOwned = 0, totalShipping = 0, totalWanted = 0;
   DISCOVER_DB.forEach(function(s){ s.cards.forEach(function(c){
     var st = state[s.id+'-'+c.num]||'';
@@ -2768,63 +2862,88 @@ function renderDashboard() {
     else if (st==='shipping') totalShipping++;
     else if (st==='wanted') totalWanted++;
   });});
-  var totalTracked = totalOwned + totalShipping + totalWanted;
-
-  // Only sets that have at least one tracked card
-  var trackedSets = DISCOVER_DB.filter(function(d) {
-    return d.cards.some(function(c) {
-      var st = state[d.id+'-'+c.num]||'';
-      return st === 'owned' || st === 'shipping' || st === 'wanted';
-    });
-  });
 
   var html =
     '<div class="dashboard">' +
     '<div class="mobile-topbar"><button class="mobile-hamburger" onclick="openNavMenu()">☰</button><span class="mobile-topbar-title">Dashboard</span></div>' +
     '<div class="page-title">Dashboard</div>' +
     '<div class="dashboard-summary">' +
-      '<span><strong>' + totalTracked + '</strong> cartes suivies</span>' +
       '<span style="color:var(--green)"><strong>' + totalOwned + '</strong> possédées</span>' +
       '<span style="color:var(--blue)"><strong>' + totalShipping + '</strong> en livraison</span>' +
       '<span style="color:var(--orange)"><strong>' + totalWanted + '</strong> souhaitées</span>' +
-      '<span><strong>' + trackedSets.length + '</strong> extensions</span>' +
     '</div>' +
     '<div class="dashboard-grid">';
 
-  // Group by SERIES
-  var shownIds = {};
-  SERIES.forEach(function(series) {
-    var dbInSeries = series.ids.map(function(id) {
-      return trackedSets.find(function(d) { return d.id === id; }) ||
-             trackedSets.find(function(d) { return d.id.toLowerCase() === id.toLowerCase(); });
-    }).filter(Boolean);
-    if (!dbInSeries.length) return;
-
-    html += '<div class="dash-series-title">' + series.label + '</div>';
-    dbInSeries.forEach(function(dset) {
-      shownIds[dset.id] = true;
-      html += dashSetCard(dset);
-    });
-  });
-
-  // Remaining
-  var remaining = trackedSets.filter(function(d) { return !shownIds[d.id]; });
-  if (remaining.length) {
-    html += '<div class="dash-series-title">Autres</div>';
-    remaining.forEach(function(dset) { html += dashSetCard(dset); });
-  }
-
-  // Empty state
-  if (!trackedSets.length) {
+  if (!wishlists.length) {
     html += '<div style="text-align:center;padding:40px 20px;color:var(--muted)">' +
-      '<div style="font-size:32px;margin-bottom:12px">◈</div>' +
-      '<div style="font-size:14px">Aucune carte suivie</div>' +
-      '<div style="font-size:12px;margin-top:6px">Ajoutez des cartes depuis l\'Encyclopédie 📖</div>' +
+      '<div style="font-size:32px;margin-bottom:12px">♡</div>' +
+      '<div style="font-size:14px">Aucune liste de souhaits</div>' +
+      '<div style="font-size:12px;margin-top:6px">Créez des listes depuis l\'Encyclopédie 📖</div>' +
     '</div>';
+  } else {
+    wishlists.forEach(function(wl) {
+      html += dashWishlistCard(wl);
+    });
   }
 
   html += '</div></div>';
   main.innerHTML = html;
+}
+
+function dashWishlistCard(wl) {
+  var cards = [];
+  DISCOVER_DB.forEach(function(dset) {
+    dset.cards.forEach(function(c) {
+      var key = dset.id + '-' + c.num;
+      if (!wishlistCards[key] || !wishlistCards[key].includes(wl.id)) return;
+      var st = state[key] || 'missing';
+      cards.push({ dset: dset, c: c, key: key, st: st });
+    });
+  });
+
+  if (!cards.length) return '';
+
+  var nOwned    = cards.filter(function(i){ return i.st==='owned'; }).length;
+  var nShipping = cards.filter(function(i){ return i.st==='shipping'; }).length;
+  var nWanted   = cards.filter(function(i){ return i.st==='wanted'; }).length;
+  var nMissing  = cards.filter(function(i){ return i.st==='missing'; }).length;
+  var total     = cards.length;
+  var pct       = total ? Math.round(nOwned / total * 100) : 0;
+
+  // Sort: owned → shipping → wanted → missing
+  var ORDER = { owned: 0, shipping: 1, wanted: 2, missing: 3 };
+  cards.sort(function(a, b) { return (ORDER[a.st]||3) - (ORDER[b.st]||3); });
+
+  var stripHtml = cards.map(function(i) {
+    var slug = SEREBII_SLUG[i.dset.id];
+    var ser  = slug ? 'https://www.serebii.net/card/' + slug + '/' + parseInt(i.c.num, 10) + '.jpg' : '';
+    var fb   = ser ? ' data-fallback="' + ser + '"' : '';
+    var onerr = 'if(this.dataset.fallback&&this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}else{this.style.opacity=0.1;}';
+    var src  = i.c.img || ser;
+    var imgTag = src
+      ? '<img src="' + src + '"' + (i.c.img ? fb : '') + ' onload="this.style.opacity=1" onerror="' + onerr + '">'
+      : '';
+    var title = (i.c.fr || i.c.en) + ' — ' + i.dset.id + ' #' + i.c.num;
+    return '<div class="dash-wl-card s-' + i.st + '" title="' + title + '" onclick="event.stopPropagation();openLightbox(\'' + (i.c.img||ser) + '\',\'' + title.replace(/'/g,'') + '\')">' + imgTag + '</div>';
+  }).join('');
+
+  return '<div class="dash-wl-banner">' +
+    '<div class="dash-wl-header" onclick="this.nextElementSibling.nextElementSibling.style.display=this.nextElementSibling.nextElementSibling.style.display===\'none\'?\'block\':\'none\'">' +
+      '<span style="font-size:14px;opacity:0.7">♡</span>' +
+      '<span class="dash-wl-name">' + wl.name + '</span>' +
+      '<div class="dash-wl-counters">' +
+        (nOwned    ? '<span style="color:var(--green)">✓ ' + nOwned + '</span>' : '') +
+        (nShipping ? '<span style="color:var(--blue)">📦 ' + nShipping + '</span>' : '') +
+        (nWanted   ? '<span style="color:var(--orange)">♡ ' + nWanted + '</span>' : '') +
+        (nMissing  ? '<span style="color:var(--muted)">— ' + nMissing + '</span>' : '') +
+        '<span style="color:var(--muted);font-size:10px">' + pct + '%</span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="dash-wl-progress"><div class="dash-wl-progress-fill" style="width:' + pct + '%"></div></div>' +
+    '<div class="dash-wl-strip-wrap">' +
+      '<div class="dash-wl-strip">' + stripHtml + '</div>' +
+    '</div>' +
+  '</div>';
 }
 
 function dashSetCard(dset) {
