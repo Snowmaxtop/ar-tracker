@@ -17,5 +17,25 @@
   "SMP-447": {
     "img": "https://archives.bulbagarden.net/media/upload/6/6e/ZeraoraFriendsSMPromo.jpg",
     "cmUrl": "https://www.cardmarket.com/en/Pokemon/Products/Singles/Sun-Moon-Promos/Zeraora-and-Friends-SM-P447?language=7,10&sellerCountry=12,7,20,23,4&minCondition=NM"
+  },
+  "SMP-452": {
+    "img": "https://archives.bulbagarden.net/media/upload/thumb/0/04/CharizardGXSMPromo195.jpg/270px-CharizardGXSMPromo195.jpg",
+    "cmUrl": "https://www.cardmarket.com/en/Pokemon/Products/Singles/Sun-Moon-Promos/Charizard-GX-SM-P452?language=7,10&sellerCountry=12,7,20,23,4&minCondition=NM",
+    "cmUrlFr": "https://www.cardmarket.com/en/Pokemon/Products/Singles/SM-Black-Star-Promos/Charizard-GX-V1-SM60?language=1&sellerCountry=12,7,20,23,4&minCondition=NM"
+  },
+  "SMP-453": {
+    "img": "https://archives.bulbagarden.net/media/upload/thumb/0/06/MewtwoGXSMPromo196.jpg/270px-MewtwoGXSMPromo196.jpg",
+    "cmUrl": "https://www.cardmarket.com/en/Pokemon/Products/Singles/Sun-Moon-Promos/Mewtwo-GX-SM-P453?language=7,10&sellerCountry=12,7,20,23,4&minCondition=NM",
+    "cmUrlFr": "https://www.cardmarket.com/en/Pokemon/Products/Singles/SM-Black-Star-Promos/Mewtwo-GX-SM196?language=1&sellerCountry=12,7,20,23,4&minCondition=NM"
+  },
+  "SMP-454": {
+    "img": "https://archives.bulbagarden.net/media/upload/thumb/0/0f/MewtwoMewGXSMPromo191.jpg/270px-MewtwoMewGXSMPromo191.jpg",
+    "cmUrl": "https://www.cardmarket.com/en/Pokemon/Products/Singles/Sun-Moon-Promos/Mewtwo-Mew-GX-SM-P454?language=7,10&sellerCountry=12,7,20,23,4&minCondition=NM",
+    "cmUrlFr": "https://www.cardmarket.com/en/Pokemon/Products/Singles/SM-Black-Star-Promos/Mewtwo-Mew-GX-SM191?language=1&sellerCountry=12,7,20,23,4&minCondition=NM"
+  },
+  "BW5t-51": {
+    "img": "https://storage.googleapis.com/images.pricecharting.com/68ee68f038e1357b0938943b252a42d1cc10c92df92c9492f1b3c0f0fb5ae55f/1600.jpg",
+    "cmUrl": "https://www.cardmarket.com/en/Pokemon/Products/Singles/Dragon-Blast/Mew-EX-V2?language=7,10&sellerCountry=12,7,20,23,4&minCondition=NM",
+    "cmUrlFr": "https://www.cardmarket.com/en/Pokemon/Products/Singles/Dragons-Exalted/Mew-EX-V2-DRX120?language=1&sellerCountry=12,7,20,23,4&minCondition=NM"
   }
 }
