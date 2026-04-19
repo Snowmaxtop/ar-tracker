@@ -45,15 +45,7 @@
     width: var(--sidebar-w); flex-shrink: 0;
     background: var(--surface); border-right: 1px solid var(--border);
     display: flex; flex-direction: column; height: 100vh; position: sticky; top: 0;
-    overflow: hidden;
   }
-  .sidebar-scroll {
-    flex: 1; overflow-y: auto; display: flex; flex-direction: column;
-    scrollbar-width: thin; scrollbar-color: var(--border) transparent;
-  }
-  .sidebar-scroll::-webkit-scrollbar { width: 4px; }
-  .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
-  .sidebar-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
   .sidebar-header { padding: 20px 16px 12px; border-bottom: 1px solid var(--border); }
   .sidebar-title {
     font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.06em;
@@ -112,15 +104,9 @@
   .sidebar-search input:focus { border-color: var(--accent); }
   .sidebar-search input::placeholder { color: var(--muted); }
 
-  .set-list { padding: 8px 0; }
-  .btn-sync-set-sidebar {
-    display: none; font-size: 10px; padding: 2px 5px; border-radius: 2px; cursor: pointer;
-    border: 1px solid rgba(250,204,21,0.3); background: transparent; color: rgba(250,204,21,0.6);
-    flex-shrink: 0; transition: all 0.15s; margin-left: auto;
-  }
-  .set-item:hover .btn-sync-set-sidebar { display: inline-flex; }
-  .btn-sync-set-sidebar:hover { border-color: var(--yellow); color: var(--yellow); background: rgba(250,204,21,0.08); }
-  .btn-sync-set-sidebar:disabled { opacity: 0.5; cursor: default; }
+  .set-list { overflow-y: auto; flex: 1; padding: 8px 0; }
+  .set-list::-webkit-scrollbar { width: 4px; }
+  .set-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
   .series-group { margin-bottom: 4px; }
   .series-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); padding: 8px 14px 4px; }
@@ -194,7 +180,7 @@
   .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; position: relative; z-index: 1; }
 
   .card {
-    display: grid; grid-template-columns: 65px 1fr; gap: 12px; padding: 12px;
+    display: grid; grid-template-columns: 82px 1fr; gap: 12px; padding: 12px;
     background: #13131c; border: 1px solid var(--border); border-radius: 4px;
     transition: border-color 0.2s, transform 0.2s; align-items: start;
   }
@@ -208,15 +194,11 @@
 
   /* ── CARD IMAGE ── */
   .card-img-wrap {
-    width: 65px; border-radius: 5px; overflow: visible; cursor: zoom-in;
-    flex-shrink: 0; display: flex; flex-direction: column; gap: 4px;
-  }
-  .card-img-wrap .card-img-inner {
-    width: 65px; height: 91px; border-radius: 5px; overflow: hidden;
-    background: var(--surface2); box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+    width: 82px; height: 115px; border-radius: 5px; overflow: hidden; cursor: zoom-in;
+    background: var(--surface2); flex-shrink: 0; box-shadow: 0 4px 14px rgba(0,0,0,0.5);
     transition: transform 0.25s, box-shadow 0.25s; display: flex; align-items: center; justify-content: center;
   }
-  .card:hover .card-img-wrap .card-img-inner { transform: scale(1.08) rotate(-1deg); box-shadow: 0 8px 24px rgba(124,92,252,0.3); }
+  .card:hover .card-img-wrap { transform: scale(1.08) rotate(-1deg); box-shadow: 0 8px 24px rgba(124,92,252,0.3); }
   .card-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .card-img-wrap .img-placeholder { font-family: 'DM Mono', monospace; font-size: 22px; color: var(--border); text-align: center; }
 
@@ -282,64 +264,6 @@
   .btn-sync-card:hover { background: rgba(250,204,21,0.15); border-color: rgba(250,204,21,0.6); color: var(--yellow); }
   .btn-sync-card.syncing { border-color: var(--yellow); color: var(--yellow); animation: syncpulse 0.8s infinite alternate; }
   .btn-sync-card.done { border-color: rgba(74,222,128,0.5); color: #4ade80; background: rgba(74,222,128,0.08); animation: none; }
-  .pcr-sync-meta { font-size: 8px; color: var(--muted); font-family: 'DM Mono', monospace; opacity: 0.7; white-space: nowrap; margin-left: 6px; }
-  .enc-price-row { display: flex; gap: 6px; margin-top: 5px; padding-top: 5px; border-top: 1px solid var(--border); }
-  .enc-price-cell { display: flex; align-items: center; gap: 3px; flex: 1; }
-  .enc-price-cell span { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--text); }
-  /* ── Split button Souhaiter / Liste ── */
-  .enc-split-btn { display: flex; flex: 1; border-radius: 6px; overflow: visible; position: relative; }
-  .enc-split-btn .enc-split-main { flex: 1; border-radius: 6px 0 0 6px; border-right: none !important; }
-  .enc-split-btn .enc-split-arrow { flex: 0 0 22px; padding: 0; border-radius: 0 6px 6px 0; font-size: 10px; }
-  .enc-split-btn.active-want .enc-split-main,
-  .enc-split-btn.active-want .enc-split-arrow { background: rgba(251,146,60,0.12); border-color: rgba(251,146,60,0.4); color: var(--orange); }
-  .enc-split-btn.active-ship .enc-split-main,
-  .enc-split-btn.active-ship .enc-split-arrow { background: rgba(96,165,250,0.12); border-color: rgba(96,165,250,0.4); color: var(--blue); }
-  /* Dropdown liste */
-  .enc-list-dropdown { position: absolute; top: calc(100% + 4px); left: 0; min-width: 160px; z-index: 200;
-    background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4); overflow: hidden; }
-  .enc-list-dropdown-item { padding: 8px 12px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
-  .enc-list-dropdown-item:hover { background: rgba(124,92,252,0.1); }
-  .enc-list-dropdown-item.active { color: var(--orange); }
-  .owned-popup { position: fixed; min-width: 210px; z-index: 9999;
-    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
-    box-shadow: 0 8px 28px rgba(0,0,0,0.6); padding: 10px;
-    pointer-events: all; }
-  .owned-popup-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; margin-top: 8px; }
-  .owned-popup-label:first-child { margin-top: 0; }
-  .owned-popup-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 2px; }
-  .owned-popup-confirm { width: 100%; margin-top: 10px; padding: 8px; background: linear-gradient(135deg,var(--accent),var(--accent2)); color: #fff; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
-  .owned-popup-close { position: absolute; top: 6px; right: 6px; display: inline-flex; align-items: center; justify-content: center;
-    font-size: 11px; padding: 2px 5px; border-radius: 2px; cursor: pointer;
-    border: 1px solid rgba(248,113,113,0.2); background: transparent;
-    color: rgba(248,113,113,0.4); transition: all 0.15s; }
-  .btn-report {
-    display: inline-flex; align-items: center; justify-content: center;
-    font-size: 11px; padding: 2px 5px; border-radius: 2px; cursor: pointer;
-    border: 1px solid rgba(248,113,113,0.2); background: transparent;
-    color: rgba(248,113,113,0.4); transition: all 0.15s; flex-shrink: 0;
-  }
-  .btn-report:hover { border-color: rgba(248,113,113,0.6); color: var(--red); background: rgba(248,113,113,0.08); }
-  .btn-report.reported { border-color: rgba(248,113,113,0.5); color: var(--red); background: rgba(248,113,113,0.1); }
-  /* ── REPORTS VIEW ── */
-  .reports-view { padding: 16px; max-width: 700px; }
-  .reports-header { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--fg); margin-bottom: 4px; }
-  .reports-sub { font-size: 11px; color: var(--muted); margin-bottom: 16px; }
-  .report-item {
-    display: flex; align-items: flex-start; gap: 10px;
-    background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
-    padding: 10px 12px; margin-bottom: 8px;
-  }
-  .card-report-bar { border-top: 1px solid var(--border); margin-top: 2px; padding: 6px 12px 6px !important; }
-  .report-item-img { width: 40px; height: 56px; object-fit: cover; border-radius: 3px; flex-shrink: 0; }
-  .report-item-body { flex: 1; min-width: 0; }
-  .report-item-name { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .report-item-meta { font-size: 9px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 2px; }
-  .report-item-actions { display: flex; gap: 6px; margin-top: 6px; }
-  .btn-resolve { font-family: 'DM Mono', monospace; font-size: 9px; padding: 3px 8px; border-radius: 2px; cursor: pointer; border: 1px solid rgba(74,222,128,0.3); background: rgba(74,222,128,0.05); color: rgba(74,222,128,0.7); }
-  .btn-resolve:hover { border-color: var(--green); color: var(--green); background: rgba(74,222,128,0.12); }
-  .btn-unreport { font-family: 'DM Mono', monospace; font-size: 9px; padding: 3px 8px; border-radius: 2px; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--muted); }
-  .btn-unreport:hover { border-color: var(--red); color: var(--red); }
 
   /* ── PRICE / LANG FIELDS ── */
   .card-prices { display: flex; gap: 6px; margin-top: 6px; align-items: flex-end; grid-column: 1 / -1; padding: 0 12px 4px; }
@@ -481,39 +405,7 @@
   .dashboard-summary { display: flex; gap: 20px; margin-bottom: 24px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
   .dashboard-summary span { display: flex; align-items: center; gap: 5px; }
   .dashboard-summary strong { color: var(--text); font-size: 14px; }
-  .dashboard-grid { display: flex; flex-direction: column; gap: 10px; }
-  .dash-wl-banner {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
-    overflow: hidden; transition: border-color 0.2s;
-  }
-  .dash-wl-banner:hover { border-color: rgba(124,92,252,0.35); }
-  .dash-wl-header {
-    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
-    cursor: pointer; user-select: none;
-  }
-  .dash-wl-header:hover { background: rgba(124,92,252,0.04); }
-  .dash-wl-name { font-size: 13px; font-weight: 500; color: var(--text); flex: 1; }
-  .dash-wl-counters { display: flex; gap: 8px; font-size: 11px; font-family: 'DM Mono', monospace; align-items: center; }
-  .dash-wl-progress { height: 3px; background: var(--border); position: relative; }
-  .dash-wl-progress-fill { height: 100%; background: var(--green); transition: width 0.3s; }
-  .dash-wl-strip-wrap {
-    overflow-x: auto; padding: 8px 14px 12px;
-    scrollbar-width: thin; scrollbar-color: var(--border) transparent;
-  }
-  .dash-wl-strip-wrap::-webkit-scrollbar { height: 4px; }
-  .dash-wl-strip-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-  .dash-wl-strip { display: flex; gap: 5px; flex-wrap: nowrap; }
-  .dash-wl-card {
-    flex-shrink: 0; width: 46px; height: 64px; border-radius: 4px; overflow: hidden;
-    background: var(--surface2); border: 2px solid transparent; box-sizing: border-box;
-    transition: border-color 0.2s, transform 0.15s;
-  }
-  .dash-wl-card:hover { transform: translateY(-3px); }
-  .dash-wl-card img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.3s; }
-  .dash-wl-card.s-owned    { border-color: var(--green); }
-  .dash-wl-card.s-shipping { border-color: var(--blue); }
-  .dash-wl-card.s-wanted   { border-color: var(--orange); }
-  .dash-wl-card.s-missing  { border-color: transparent; opacity: 0.35; }
+  .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
   .dash-series-title {
     grid-column: 1 / -1; font-family: 'DM Mono', monospace; font-size: 10px;
     text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); padding: 8px 0 4px;
@@ -1186,13 +1078,11 @@
       </div>
     </div>
   </div>
-  <div class="sidebar-scroll">
   <div class="sidebar-nav">
     <button class="nav-btn active" id="nav-dashboard" onclick="showDashboard()"><span class="nav-icon">◈</span> Dashboard</button>
     <button class="nav-btn" id="nav-collection" onclick="showCollection()"><span class="nav-icon">✦</span> Ma Collection</button>
     <button class="nav-btn" id="nav-wishlist" onclick="showWishlist()"><span class="nav-icon">♡</span> Wishlist</button>
     <button class="nav-btn" id="nav-encyclopedia" onclick="showEncyclopedia()"><span class="nav-icon">📖</span> Encyclopédie</button>
-    <button class="nav-btn" id="nav-reports" onclick="showReports()"><span class="nav-icon">⚑</span> Reports <span id="nav-reports-badge" style="display:none;background:var(--red);color:#fff;border-radius:8px;font-size:8px;padding:1px 5px;margin-left:4px;font-family:'DM Mono',monospace;"></span></button>
   </div>
   <div class="sidebar-nav" id="community-nav" style="border-bottom:1px solid var(--border);padding:4px 10px 6px;">
     <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:0.12em;padding:4px 8px 2px;">👥 COMMUNAUTÉ</div>
@@ -1212,7 +1102,7 @@
       <span class="scv-val scv-delta" id="scv-delta">—</span>
     </div>
   </div>
-  <div style="display:flex;gap:6px;padding:0 10px 6px;"><button class="scan-sidebar-btn" style="flex:1;justify-content:center;" onclick="startScan(true)">📷 Scanner</button><button class="scan-sidebar-btn" style="flex:1;justify-content:center;" onclick="startScan(false)">🖼 Importer</button><button class="scan-sidebar-btn" style="flex:1;justify-content:center;" onclick="exportToCSV()" title="Exporter ma collection en CSV">⬇ Export</button></div>
+  <div style="display:flex;gap:6px;padding:0 10px 6px;"><button class="scan-sidebar-btn" style="flex:1;justify-content:center;" onclick="startScan(true)">📷 Scanner</button><button class="scan-sidebar-btn" style="flex:1;justify-content:center;" onclick="startScan(false)">🖼 Importer</button></div>
   <div class="sync-bar">
     <button class="sync-btn" id="sync-pull-btn" onclick="syncPull()" title="Télécharger depuis le cloud">⬇ Cloud</button>
     <button class="sync-btn" id="sync-push-btn" onclick="syncPush()" title="Sauvegarder vers le cloud">⬆ Sauv.</button>
@@ -1229,11 +1119,10 @@
     </div>
     <div class="cm-sync-status" id="cm-sync-status"></div>
   </div>
-  <div class="sidebar-search" id="sidebar-search-wrap" style="display:none">
-    <input type="text" id="set-search" placeholder="Rechercher un set…">
+  <div class="sidebar-search">
+    <input type="text" id="set-search" placeholder="Rechercher une extension…">
   </div>
   <div class="set-list" id="set-list"></div>
-  </div><!-- /sidebar-scroll -->
 </aside>
 
 <main class="main" id="main">
@@ -1347,7 +1236,6 @@ let buyPrices = {}; // { "M3-084": 2.50 }  — per user
 let cardLangs = {}; // { "M3-084": "jp" }  — per user (jp|kr|cn)
 let ownedDates = {}; // { "M3-084": "2026-03-19" } — per user
 let cardConditions = {}; // { "M3-084": "NM" } — per user
-let reports = [];        // [{ key, name, set, reporter, date, resolved }] — shared
 let currentUser = '';          // username for multi-user sync
 let otherUsers  = {};          // { "alice": { state, wishlists, wishlistCards }, ... }
 
@@ -1375,12 +1263,10 @@ function loadState() {
   try { cardLangs     = JSON.parse(localStorage.getItem('pkmn-ar-cardlangs')   || '{}'); } catch(e) { cardLangs = {}; }
   try { ownedDates    = JSON.parse(localStorage.getItem('pkmn-ar-owneddates')  || '{}'); } catch(e) { ownedDates = {}; }
   try { cardConditions = JSON.parse(localStorage.getItem('pkmn-ar-conditions')  || '{}'); } catch(e) { cardConditions = {}; }
-  try { reports        = JSON.parse(localStorage.getItem('pkmn-ar-reports')     || '[]'); } catch(e) { reports = []; }
   ensureDefaultWishlist();
   assignOrphanCardsToDefault();
   var userLabel = document.getElementById('sidebar-username');
   if (userLabel && currentUser) userLabel.textContent = '👤 ' + userDisplayName(currentUser);
-  setTimeout(refreshReportsBadge, 0);
 }
 function precacheTrackedImages() {
   if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) return;
@@ -1419,7 +1305,6 @@ function saveWishlists() {
   syncAutoPush();
 }
 function savePrices() { localStorage.setItem('pkmn-ar-prices', JSON.stringify(prices)); if (!cmSyncActive) syncAutoPush(); }
-function saveReports() { localStorage.setItem('pkmn-ar-reports', JSON.stringify(reports)); syncAutoPush(); }
 
 // ═══════════════════════════════════════════════════════════════════════════
 // IMAGE & CARDMARKET HELPERS
@@ -1452,6 +1337,7 @@ function imgUrls(set, numShort) {
     const suffix = (set.lang === 'CN') ? '_R_CN_LG.png' : '_R_JP_LG.png';
     urls.push('https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpc/' + code + '/' + code + '_' + n + suffix);
   }
+  if (serebii) urls.push('https://www.serebii.net/card/' + serebii + '/' + n + '.jpg');
   return urls;
 }
 
@@ -1507,29 +1393,6 @@ function buildImgTag(set, card) {
     ' style="opacity:0;transition:opacity 0.3s">';
 }
 
-// ── Helpers image universels pour cartes DISCOVER_DB ─────────────────────
-// Limitless (c.img) → Serebii fallback automatique
-function discoverImgHtml(setId, num, primaryImg) {
-  var src = primaryImg;
-  if (!src) return '<span class="thumb-placeholder">?</span>';
-  var onerr = 'this.style.display=\'none\';';
-  return '<img src="' + src + '"' +
-    ' onload="this.style.opacity=1" onerror="' + onerr + '"' +
-    ' style="opacity:0;transition:opacity 0.3s;width:100%;height:100%;object-fit:contain">';
-}
-
-function discoverThumbHtml(setId, num, primaryImg, cls, title) {
-  var src = primaryImg;
-  var titleAttr = title ? ' title="' + title + '"' : '';
-  if (!src) return '<div class="dash-thumb' + (cls||'') + '"' + titleAttr + '><span class="thumb-placeholder">?</span></div>';
-  var onerr = 'this.parentNode.innerHTML=\'<span class=thumb-placeholder>?</span>\';';
-  return '<div class="dash-thumb' + (cls||'') + '"' + titleAttr + '>' +
-    '<img src="' + src + '"' +
-    ' onload="this.style.opacity=1" onerror="' + onerr + '"' +
-    ' style="opacity:0;transition:opacity 0.3s"></div>';
-}
-// ─────────────────────────────────────────────────────────────────────────
-
 // Prix par pays (sync CM extension)
 // Pour ajouter un pays : { code:'XX', label:'XX', flag:'xx' } (code ISO 2 lettres)
 const CM_COUNTRIES = [
@@ -1574,11 +1437,19 @@ const CM_EXTRACT_CONFIG = {
 };
 
 function buildOnePriceRow(key, country, lang) {
+  // Price key: {cardKey}__cm_{lang}_{country}
   var slot = key + '__cm_' + lang + '_' + country.code;
   var stored = prices[slot];
+  var dateStored = prices[slot + '__date'];
   var price = stored ? stored.split('|')[0] : '';
+  var dateHtml = '';
+  if (dateStored) {
+    var d = new Date(dateStored);
+    dateHtml = '<span class="pcr-date" title="' + d.toLocaleString('fr-FR') + '">' +
+      d.toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit'}) + '</span>';
+  }
   var priceHtml = price
-    ? '<span class="pcr-price">' + price + '</span>'
+    ? '<span class="pcr-price">' + price + ' €</span>'
     : '<span class="pcr-price empty">—</span>';
   return '<div class="price-country-row"' +
     ' data-price-key="' + key + '"' +
@@ -1587,18 +1458,8 @@ function buildOnePriceRow(key, country, lang) {
     '<img class="pcr-flag" src="https://flagcdn.com/w40/' + country.flag + '.png" alt="' + country.code + '">' +
     '<span class="pcr-code">' + country.label + '</span>' +
     priceHtml +
+    dateHtml +
   '</div>';
-}
-
-// Retourne le HTML de la meta sync (date + user) pour une carte
-function buildPriceSyncMeta(key) {
-  var date = prices[key + '__syncdate'];
-  var user = prices[key + '__syncuser'];
-  if (!date) return '<span class="pcr-sync-meta"></span>';
-  var d = new Date(date);
-  var dateStr = d.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'2-digit'});
-  var userStr = user ? ' · ' + user : '';
-  return '<span class="pcr-sync-meta" title="Sync le ' + d.toLocaleString('fr-FR') + '">' + dateStr + userStr + '</span>';
 }
 
 function buildCountryPriceFields(key, card) {
@@ -1651,134 +1512,14 @@ function getBestCmPrice(key, langOverride) {
   return best;
 }
 
-// Retourne le meilleur prix toutes langues confondues pour l'encyclopédie
-function getBestEncPrice(key, lang) {
-  var best = null;
-  CM_COUNTRIES.forEach(function(c) {
-    var raw = prices[key + '__cm_' + lang + '_' + c.code];
-    if (!raw) return;
-    var p = parseFloat(raw.split('|')[0]);
-    if (!isNaN(p) && (best === null || p < best)) best = p;
-  });
-  return best !== null ? best.toFixed(2) : '';
-}
-
-// ── Popup "Possédée" : condition + langue avant validation ────────────────
-function openOwnedPopup(key, anchorEl, onConfirm) {
-  // Ferme tout popup ouvert
-  document.querySelectorAll('.owned-popup, .enc-list-dropdown').forEach(function(p) { p.remove(); });
-
-  var cond = cardConditions[key] || 'NM';
-  var lang = cardLangs[key] || 'jp';
-
-  var popup = document.createElement('div');
-  popup.className = 'owned-popup';
-
-  // Condition
-  var condHtml = '<div class="owned-popup-label">État</div><div class="owned-popup-row">';
-  CM_CONDITIONS.forEach(function(cc) {
-    var active = cond === cc.code;
-    condHtml += '<button class="condition-btn' + (active ? ' active' : '') + '" data-cond="' + cc.code + '" title="' + cc.label + '" style="' +
-      (active ? 'border-color:' + cc.color + ';color:' + cc.color + ';background:' + cc.color + '18;' : '') + '">' + cc.code + '</button>';
-  });
-  condHtml += '</div>';
-
-  // Langue
-  var allLangs = [
-    { code: 'jp', flag: 'jp', label: 'JP' },
-    { code: 'kr', flag: 'kr', label: 'KR' },
-    { code: 'cn', flag: 'cn', label: 'CN' },
-    { code: 'fr', flag: 'fr', label: 'FR' },
-  ];
-  var langHtml = '<div class="owned-popup-label">Langue</div><div class="owned-popup-row">';
-  allLangs.forEach(function(l) {
-    var active = lang === l.code;
-    langHtml += '<button class="card-lang-btn' + (active ? ' active' : '') + '" data-lang="' + l.code + '">' +
-      '<img src="https://flagcdn.com/w20/' + l.flag + '.png" alt="' + l.label + '"> ' + l.label + '</button>';
-  });
-  langHtml += '</div>';
-
-  popup.innerHTML = condHtml + langHtml +
-    '<button class="owned-popup-confirm">✓ Marquer comme possédée</button>' +
-    '<button class="owned-popup-close" title="Annuler">✕</button>';
-
-  // Bloque la propagation des clics depuis le popup vers les cartes en dessous
-  popup.addEventListener('click', function(e) { e.stopPropagation(); });
-  popup.addEventListener('mousedown', function(e) { e.stopPropagation(); });
-
-  // Condition buttons
-  popup.querySelectorAll('.condition-btn').forEach(function(btn) {
-    btn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      cond = btn.dataset.cond;
-      popup.querySelectorAll('.condition-btn').forEach(function(b) {
-        var cc = CM_CONDITIONS.find(function(c) { return c.code === b.dataset.cond; });
-        var isActive = b.dataset.cond === cond;
-        b.classList.toggle('active', isActive);
-        b.style.borderColor = isActive && cc ? cc.color : '';
-        b.style.color       = isActive && cc ? cc.color : '';
-        b.style.background  = isActive && cc ? cc.color + '18' : '';
-      });
-    });
-  });
-
-  // Lang buttons
-  popup.querySelectorAll('.card-lang-btn').forEach(function(btn) {
-    btn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      lang = btn.dataset.lang;
-      popup.querySelectorAll('.card-lang-btn').forEach(function(b) {
-        b.classList.toggle('active', b.dataset.lang === lang);
-      });
-    });
-  });
-
-  // Bouton fermer (croix)
-  popup.querySelector('.owned-popup-close').addEventListener('click', function(e) {
-    e.stopPropagation();
-    popup.remove();
-  });
-
-  // Confirm
-  popup.querySelector('.owned-popup-confirm').addEventListener('click', function(e) {
-    e.stopPropagation();
-    popup.remove();
-    onConfirm(cond, lang);
-  });
-
-  // Positionnement : attaché au body pour sortir du stacking context de la grille
-  var rect = anchorEl.getBoundingClientRect();
-  popup.style.position = 'fixed';
-  popup.style.top  = (rect.bottom + 6) + 'px';
-  popup.style.left = rect.left + 'px';
-  document.body.appendChild(popup);
-
-  // Ajuste si déborde à droite
-  var popW = 210;
-  if (rect.left + popW > window.innerWidth - 8) {
-    popup.style.left = Math.max(8, window.innerWidth - popW - 8) + 'px';
-  }
-
-  // Ferme au clic extérieur
-  setTimeout(function() {
-    document.addEventListener('click', function closePopup(ev) {
-      if (!popup.contains(ev.target) && ev.target !== anchorEl) {
-        popup.remove();
-        document.removeEventListener('click', closePopup);
-      }
-    });
-  }, 10);
-}
-
 function buildOwnedInfo(key, card) {
   var buyVal  = buyPrices[key] !== undefined ? parseFloat(buyPrices[key]) : null;
   var lang    = cardLangs[key] || 'jp';
-  var isFr    = lang === 'fr';
-  var _best   = isFr ? { price: null, country: '' } : getBestCmPrice(key, lang);
+  var _best   = getBestCmPrice(key, lang);
   var bestPrice = _best.price; var bestCountry = _best.country;
 
   var deltaHtml = '<span class="owned-info-val neu">—</span>';
-  if (!isFr && buyVal !== null && bestPrice !== null) {
+  if (buyVal !== null && bestPrice !== null) {
     var delta = bestPrice - buyVal;
     var sign  = delta >= 0 ? '+' : '';
     var cls   = delta > 0.01 ? 'pos' : delta < -0.01 ? 'neg' : 'neu';
@@ -1795,9 +1536,6 @@ function buildOwnedInfo(key, card) {
       '</button>' +
       '<button class="card-lang-btn' + (lang === 'cn' ? ' active' : '') + '" data-lang-key="' + key + '" data-lang-val="cn">' +
         '<img src="https://flagcdn.com/w20/cn.png" alt="CN"> CN' +
-      '</button>' +
-      '<button class="card-lang-btn' + (lang === 'fr' ? ' active' : '') + '" data-lang-key="' + key + '" data-lang-val="fr" title="Carte française (pas de prix CM)">' +
-        '<img src="https://flagcdn.com/w20/fr.png" alt="FR"> FR' +
       '</button>' +
     '</div>';
 
@@ -1848,19 +1586,17 @@ function buildOwnedInfo(key, card) {
 function updateOwnedInfoDelta(key) {
   var buyVal  = buyPrices[key] !== undefined ? parseFloat(buyPrices[key]) : null;
   var lang    = cardLangs[key] || 'jp';
-  var isFr    = lang === 'fr';
-  var _best   = isFr ? { price: null, country: '' } : getBestCmPrice(key, lang);
+  var _best = getBestCmPrice(key, lang);
   var bestPrice = _best.price; var bestCountry = _best.country;
 
   // Update best price display
   document.querySelectorAll('.cm-fr-val[data-fr-key="' + key + '"]').forEach(function(el) {
-    el.innerHTML = isFr ? '<span style="opacity:0.5;font-size:9px">Carte FR</span>'
-      : (bestPrice !== null ? bestPrice.toFixed(2) + ' € <span style="opacity:0.5;font-size:8px">' + bestCountry + '</span>' : '—');
+    el.innerHTML = bestPrice !== null ? bestPrice.toFixed(2) + ' € <span style="opacity:0.5;font-size:8px">' + bestCountry + '</span>' : '—';
   });
 
   // Update delta display
   var deltaHtml = '<span class="owned-info-val neu">—</span>';
-  if (!isFr && buyVal !== null && bestPrice !== null) {
+  if (buyVal !== null && bestPrice !== null) {
     var delta = bestPrice - buyVal;
     var sign  = delta >= 0 ? '+' : '';
     var cls   = delta > 0.01 ? 'pos' : delta < -0.01 ? 'neg' : 'neu';
@@ -1877,12 +1613,9 @@ function renderCard(set, card, showSetBadge) {
   const hidePrices = (status === 'owned' || status === 'wanted' || status === 'shipping') ? 'none' : 'flex';
 
   return '<div class="card' + (status === 'owned' ? ' is-owned' : status === 'shipping' ? ' is-shipping' : status === 'wanted' ? ' is-wanted' : '') + '" data-card-key="' + key + '">' +
-    '<div class="card-img-wrap" style="position:relative"><div class="card-img-inner">' + buildImgTag(set, card) + '</div><button class="btn-remove-card" data-key="' + key + '" title="Retirer de la collection">✕</button>' + '</div>' +
+    '<div class="card-img-wrap" style="position:relative">' + buildImgTag(set, card) + '<button class="btn-remove-card" data-key="' + key + '" title="Retirer de la collection">✕</button>' + '</div>' +
     '<div class="card-body">' +
-      '<div style="display:flex;align-items:center;justify-content:space-between;gap:4px">' +
-        (showSetBadge ? '<span class="card-set-badge">' + set.id + '<span style="opacity:0.6;font-weight:400"> — ' + set.name + '</span></span>' : '<span></span>') +
-        '<button class="btn-report' + (isReported(key) ? ' reported' : '') + '" onclick="toggleReport(\'' + key + '\',this)">' + (isReported(key) ? '⚑' : '⚐') + '</button>' +
-      '</div>' +
+      (showSetBadge ? '<span class="card-set-badge">' + set.id + '</span>' : '') +
       '<div class="card-name">' + card.name + (card.nameEn && card.nameEn !== card.name ? ' <span class="card-name-en">(' + card.nameEn + ')</span>' : '') + '</div>' +
       '<div class="card-meta">' +
         (card.num ? '<span class="card-num">#' + card.num + '</span>' : '') +
@@ -1906,7 +1639,7 @@ function renderCard(set, card, showSetBadge) {
             return '<a class="btn-cm-cn btn-cm-card auto" href="' + searchUrl + '" target="_blank" title="Recherche auto CN — non vérifié">' + EXT_SVG + ' CM ' + cnFlag + '</a>';
           }
         })() +
-        (!card.noCmJP || card.cmUrlCn ? '<button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\',event)">⟳ Sync</button>' + buildPriceSyncMeta(key).replace('class="pcr-sync-meta"', 'class="pcr-sync-meta" data-sync-key="' + key + '"') : '') +
+        (!card.noCmJP || card.cmUrlCn ? '<button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\',event)">⟳ Sync</button>' : '') +
       '</div>' +
       '<div class="card-prices" style="display:' + hidePrices + '">' +
         '<div class="prices-by-country">' +
@@ -1935,7 +1668,9 @@ function buildDiscoverCardEl(dset, c, opts) {
   div.className = 'card enc-card' + (st==='owned'?' is-owned':st==='shipping'?' is-shipping':st==='wanted'?' is-wanted':'');
   div.dataset.cardKey = key;
 
-  var imgHtml = discoverImgHtml(dset.id, c.num, c.img);
+  var imgHtml = c.img
+    ? '<img src="'+c.img+'" onload="this.style.opacity=1" onerror="this.style.display=\'none\'" style="opacity:0;transition:opacity 0.3s;width:100%;height:100%;object-fit:contain">'
+    : '<span class="thumb-placeholder">?</span>';
 
   // CM links (only if card has them — will be populated from Excel later)
   var cmLinksHtml = '';
@@ -1974,56 +1709,29 @@ function buildDiscoverCardEl(dset, c, opts) {
   }
 
   div.innerHTML =
-    // ── Bloc 1 : Image + infos ──
-    '<div class="card-img-wrap"><div class="card-img-inner">' + imgHtml + '</div></div>' +
+    '<div class="card-img-wrap">' + imgHtml + '</div>' +
     '<div class="card-body">' +
-      // Ligne 1 : Set ID — Nom set | Report | Commentaire
-      '<div style="display:flex;align-items:center;gap:4px;min-width:0">' +
-        '<span class="card-set-badge" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + dset.id + '<span style="opacity:0.6;font-weight:400"> — ' + dset.name + '</span></span>' +
-        (!opts.readOnly ? '<button class="btn-report' + (isReported(key) ? ' reported' : '') + '" onclick="toggleReport(\'' + key + '\',this)">' + (isReported(key) ? '⚑' : '⚐') + '</button>' : '') +
-        (st ? '<span class="card-comment-icon' + (comments[key] ? ' has-comment' : '') + '" data-comment-key="' + key + '" title="Commenter">?' +
-          (comments[key] ? '<span class="card-comment-tooltip">' + comments[key].replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>' : '') +
-        '</span>' : '') +
-      '</div>' +
-      // Ligne 2 : Nom Pokémon + numéro
-      '<div style="display:flex;align-items:baseline;gap:5px;margin-top:2px">' +
-        '<span class="card-name" style="margin:0;flex:1;min-width:0">' + c.fr + (c.en && c.en !== c.fr ? ' <span class="card-name-en">(' + c.en + ')</span>' : '') + '</span>' +
-        '<span class="card-num" style="flex-shrink:0">#' + c.num + '</span>' +
-      '</div>' +
-      // Ligne 3 : Rareté
-      '<div style="margin-top:3px">' +
+      '<span class="card-set-badge">' + dset.id + '</span>' +
+      '<div class="card-name">' + c.fr + (c.en && c.en !== c.fr ? ' <span class="card-name-en">(' + c.en + ')</span>' : '') + '</div>' +
+      '<div class="card-meta">' +
+        '<span class="card-num">#' + c.num + '</span>' +
         '<span class="rarity-badge rarity-' + c.rarity + '">' + c.rarity + '</span>' +
       '</div>' +
       listsHtml +
+      (opts.readOnly ? '' : '<div class="card-actions" style="align-items:center">') +
+        (st !== 'owned' && st !== 'shipping' ? '<button class="btn-status' + (st==='wanted'?' wanted':'') + '" data-key="' + key + '" data-status="wanted">♡ Souhaitée</button>' : '') +
+        (st !== 'owned' ? '<button class="btn-status' + (st==='shipping'?' shipping':'') + '" data-key="' + key + '" data-status="shipping">📦 En livraison</button>' : '') +
+        '<button class="btn-status' + (st==='owned'?' owned':'') + '" data-key="' + key + '" data-status="owned">✓ Possédée</button>' +
+        (st ? '<span class="card-comment-icon' + (comments[key] ? ' has-comment' : '') + '" data-comment-key="' + key + '" title="Commenter">?' +
+          (comments[key] ? '<span class="card-comment-tooltip">' + comments[key].replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>' : '') +
+        '</span>' : '') +
+      (opts.readOnly ? '' : '</div>') +
+      (st && comments[key] !== undefined ? '' : '') +
+      (cmLinksHtml && st !== 'owned' ? '<div class="card-actions">' + cmLinksHtml + '</div>' : '') +
+      (c.cmUrl && (st === 'owned' || st === 'wanted' || (wishlistCards[key] && wishlistCards[key].length) || opts.removeWlId || opts.showLists) ?
+        '<div class="card-actions" style="margin-top:2px"><button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\',event)" style="width:100%;justify-content:center">⟳ Sync prix CM</button></div>' : '') +
+      removeHtml +
     '</div>' +
-    // ── Bloc 2 : Statuts ──
-    (opts.readOnly ? '' :
-      '<div style="grid-column:1/-1;display:flex;gap:4px;padding:0 0 4px">' +
-        (opts.removeWlId ?
-          '<button class="btn-enc-remove" data-key="' + key + '" data-wl="' + opts.removeWlId + '" style="flex:1;font-size:10px;padding:6px 10px;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:6px;color:var(--red);cursor:pointer;text-align:center">✕ Retirer de cette liste</button>'
-          :
-          (st !== 'owned' && st !== 'shipping' ? '<button class="btn-status' + (st==='wanted'?' wanted':'') + '" data-key="' + key + '" data-status="wanted" style="flex:1">♡ Souhaitée</button>' : '')
-        ) +
-        (st !== 'owned' ? '<button class="btn-status' + (st==='shipping'?' shipping':'') + '" data-key="' + key + '" data-status="shipping" style="flex:1">📦 En livraison</button>' : '') +
-        '<button class="btn-status' + (st==='owned'?' owned':'') + '" data-key="' + key + '" data-status="owned" style="flex:1">✓ Possédée</button>' +
-      '</div>'
-    ) +
-    // ── Bloc 3 : CM + Sync ──
-    ((cmLinksHtml || c.cmUrl) && st !== 'owned' ?
-      '<div style="grid-column:1/-1;display:flex;gap:4px;padding:0 0 4px">' +
-        (cmLinksHtml ? cmLinksHtml : '') +
-        (c.cmUrl && (st === 'owned' || st === 'wanted' || (wishlistCards[key] && wishlistCards[key].length) || opts.removeWlId || opts.showLists) ?
-          '<button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\',event)" style="flex:1;justify-content:center">⟳ Sync</button>' +
-          buildPriceSyncMeta(key).replace('class="pcr-sync-meta"', 'class="pcr-sync-meta" data-sync-key="' + key + '"')
-          : '') +
-      '</div>' : '') +
-    // ── Bloc 3 (owned) : Sync uniquement ──
-    (c.cmUrl && st === 'owned' ?
-      '<div style="grid-column:1/-1;display:flex;gap:4px;padding:0 0 4px">' +
-        '<button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\',event)" style="flex:1;justify-content:center">⟳ Sync prix CM</button>' +
-        buildPriceSyncMeta(key).replace('class="pcr-sync-meta"', 'class="pcr-sync-meta" data-sync-key="' + key + '"') +
-      '</div>' : '') +
-    // ── Bloc 4 : Prix ──
     '<div class="card-prices" style="display:' + (st === 'owned' ? 'none' : 'block') + ';grid-column:1/-1">' +
       '<div class="prices-by-country">' + priceHtml + '</div>' +
     '</div>' +
@@ -2043,73 +1751,46 @@ function bindDiscoverCardEvents(div, opts) {
       e.stopPropagation();
       var k = btn.dataset.key;
       var next = btn.dataset.status;
-      var cur = state[k] || '';
-
-      // Si on clique "possédée" et pas encore owned → ouvrir le popup
-      if (next === 'owned' && cur !== 'owned') {
-        openOwnedPopup(k, btn, function(cond, lang) {
-          state[k] = 'owned';
-          if (!ownedDates[k]) { ownedDates[k] = new Date().toISOString().slice(0,10); localStorage.setItem('pkmn-ar-owneddates', JSON.stringify(ownedDates)); }
-          cardConditions[k] = cond;
-          localStorage.setItem('pkmn-ar-conditions', JSON.stringify(cardConditions));
-          cardLangs[k] = lang;
-          localStorage.setItem('pkmn-ar-cardlangs', JSON.stringify(cardLangs));
-          saveState();
-          var s = 'owned';
-          div.classList.remove('is-owned','is-shipping','is-wanted');
-          div.classList.add('is-owned');
-          div.querySelectorAll('.btn-status').forEach(function(b) {
-            b.classList.remove('owned','shipping','wanted');
-            if (b.dataset.status === 'owned') b.classList.add('owned');
-          });
-          var pricesBlock = div.querySelector('.card-prices');
-          var ownedBlock  = div.querySelector('.card-owned-info-wrap');
-          if (pricesBlock) pricesBlock.style.display = 'none';
-          if (ownedBlock)  { ownedBlock.style.display = 'block'; ownedBlock.innerHTML = buildOwnedInfo(k, {}); }
-          var commentIcon = div.querySelector('.card-comment-icon');
-          if (commentIcon) commentIcon.style.display = '';
-          if (opts.fadeOnStatuses && opts.fadeOnStatuses.indexOf('owned') !== -1) {
-            div.style.transition = 'opacity 0.3s, transform 0.3s';
-            div.style.opacity = '0'; div.style.transform = 'scale(0.95)';
-            setTimeout(function() { div.remove(); }, 300);
-          }
-          if (opts.onAfterUpdate) opts.onAfterUpdate();
-        });
-        return; // sortir — le reste se fait dans onConfirm
-      }
-
-      // Tous les autres cas (toggle off, souhaitée, livraison)
-      state[k] = cur === next ? undefined : next;
+      state[k] = state[k] === next ? undefined : next;
       if (!state[k]) delete state[k];
       saveState();
       var s = state[k] || '';
+      // Record owned date
       if (s === 'owned' && !ownedDates[k]) {
         ownedDates[k] = new Date().toISOString().slice(0,10);
         localStorage.setItem('pkmn-ar-owneddates', JSON.stringify(ownedDates));
       }
       if (s !== 'owned') { delete ownedDates[k]; localStorage.setItem('pkmn-ar-owneddates', JSON.stringify(ownedDates)); }
+      // Update this card visually in-place
       div.classList.remove('is-owned','is-shipping','is-wanted');
       if (s) div.classList.add('is-' + s);
       div.querySelectorAll('.btn-status').forEach(function(b) {
         b.classList.remove('owned','shipping','wanted');
         if (state[k] === b.dataset.status) b.classList.add(b.dataset.status);
       });
+      // Toggle prices vs owned-info
       var pricesBlock = div.querySelector('.card-prices');
       var ownedBlock  = div.querySelector('.card-owned-info-wrap');
       if (pricesBlock) pricesBlock.style.display = (s === 'owned') ? 'none' : 'block';
       if (ownedBlock)  ownedBlock.style.display  = (s === 'owned') ? 'block' : 'none';
+      // Toggle comment icon visibility
       var commentIcon = div.querySelector('.card-comment-icon');
       if (commentIcon) commentIcon.style.display = s ? '' : 'none';
+      // If in collection view and card is no longer owned, fade out
       if (opts.requiredStatus && s !== opts.requiredStatus) {
         div.style.transition = 'opacity 0.3s, transform 0.3s';
-        div.style.opacity = '0'; div.style.transform = 'scale(0.95)';
+        div.style.opacity = '0';
+        div.style.transform = 'scale(0.95)';
         setTimeout(function() { div.remove(); }, 300);
       }
+      // If in wishlist view and card moves to shipping/owned, fade out
       if (opts.fadeOnStatuses && opts.fadeOnStatuses.indexOf(next) !== -1 && s === next) {
         div.style.transition = 'opacity 0.3s, transform 0.3s';
-        div.style.opacity = '0'; div.style.transform = 'scale(0.95)';
+        div.style.opacity = '0';
+        div.style.transform = 'scale(0.95)';
         setTimeout(function() { div.remove(); }, 300);
       }
+      // Callback for counter updates
       if (opts.onAfterUpdate) opts.onAfterUpdate();
     });
   });
@@ -2181,9 +1862,8 @@ function bindDiscoverCardEvents(div, opts) {
       input.className = 'card-comment-input';
       input.value = comments[k] || '';
       input.placeholder = 'Ajouter un commentaire…';
-      // Insert after the header row (flex row with badge + comment icon)
-      var refEl = icon.closest('.card-body') || icon.parentNode;
-      refEl.insertAdjacentElement('afterend', input);
+      // Insert after the actions row
+      icon.closest('.card-actions').insertAdjacentElement('afterend', input);
       input.focus();
       // Save on blur or Enter
       function saveComment() {
@@ -2223,20 +1903,11 @@ function bindDiscoverCardEvents(div, opts) {
       var k = this.dataset.key;
       var wlId = this.dataset.wl;
       if (!k || !wlId) return;
-      removeCardFromWishlist(k, wlId); // nettoie wishlistCards + state si plus dans aucune liste
-      // Met à jour le bouton "Souhaitée" dans l'encyclopédie si visible
-      var encCard = document.querySelector('[data-card-key="' + k + '"]');
-      if (encCard && !state[k]) {
-        var wantBtn = encCard.querySelector('.btn-enc-want');
-        var splitBtn = encCard.querySelector('.enc-split-btn');
-        if (wantBtn) wantBtn.textContent = '☆ Souhaiter';
-        if (splitBtn) splitBtn.classList.remove('active-want', 'active-ship');
-        encCard.classList.remove('is-wanted', 'is-shipping');
-      }
+      removeCardFromWishlist(k, wlId);
       div.style.transition = 'opacity 0.3s, transform 0.3s';
       div.style.opacity = '0';
       div.style.transform = 'scale(0.95)';
-      setTimeout(function() { div.remove(); wlAfterMutation(); if (opts.onAfterUpdate) opts.onAfterUpdate(); }, 300);
+      setTimeout(function() { div.remove(); if (opts.onAfterUpdate) opts.onAfterUpdate(); }, 300);
     });
   }
 }
@@ -2372,74 +2043,43 @@ function refreshCommunityNav() {
 
 function renderSidebar(filter) {
   filter = filter || '';
-  var container = document.getElementById('set-list');
-  var searchWrap = document.getElementById('sidebar-search-wrap');
+  const container = document.getElementById('set-list');
   container.innerHTML = '';
 
-  if (activeView !== 'encyclopedia') {
-    if (searchWrap) searchWrap.style.display = 'none';
-    return;
-  }
+  SERIES.forEach(function(series) {
+    const matchingSets = series.ids
+      .map(function(id) { return SETS.find(function(s) { return s.id === id; }); })
+      .filter(function(s) { return s && (!filter || s.name.toLowerCase().includes(filter) || s.id.toLowerCase().includes(filter)); });
 
-  if (searchWrap) searchWrap.style.display = '';
+    if (!matchingSets.length) return;
 
-  // Group DISCOVER_DB sets by bloc
-  var grouped = {};
-  var blocOrder = [];
-  DISCOVER_DB.forEach(function(dset) {
-    var bloc = dset.bloc || 'Autre';
-    if (!grouped[bloc]) { grouped[bloc] = []; blocOrder.push(bloc); }
-    grouped[bloc].push(dset);
-  });
-
-  blocOrder.forEach(function(bloc) {
-    var sets = grouped[bloc].filter(function(dset) {
-      return !filter || dset.id.toLowerCase().includes(filter) || dset.name.toLowerCase().includes(filter);
-    });
-    if (!sets.length) return;
-
-    var group = document.createElement('div');
+    const group = document.createElement('div');
     group.className = 'series-group';
-    group.innerHTML = '<div class="series-label">' + bloc + '</div>';
+    group.innerHTML = '<div class="series-label">' + series.label + '</div>';
 
-    sets.forEach(function(dset) {
-      var isActive = encSets.length === 1 && encSets[0] === dset.id;
-      var nOwned = dset.cards.filter(function(c) { return state[dset.id + '-' + c.num] === 'owned'; }).length;
-      var item = document.createElement('div');
-      item.className = 'set-item' + (isActive ? ' active' : '') + (nOwned ? ' has-owned' : '');
-      item.dataset.id = dset.id;
+    matchingSets.forEach(function(set) {
+      const hasOwned = set.cards.some(function(c) { return state[stateKey(set.id, c.numShort, c.name)] === 'owned'; });
+      const item = document.createElement('div');
+      item.className = 'set-item' + (set.id === activeSetId ? ' active' : '') + (hasOwned ? ' has-owned' : '');
+      item.dataset.id = set.id;
       item.innerHTML =
-        '<span class="set-id">' + dset.id + '</span>' +
-        '<span class="set-name">' + dset.name + '</span>' +
-        '<span class="set-count">' + dset.cards.length + '</span>' +
-        '<button class="btn-sync-set-sidebar" title="Sync AR/SAR/SR/MUR" onclick="event.stopPropagation();startCmSyncSet(\'' + dset.id + '\',this,true)">⟳</button>';
-      item.addEventListener('click', function() {
-        if (encSets.length === 1 && encSets[0] === dset.id) {
-          // Deselect → reset to "tous" dans le bloc courant
-          encSets = [];
-        } else {
-          encSets = [dset.id];
-          // Met à jour le bloc si nécessaire
-          if (dset.bloc && encBloc !== 'all' && encBloc !== dset.bloc) {
-            encBloc = dset.bloc;
-          }
-        }
-        renderSidebar(filter);
-        renderEncyclopedia();
-      });
+        '<span class="set-id">' + set.id + '</span>' +
+        setFlagHtml(set) +
+        '<span class="set-name">' + set.name + '</span>' +
+        '<span class="set-count">' + set.cards.length + '</span>';
+      item.addEventListener('click', function() { selectSet(set.id); });
       group.appendChild(item);
     });
+
     container.appendChild(group);
   });
 }
 
 function refreshSidebarDots() {
-  if (activeView !== 'encyclopedia') return;
-  document.querySelectorAll('#set-list .set-item').forEach(function(el) {
-    var dset = DISCOVER_DB.find(function(s) { return s.id === el.dataset.id; });
-    if (!dset) return;
-    var nOwned = dset.cards.filter(function(c) { return state[dset.id + '-' + c.num] === 'owned'; }).length;
-    el.classList.toggle('has-owned', nOwned > 0);
+  document.querySelectorAll('.set-item').forEach(function(el) {
+    const set = SETS.find(function(s) { return s.id === el.dataset.id; });
+    if (!set) return;
+    el.classList.toggle('has-owned', set.cards.some(function(c) { return state[stateKey(set.id, c.numShort, c.name)] === 'owned'; }));
   });
   refreshCommunityNav();
 }
@@ -2511,127 +2151,12 @@ function showEncyclopedia() {
   activeSetId = null;
   closeNavMenu();
   setNavActive('nav-encyclopedia');
-  renderSidebar('');
+  renderSidebar(document.getElementById('set-search').value.toLowerCase());
   renderEncyclopedia();
 }
 
-// ── REPORTS ──────────────────────────────────────────────────────────────
-function isReported(key) {
-  return reports.some(function(r) { return r.key === key && !r.resolved; });
-}
-
-function autoReportSyncError(rawKey) {
-  var key = rawKey.endsWith('__cn') ? rawKey.slice(0, -4) : rawKey;
-  if (isReported(key)) return false;
-  // Lookup name from DISCOVER_DB
-  var name = key, setId = key.split('-')[0];
-  DISCOVER_DB.forEach(function(dset) {
-    dset.cards.forEach(function(c) {
-      if (dset.id + '-' + c.num === key) { name = (c.fr || c.en || key); setId = dset.id; }
-    });
-  });
-  reports.push({ key: key, name: name, set: setId, reporter: 'sync-auto ⚠', date: new Date().toISOString(), resolved: false });
-  return true;
-}
-
-function toggleReport(key, btn) {
-  var idx = reports.findIndex(function(r) { return r.key === key && !r.resolved; });
-  if (idx >= 0) {
-    reports.splice(idx, 1);
-    btn.textContent = '⚐ Reporter';
-    btn.classList.remove('reported');
-  } else {
-    // Lookup name and set from key
-    var name = key, setId = key.split('-')[0];
-    DISCOVER_DB.forEach(function(dset) {
-      dset.cards.forEach(function(c) {
-        if (dset.id + '-' + c.num === key) { name = c.en || c.fr || key; setId = dset.id; }
-      });
-    });
-    SETS.forEach(function(set) {
-      set.cards.forEach(function(card) {
-        if (stateKey(set.id, card.numShort, card.name) === key) { name = card.nameEn || card.name || key; setId = set.id; }
-      });
-    });
-    reports.push({ key: key, name: name, set: setId, reporter: currentUser || 'anonyme', date: new Date().toISOString(), resolved: false });
-    btn.textContent = '⚑ Reporté';
-    btn.classList.add('reported');
-  }
-  saveReports();
-  refreshReportsBadge();
-}
-
-function resolveReport(key) {
-  reports = reports.filter(function(r) { return r.key !== key; });
-  saveReports();
-  renderReports();
-  refreshReportsBadge();
-}
-
-function refreshReportsBadge() {
-  var badge = document.getElementById('nav-reports-badge');
-  if (!badge) return;
-  var count = reports.length;
-  badge.textContent = count;
-  badge.style.display = count > 0 ? 'inline' : 'none';
-}
-
-function showReports() {
-  activeView = 'reports';
-  activeSetId = null;
-  closeNavMenu();
-  setNavActive('nav-reports');
-  renderSidebar(document.getElementById('set-search').value.toLowerCase());
-  renderReports();
-}
-
-function renderReports() {
-  var main = document.getElementById('main');
-  var html = '<div class="reports-view">' +
-    '<div class="reports-header">⚑ Reports</div>' +
-    '<div class="reports-sub">' + reports.length + ' carte' + (reports.length > 1 ? 's' : '') + ' en attente</div>';
-
-  if (reports.length === 0) {
-    html += '<div style="color:var(--muted);font-size:12px;padding:20px 0;text-align:center;">Aucun report pour l\'instant 🎉</div>';
-  } else {
-    reports.forEach(function(r) {
-      var imgSrc = '';
-      DISCOVER_DB.forEach(function(dset) {
-        if (imgSrc) return;
-        dset.cards.forEach(function(c) {
-          if (imgSrc) return;
-          if (dset.id + '-' + c.num === r.key) imgSrc = c.img || '';
-        });
-      });
-      var d = new Date(r.date);
-      var dateStr = d.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'2-digit'});
-      html += '<div class="report-item" data-report-key="' + r.key + '">' +
-        (imgSrc ? '<img class="report-item-img" src="' + imgSrc + '" alt="">' : '<div class="report-item-img" style="background:var(--surface2);border-radius:3px"></div>') +
-        '<div class="report-item-body">' +
-          '<div class="report-item-name">' + (r.name || r.key) + '</div>' +
-          '<div class="report-item-meta">' + r.key + ' · ' + r.reporter + ' · ' + dateStr + '</div>' +
-          '<div class="report-item-actions">' +
-            '<button class="btn-resolve" onclick="resolveReport(\'' + r.key + '\')">✓ Résolu</button>' +
-            '<button class="btn-unreport" onclick="unreportCard(\'' + r.key + '\')">✕ Supprimer</button>' +
-          '</div>' +
-        '</div>' +
-      '</div>';
-    });
-  }
-  html += '</div>';
-  main.innerHTML = html;
-}
-
-function unreportCard(key) {
-  reports = reports.filter(function(r) { return r.key !== key; });
-  saveReports();
-  renderReports();
-  refreshReportsBadge();
-}
-// ─────────────────────────────────────────────────────────────────────────
-
 function setNavActive(id) {
-  ['nav-dashboard','nav-collection','nav-wishlist','nav-encyclopedia','nav-reports'].forEach(function(nid) {
+  ['nav-dashboard','nav-collection','nav-wishlist','nav-encyclopedia'].forEach(function(nid) {
     var el = document.getElementById(nid);
     if (el) el.classList.toggle('active', nid === id);
   });
@@ -2639,7 +2164,7 @@ function setNavActive(id) {
   document.querySelectorAll('#community-nav .nav-btn').forEach(function(b) {
     b.classList.toggle('active', b.id === id);
   });
-  var bnavMap = { 'nav-dashboard':'bnav-dashboard', 'nav-collection':'bnav-collection', 'nav-wishlist':'bnav-wishlist', 'nav-encyclopedia':'bnav-encyclopedia', 'nav-reports':'bnav-encyclopedia' };
+  var bnavMap = { 'nav-dashboard':'bnav-dashboard', 'nav-collection':'bnav-collection', 'nav-wishlist':'bnav-wishlist', 'nav-encyclopedia':'bnav-encyclopedia' };
   ['bnav-dashboard','bnav-collection','bnav-wishlist','bnav-encyclopedia','bnav-sets'].forEach(function(bid) {
     var el = document.getElementById(bid);
     if (el) el.classList.toggle('active', bnavMap[id] === bid);
@@ -2740,53 +2265,30 @@ function refreshEncGrid() {
     div.className = 'card enc-card' + (isOwned ? ' is-owned' : isShipping ? ' is-shipping' : isWanted ? ' is-wanted' : '');
     div.dataset.cardKey = key;
     div.innerHTML =
-      '<div class="card-img-wrap"><div class="card-img-inner">' + discoverImgHtml(s.id, c.num, c.img) + '</div></div>' +
+      '<div class="card-img-wrap">' +
+        (c.img ? '<img src="' + c.img + '" onload="this.style.opacity=1" onerror="this.style.display=\'none\'" style="opacity:0;transition:opacity 0.3s;width:100%;height:100%;object-fit:contain">' : '<span class="thumb-placeholder">?</span>') +
+      '</div>' +
       '<div class="card-body">' +
-        '<span class="card-set-badge">' + s.id + '<span style="opacity:0.6;font-weight:400"> — ' + s.name + '</span></span>' +
+        '<span class="card-set-badge">' + s.id + '</span>' +
         '<div class="card-name">' + c.fr + (c.en && c.en !== c.fr ? ' <span class="card-name-en">(' + c.en + ')</span>' : '') + '</div>' +
         '<div class="card-meta">' +
           '<span class="card-num">#' + c.num + '</span>' +
           '<span class="rarity-badge rarity-' + c.rarity + '">' + c.rarity + '</span>' +
         '</div>' +
         '<div class="card-actions" style="gap:4px">' +
-          (isOwned ? '' :
-            '<div class="enc-split-btn' + (isWanted ? ' active-want' : isShipping ? ' active-ship' : '') + '">' +
-              '<button class="enc-split-main btn-enc-want" data-key="' + key + '">' +
-                (isShipping ? '📦 En livraison' : isWanted ? '♡ Souhaitée' : '☆ Souhaiter') +
-              '</button>' +
-              '<button class="enc-split-arrow btn-enc-list" data-key="' + key + '" title="Choisir une liste">▾</button>' +
-            '</div>'
-          ) +
+          '<button class="btn-enc-want' + (isWanted ? ' active-want' : isShipping ? ' active-ship' : '') + '" data-key="' + key + '">' +
+            (isOwned ? '✓ Possédée' : isShipping ? '📦 En livraison' : isWanted ? '♡ Souhaitée' : '☆ Souhaiter') +
+          '</button>' +
           '<button class="btn-enc-own' + (isOwned ? ' active-own' : '') + '" data-key="' + key + '">✓ Possédée</button>' +
+          (isOwned ? '' : '<button class="btn-enc-list" data-key="' + key + '" title="Ajouter à une liste">📋</button>') +
         '</div>' +
-        (c.cmUrl ?
-          '<div style="display:flex;gap:4px;margin-top:3px">' +
-            '<button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\',event)" style="flex:1;justify-content:center;font-size:9px;padding:4px 6px">⟳ Sync prix CM</button>' +
-            buildPriceSyncMeta(key).replace('class="pcr-sync-meta"', 'class="pcr-sync-meta" data-sync-key="' + key + '"') +
-          '</div>' : '') +
-        (function() {
-          var jp = getBestEncPrice(key, 'jp');
-          var kr = getBestEncPrice(key, 'kr');
-          var cn = getBestEncPrice(key, 'cn');
-          if (!jp && !kr && !cn) return '';
-          function cell(flag, val) {
-            return '<div class="enc-price-cell">' +
-              '<img src="https://flagcdn.com/w20/' + flag + '.png" style="width:12px;height:8px;object-fit:cover;border-radius:1px;opacity:0.8">' +
-              '<span>' + (val ? val + '€' : '—') + '</span>' +
-            '</div>';
-          }
-          return '<div class="enc-price-row">' + cell('jp', jp) + cell('kr', kr) + cell('cn', cn) + '</div>';
-        })() +
       '</div>';
-    var wantBtnEl = div.querySelector('.btn-enc-want');
-    if (wantBtnEl) {
-    wantBtnEl.addEventListener('click', function() {
+    div.querySelector('.btn-enc-want').addEventListener('click', function() {
       var k = this.dataset.key;
       var cur = state[k] || '';
       if (cur === 'owned' || cur === 'shipping') return;
       if (cur === 'wanted') {
-        // Retire de la liste par défaut — removeCardFromWishlist gère l'état
-        // si plus dans aucune liste, il efface state[k] lui-même
+        delete state[k];
         removeCardFromWishlist(k, DEFAULT_WL_ID);
       } else {
         state[k] = 'wanted';
@@ -2794,67 +2296,53 @@ function refreshEncGrid() {
       }
       saveState();
       var newSt = state[k] || '';
-      var splitBtn = div.querySelector('.enc-split-btn');
       div.classList.remove('is-wanted','is-shipping','is-owned');
       div.classList.toggle('is-wanted', newSt === 'wanted');
       this.textContent = newSt === 'wanted' ? '♡ Souhaitée' : '☆ Souhaiter';
-      if (splitBtn) { splitBtn.classList.toggle('active-want', newSt === 'wanted'); splitBtn.classList.remove('active-ship'); }
+      this.classList.toggle('active-want', newSt === 'wanted');
       updateSetStatsByKey(k);
-      wlAfterMutation();
+      if (encStatus !== 'all') { div.style.opacity = '0.35'; setTimeout(function(){ div.remove(); }, 400); }
     });
-    } // end if (wantBtnEl)
     var ownBtn = div.querySelector('.btn-enc-own');
     if (ownBtn) {
-      ownBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
+      ownBtn.addEventListener('click', function() {
         var k = this.dataset.key;
         var cur = state[k] || '';
         if (cur === 'owned') {
-          // Retirer de la collection
+          // Remove from collection
           delete state[k];
           delete ownedDates[k];
-          delete cardConditions[k];
-          delete cardLangs[k];
           localStorage.setItem('pkmn-ar-owneddates', JSON.stringify(ownedDates));
-          localStorage.setItem('pkmn-ar-conditions', JSON.stringify(cardConditions));
-          localStorage.setItem('pkmn-ar-cardlangs',  JSON.stringify(cardLangs));
           saveState();
           div.classList.remove('is-owned');
           this.classList.remove('active-own');
-          var wantBtn2 = div.querySelector('.btn-enc-want');
-          if (wantBtn2) { wantBtn2.textContent = '☆ Souhaiter'; wantBtn2.classList.remove('active-want','active-ship'); }
-          if (encStatus !== 'all') {
-            div.style.transition = 'opacity 0.3s';
-            div.style.opacity = '0.35';
-            setTimeout(function() { div.remove(); }, 400);
-          }
-          updateSetStatsByKey(k);
-          wlAfterMutation();
-        } else {
-          // Ouvre le popup état + langue
-          var btn = this;
-          openOwnedPopup(k, btn, function(cond, lang) {
-            state[k] = 'owned';
-            if (!ownedDates[k]) { ownedDates[k] = new Date().toISOString().slice(0,10); localStorage.setItem('pkmn-ar-owneddates', JSON.stringify(ownedDates)); }
-            cardConditions[k] = cond;
-            localStorage.setItem('pkmn-ar-conditions', JSON.stringify(cardConditions));
-            cardLangs[k] = lang;
-            localStorage.setItem('pkmn-ar-cardlangs', JSON.stringify(cardLangs));
-            saveState();
-            div.classList.remove('is-wanted','is-shipping');
-            div.classList.add('is-owned');
-            btn.classList.add('active-own');
-            var wantBtn3 = div.querySelector('.btn-enc-want');
-            if (wantBtn3) { wantBtn3.textContent = '✓ Possédée'; wantBtn3.classList.remove('active-want','active-ship'); }
-            updateSetStatsByKey(k);
-            wlAfterMutation();
-            if (encStatus !== 'all') {
-              div.style.transition = 'opacity 0.3s';
-              div.style.opacity = '0.35';
-              setTimeout(function() { div.remove(); }, 400);
+          var wantBtn = div.querySelector('.btn-enc-want');
+          if (wantBtn) { wantBtn.textContent = '☆ Souhaiter'; wantBtn.classList.remove('active-want','active-ship'); }
+          var listB = div.querySelector('.btn-enc-list');
+          if (!listB) {
+            var actionsDiv = div.querySelector('.card-actions');
+            if (actionsDiv) {
+              var nb = document.createElement('button');
+              nb.className = 'btn-enc-list';
+              nb.dataset.key = k;
+              nb.title = 'Ajouter à une liste';
+              nb.textContent = '📋';
+              actionsDiv.appendChild(nb);
             }
-          });
+          }
+        } else {
+          // Add to collection
+          state[k] = 'owned';
+          if (!ownedDates[k]) { ownedDates[k] = new Date().toISOString().slice(0,10); localStorage.setItem('pkmn-ar-owneddates', JSON.stringify(ownedDates)); }
+          saveState();
+          div.classList.remove('is-wanted','is-shipping');
+          div.classList.add('is-owned');
+          this.classList.add('active-own');
+          var wantBtn = div.querySelector('.btn-enc-want');
+          if (wantBtn) { wantBtn.textContent = '✓ Possédée'; wantBtn.classList.remove('active-want','active-ship'); }
         }
+        updateSetStatsByKey(k);
+        if (encStatus !== 'all') { div.style.opacity = '0.35'; setTimeout(function(){ div.remove(); }, 400); }
       });
     }
     var listBtn = div.querySelector('.btn-enc-list');
@@ -2864,78 +2352,57 @@ function refreshEncGrid() {
         var k = this.dataset.key;
         var btn = this;
         // Close any other open popups
-        document.querySelectorAll('.enc-list-popup, .enc-list-dropdown').forEach(function(p) { p.remove(); });
-        // Build dropdown
+        document.querySelectorAll('.enc-list-popup').forEach(function(p) { p.remove(); });
+        // Build popup
         var popup = document.createElement('div');
-        popup.className = 'enc-list-dropdown';
+        popup.className = 'enc-list-popup';
         if (!wishlists.length) {
-          popup.innerHTML = '<div class="enc-list-dropdown-item" id="enc-popup-create">＋ Créer une liste</div>';
+          popup.innerHTML = '<div class="enc-list-popup-create" id="enc-popup-create">＋ Créer une liste</div>';
         } else {
           var html = '';
           wishlists.forEach(function(wl) {
-            var inList = isCardInWishlist(k, wl.id);
-            html += '<div class="enc-list-dropdown-item' + (inList ? ' active' : '') + '" data-wl="' + wl.id + '">' + (inList ? '✓ ' : '') + wl.name + '</div>';
+            var checked = isCardInWishlist(k, wl.id) ? ' checked' : '';
+            html += '<label class="enc-list-popup-item"><input type="checkbox" data-wl="' + wl.id + '"' + checked + '> ' + wl.name + '</label>';
           });
-          html += '<div class="enc-list-dropdown-item" id="enc-popup-create" style="border-top:1px solid var(--border);color:var(--muted)">＋ Nouvelle liste</div>';
+          html += '<div class="enc-list-popup-create" id="enc-popup-create">＋ Nouvelle liste</div>';
           popup.innerHTML = html;
         }
-        // Attach to split btn container (has position:relative)
-        var container = btn.closest('.enc-split-btn') || btn.parentNode;
-        container.appendChild(popup);
-        // Click on list item
-        popup.querySelectorAll('.enc-list-dropdown-item[data-wl]').forEach(function(item) {
-          item.addEventListener('click', function(ev) {
-            ev.stopPropagation();
-            var wlId = this.dataset.wl;
-            var wlName = wishlists.find(function(w) { return w.id === wlId; });
-            wlName = wlName ? wlName.name : '';
-            if (isCardInWishlist(k, wlId)) {
-              removeCardFromWishlist(k, wlId); // nettoie state si plus dans aucune liste
-              this.classList.remove('active');
-              this.textContent = wlName;
-            } else {
-              addCardToWishlist(k, wlId);
-              this.classList.add('active');
-              this.textContent = '✓ ' + wlName;
-            }
-            // Met à jour le bouton want selon l'état actuel
+        btn.parentNode.style.position = 'relative';
+        btn.parentNode.appendChild(popup);
+        // Checkbox changes
+        popup.querySelectorAll('input[type=checkbox]').forEach(function(cb) {
+          cb.addEventListener('change', function() {
+            if (cb.checked) { addCardToWishlist(k, cb.dataset.wl); }
+            else { removeCardFromWishlist(k, cb.dataset.wl); }
+            // Update want button if card just became wanted
             var wantBtn = div.querySelector('.btn-enc-want');
-            var splitBtn = div.querySelector('.enc-split-btn');
             var curSt = state[k] || '';
-            if (wantBtn) {
-              wantBtn.textContent = curSt === 'wanted' ? '♡ Souhaitée' : curSt === 'shipping' ? '📦 En livraison' : '☆ Souhaiter';
+            if (curSt === 'wanted') {
+              div.classList.add('is-wanted');
+              if (wantBtn) { wantBtn.textContent = '♡ Souhaitée'; wantBtn.classList.add('active-want'); }
             }
-            if (splitBtn) {
-              splitBtn.classList.toggle('active-want', curSt === 'wanted');
-              splitBtn.classList.toggle('active-ship', curSt === 'shipping');
-            }
-            div.classList.toggle('is-wanted', curSt === 'wanted');
-            div.classList.toggle('is-shipping', curSt === 'shipping');
-            // Ne pas fermer le popup — l'utilisateur peut sélectionner plusieurs listes
-            wlAfterMutation();
           });
         });
-        // Create new list
+        // Create new list from popup
         var createBtn = popup.querySelector('#enc-popup-create');
         if (createBtn) {
-          createBtn.addEventListener('click', function(ev) {
-            ev.stopPropagation();
+          createBtn.addEventListener('click', function() {
             var name = prompt('Nom de la nouvelle liste :');
             if (name && name.trim()) {
               var newId = createWishlist(name.trim());
               addCardToWishlist(k, newId);
               popup.remove();
+              // Update want button
               var wantBtn = div.querySelector('.btn-enc-want');
-              var splitBtn = div.querySelector('.enc-split-btn');
-              if (state[k] === 'wanted' && wantBtn) {
-                wantBtn.textContent = '♡ Souhaitée';
-                if (splitBtn) splitBtn.classList.add('active-want');
+              var curSt = state[k] || '';
+              if (curSt === 'wanted') {
+                div.classList.add('is-wanted');
+                if (wantBtn) { wantBtn.textContent = '♡ Souhaitée'; wantBtn.classList.add('active-want'); }
               }
-              wlAfterMutation();
             }
           });
         }
-        // Close on outside click
+        // Close popup on outside click
         setTimeout(function() {
           document.addEventListener('click', function closePopup(ev) {
             if (!popup.contains(ev.target) && ev.target !== btn) {
@@ -3059,7 +2526,7 @@ function renderEncyclopedia() {
 }
 
 function setNavActive(id) {
-  ['nav-dashboard','nav-collection','nav-wishlist','nav-encyclopedia','nav-reports'].forEach(function(nid) {
+  ['nav-dashboard','nav-collection','nav-wishlist','nav-encyclopedia'].forEach(function(nid) {
     var el = document.getElementById(nid);
     if (el) el.classList.toggle('active', nid === id);
   });
@@ -3067,7 +2534,7 @@ function setNavActive(id) {
   document.querySelectorAll('#community-nav .nav-btn').forEach(function(b) {
     b.classList.toggle('active', b.id === id);
   });
-  var bnavMap = { 'nav-dashboard':'bnav-dashboard', 'nav-collection':'bnav-collection', 'nav-wishlist':'bnav-wishlist', 'nav-encyclopedia':'bnav-encyclopedia', 'nav-reports':'bnav-encyclopedia' };
+  var bnavMap = { 'nav-dashboard':'bnav-dashboard', 'nav-collection':'bnav-collection', 'nav-wishlist':'bnav-wishlist', 'nav-encyclopedia':'bnav-encyclopedia' };
   ['bnav-dashboard','bnav-collection','bnav-wishlist','bnav-encyclopedia','bnav-sets'].forEach(function(bid) {
     var el = document.getElementById(bid);
     if (el) el.classList.toggle('active', bnavMap[id] === bid);
@@ -3080,7 +2547,7 @@ function setNavActive(id) {
 function renderDashboard() {
   var main = document.getElementById('main');
 
-  // Global stats
+  // Count only tracked cards from DISCOVER_DB
   var totalOwned = 0, totalShipping = 0, totalWanted = 0;
   DISCOVER_DB.forEach(function(s){ s.cards.forEach(function(c){
     var st = state[s.id+'-'+c.num]||'';
@@ -3088,85 +2555,63 @@ function renderDashboard() {
     else if (st==='shipping') totalShipping++;
     else if (st==='wanted') totalWanted++;
   });});
+  var totalTracked = totalOwned + totalShipping + totalWanted;
+
+  // Only sets that have at least one tracked card
+  var trackedSets = DISCOVER_DB.filter(function(d) {
+    return d.cards.some(function(c) {
+      var st = state[d.id+'-'+c.num]||'';
+      return st === 'owned' || st === 'shipping' || st === 'wanted';
+    });
+  });
 
   var html =
     '<div class="dashboard">' +
     '<div class="mobile-topbar"><button class="mobile-hamburger" onclick="openNavMenu()">☰</button><span class="mobile-topbar-title">Dashboard</span></div>' +
     '<div class="page-title">Dashboard</div>' +
     '<div class="dashboard-summary">' +
+      '<span><strong>' + totalTracked + '</strong> cartes suivies</span>' +
       '<span style="color:var(--green)"><strong>' + totalOwned + '</strong> possédées</span>' +
       '<span style="color:var(--blue)"><strong>' + totalShipping + '</strong> en livraison</span>' +
       '<span style="color:var(--orange)"><strong>' + totalWanted + '</strong> souhaitées</span>' +
+      '<span><strong>' + trackedSets.length + '</strong> extensions</span>' +
     '</div>' +
     '<div class="dashboard-grid">';
 
-  if (!wishlists.length) {
-    html += '<div style="text-align:center;padding:40px 20px;color:var(--muted)">' +
-      '<div style="font-size:32px;margin-bottom:12px">♡</div>' +
-      '<div style="font-size:14px">Aucune liste de souhaits</div>' +
-      '<div style="font-size:12px;margin-top:6px">Créez des listes depuis l\'Encyclopédie 📖</div>' +
-    '</div>';
-  } else {
-    wishlists.forEach(function(wl) {
-      html += dashWishlistCard(wl);
+  // Group by SERIES
+  var shownIds = {};
+  SERIES.forEach(function(series) {
+    var dbInSeries = series.ids.map(function(id) {
+      return trackedSets.find(function(d) { return d.id === id; }) ||
+             trackedSets.find(function(d) { return d.id.toLowerCase() === id.toLowerCase(); });
+    }).filter(Boolean);
+    if (!dbInSeries.length) return;
+
+    html += '<div class="dash-series-title">' + series.label + '</div>';
+    dbInSeries.forEach(function(dset) {
+      shownIds[dset.id] = true;
+      html += dashSetCard(dset);
     });
+  });
+
+  // Remaining
+  var remaining = trackedSets.filter(function(d) { return !shownIds[d.id]; });
+  if (remaining.length) {
+    html += '<div class="dash-series-title">Autres</div>';
+    remaining.forEach(function(dset) { html += dashSetCard(dset); });
+  }
+
+  // Empty state
+  if (!trackedSets.length) {
+    html += '<div style="text-align:center;padding:40px 20px;color:var(--muted)">' +
+      '<div style="font-size:32px;margin-bottom:12px">◈</div>' +
+      '<div style="font-size:14px">Aucune carte suivie</div>' +
+      '<div style="font-size:12px;margin-top:6px">Ajoutez des cartes depuis l\'Encyclopédie 📖</div>' +
+    '</div>';
   }
 
   html += '</div></div>';
   main.innerHTML = html;
-}
-
-function dashWishlistCard(wl) {
-  var cards = [];
-  DISCOVER_DB.forEach(function(dset) {
-    dset.cards.forEach(function(c) {
-      var key = dset.id + '-' + c.num;
-      if (!wishlistCards[key] || !wishlistCards[key].includes(wl.id)) return;
-      var st = state[key] || 'missing';
-      cards.push({ dset: dset, c: c, key: key, st: st });
-    });
-  });
-
-  if (!cards.length) return '';
-
-  var nOwned    = cards.filter(function(i){ return i.st==='owned'; }).length;
-  var nShipping = cards.filter(function(i){ return i.st==='shipping'; }).length;
-  var nWanted   = cards.filter(function(i){ return i.st==='wanted'; }).length;
-  var nMissing  = cards.filter(function(i){ return i.st==='missing'; }).length;
-  var total     = cards.length;
-  var pct       = total ? Math.round(nOwned / total * 100) : 0;
-
-  // Sort: owned → shipping → wanted → missing
-  var ORDER = { owned: 0, shipping: 1, wanted: 2, missing: 3 };
-  cards.sort(function(a, b) { return (ORDER[a.st]||3) - (ORDER[b.st]||3); });
-
-  var stripHtml = cards.map(function(i) {
-    var onerr = 'this.style.opacity=0.1;';
-    var src  = i.c.img;
-    var imgTag = src
-      ? '<img src="' + src + '" onload="this.style.opacity=1" onerror="' + onerr + '">'
-      : '';
-    var title = (i.c.fr || i.c.en) + ' — ' + i.dset.id + ' #' + i.c.num;
-    return '<div class="dash-wl-card s-' + i.st + '" title="' + title + '" onclick="event.stopPropagation();openLightbox(\'' + (i.c.img||ser) + '\',\'' + title.replace(/'/g,'') + '\')">' + imgTag + '</div>';
-  }).join('');
-
-  return '<div class="dash-wl-banner">' +
-    '<div class="dash-wl-header" onclick="this.nextElementSibling.nextElementSibling.style.display=this.nextElementSibling.nextElementSibling.style.display===\'none\'?\'block\':\'none\'">' +
-      '<span style="font-size:14px;opacity:0.7">♡</span>' +
-      '<span class="dash-wl-name">' + wl.name + '</span>' +
-      '<div class="dash-wl-counters">' +
-        (nOwned    ? '<span style="color:var(--green)">✓ ' + nOwned + '</span>' : '') +
-        (nShipping ? '<span style="color:var(--blue)">📦 ' + nShipping + '</span>' : '') +
-        (nWanted   ? '<span style="color:var(--orange)">♡ ' + nWanted + '</span>' : '') +
-        (nMissing  ? '<span style="color:var(--muted)">— ' + nMissing + '</span>' : '') +
-        '<span style="color:var(--muted);font-size:10px">' + pct + '%</span>' +
-      '</div>' +
-    '</div>' +
-    '<div class="dash-wl-progress"><div class="dash-wl-progress-fill" style="width:' + pct + '%"></div></div>' +
-    '<div class="dash-wl-strip-wrap">' +
-      '<div class="dash-wl-strip">' + stripHtml + '</div>' +
-    '</div>' +
-  '</div>';
 }
 
 function dashSetCard(dset) {
@@ -3184,7 +2629,11 @@ function dashSetCard(dset) {
   trackedCards.forEach(function(c) {
     var st = state[dset.id+'-'+c.num]||'';
     var cls = st==='owned'?' thumb-owned':st==='shipping'?' thumb-shipping':st==='wanted'?' thumb-wanted':'';
-    thumbsHtml += discoverThumbHtml(dset.id, c.num, c.img, cls);
+    if (c.img) {
+      thumbsHtml += '<div class="dash-thumb'+cls+'"><img src="'+c.img+'" onload="this.style.opacity=1" onerror="this.parentNode.innerHTML=\'<span class=thumb-placeholder>?</span>\'" style="opacity:0;transition:opacity 0.3s"></div>';
+    } else {
+      thumbsHtml += '<div class="dash-thumb'+cls+'"><span class="thumb-placeholder">?</span></div>';
+    }
   });
 
   return '<div class="dash-set-card" onclick="showDashSetDetail(\'' + dset.id + '\')" style="cursor:pointer">' +
@@ -3463,15 +2912,7 @@ function addCardToWishlist(cardKey, wlId) {
 function removeCardFromWishlist(cardKey, wlId) {
   if (!wishlistCards[cardKey]) return;
   wishlistCards[cardKey] = wishlistCards[cardKey].filter(function(id) { return id !== wlId; });
-  if (!wishlistCards[cardKey].length) {
-    delete wishlistCards[cardKey];
-    // Plus dans aucune liste → effacer l'état wanted/shipping
-    if (state[cardKey] === 'wanted' || state[cardKey] === 'shipping') {
-      delete state[cardKey];
-      saveState(); // saveState inclut saveWishlists
-      return;
-    }
-  }
+  if (!wishlistCards[cardKey].length) delete wishlistCards[cardKey];
   saveWishlists();
 }
 function isCardInWishlist(cardKey, wlId) {
@@ -3491,72 +2932,27 @@ let wishlistListFilter = null; // null = all, or wlId string
 let wishlistSearch = '';
 
 function refreshWishlistCounters() {
-  var main = document.getElementById('main');
-  if (!main) return;
   var allItems = getWishlistCards();
   var wantedCount   = allItems.filter(function(i) { return i.status === 'wanted'; }).length;
   var shippingCount = allItems.filter(function(i) { return i.status === 'shipping'; }).length;
   var el;
   el = document.getElementById('wl-count-wanted');   if (el) el.textContent = wantedCount;
   el = document.getElementById('wl-count-shipping'); if (el) el.textContent = shippingCount;
-
-  function wlKeyOf(item) {
-    return item.fromDiscover ? (item.set.id + '-' + item.card.numShort) : stateKey(item.set.id, item.card.numShort, item.card.name);
-  }
-
+  // Per-list counters
   wishlists.forEach(function(wl) {
-    var listCards = allItems.filter(function(i) { return isCardInWishlist(wlKeyOf(i), wl.id); });
+    var listCards = allItems.filter(function(i) {
+      var k = i.fromDiscover ? (i.set.id + '-' + i.card.numShort) : stateKey(i.set.id, i.card.numShort, i.card.name);
+      return isCardInWishlist(k, wl.id);
+    });
     var wW = listCards.filter(function(c) { return c.status === 'wanted'; }).length;
     var wS = listCards.filter(function(c) { return c.status === 'shipping'; }).length;
-
     el = document.querySelector('[data-wl-stat-wanted="' + wl.id + '"]');
-    if (el) { el.textContent = '♡ ' + wW; el.style.display = wW ? '' : 'none'; }
+    if (el) el.textContent = '♡ ' + wW + ' souhaitée' + (wW > 1 ? 's' : '');
     el = document.querySelector('[data-wl-stat-ship="' + wl.id + '"]');
-    if (el) { el.textContent = '📦 ' + wS; el.style.display = wS ? '' : 'none'; }
+    if (el) el.textContent = '📦 ' + wS + ' en livraison';
     el = document.querySelector('[data-wl-stat-total="' + wl.id + '"]');
     if (el) el.textContent = listCards.length + ' carte' + (listCards.length > 1 ? 's' : '');
-
-    // Met à jour le strip de thumbnails (vue repliée)
-    var thumbStrip = main.querySelector('[data-wl-body="' + wl.id + '"] .wl-thumb-strip');
-    if (thumbStrip) {
-      var MAX_THUMBS = 12;
-      var thumbsHtml = '';
-      listCards.slice(0, MAX_THUMBS).forEach(function(item) {
-        var cls = item.status === 'shipping' ? ' thumb-shipping' : ' thumb-wanted';
-        var dset = DISCOVER_DB.find(function(d) { return d.id === item.set.id; });
-        var origCard = dset ? dset.cards.find(function(c2) { return c2.num === item.card.numShort; }) : null;
-        var imgSrc = origCard && origCard.img ? origCard.img : '';
-        thumbsHtml += discoverThumbHtml(item.set.id, item.card.numShort, imgSrc, cls);
-      });
-      if (listCards.length > MAX_THUMBS) {
-        thumbsHtml += '<div class="dash-thumb-more">+' + (listCards.length - MAX_THUMBS) + '</div>';
-      }
-      thumbStrip.innerHTML = thumbsHtml || '<div style="font-size:11px;color:var(--muted);font-style:italic;padding:6px 2px 10px">Aucune carte &#8212; ajoutez-en depuis l\'Encyclop&#233;die</div>';
-    }
   });
-}
-
-// Appelé après toute mutation d'état wishlist.
-// Compteurs + thumbnails = immédiat. Grilles = debounce 350ms (laisse les animations se terminer).
-var _wlGridRefreshTimer = null;
-function wlAfterMutation() {
-  refreshWishlistCounters();
-  clearTimeout(_wlGridRefreshTimer);
-  _wlGridRefreshTimer = setTimeout(function() {
-    var main = document.getElementById('main');
-    if (!main || activeView !== 'wishlist') return;
-    function wlKeyOf2(item) {
-      return item.fromDiscover ? (item.set.id + '-' + item.card.numShort) : stateKey(item.set.id, item.card.numShort, item.card.name);
-    }
-    wishlists.forEach(function(wl) {
-      if (!wlOpenState[wl.id]) return;
-      var grid = main.querySelector('.wl-card-grid[data-wl-id="' + wl.id + '"]');
-      if (!grid) return;
-      var freshCards = getWishlistCards().filter(function(i) { return isCardInWishlist(wlKeyOf2(i), wl.id); });
-      grid.innerHTML = '';
-      _populateWlGrid(main, { wl: wl, cards: freshCards });
-    });
-  }, 350);
 }
 
 function renderWishlist() {
@@ -3607,7 +3003,11 @@ function renderWishlist() {
       var dset = DISCOVER_DB.find(function(d) { return d.id === item.set.id; });
       var origCard = dset ? dset.cards.find(function(c2) { return c2.num === item.card.numShort; }) : null;
       var imgSrc = origCard && origCard.img ? origCard.img : '';
-      thumbsHtml += discoverThumbHtml(item.set.id, item.card.numShort, imgSrc, cls);
+      if (imgSrc) {
+        thumbsHtml += '<div class="dash-thumb' + cls + '"><img src="' + imgSrc + '" onload="this.style.opacity=1" style="opacity:0;transition:opacity 0.3s"></div>';
+      } else {
+        thumbsHtml += '<div class="dash-thumb' + cls + '"><span class="thumb-placeholder">?</span></div>';
+      }
     });
     if (cards.length > MAX_THUMBS) {
       thumbsHtml += '<div class="dash-thumb-more">+' + (cards.length - MAX_THUMBS) + '</div>';
@@ -3625,7 +3025,6 @@ function renderWishlist() {
             (wShip   ? '<span style="color:var(--blue)" data-wl-stat-ship="' + wl.id + '">&#128230; ' + wShip + '</span>'  : '<span data-wl-stat-ship="' + wl.id + '" style="display:none"></span>') +
             '<span style="color:var(--muted)" data-wl-stat-total="' + wl.id + '">' + cards.length + ' carte' + (cards.length > 1 ? 's' : '') + '</span>' +
           '</div>' +
-          '<button class="wl-action-btn wl-sync-prices" data-wl-id="' + wl.id + '" title="Sync prix CM" onclick="event.stopPropagation();startCmSyncWishlist(\'' + wl.id + '\',this)" style="margin-left:4px;font-size:11px;padding:3px 7px">🔄</button>' +
           '<button class="wl-action-btn wl-rename" data-wl-id="' + wl.id + '" title="Renommer" style="margin-left:4px">&#10000;</button>' +
           (wl.id !== DEFAULT_WL_ID ? '<button class="wl-action-btn danger wl-delete" data-wl-id="' + wl.id + '" title="Supprimer">&#10005;</button>' : '') +
           '<span class="wl-chevron">&#9654;</span>' +
@@ -3672,16 +3071,9 @@ function renderWishlist() {
       if (expandedBody)  expandedBody.style.display  = isNowOpen ? '' : 'none';
       if (isNowOpen) {
         var grid = expandedBody && expandedBody.querySelector('.wl-card-grid');
-        if (grid) {
-          // Toujours recalculer depuis l'état courant (pas depuis listData stale)
-          var freshItems = getWishlistCards();
-          function wlKey2(item) {
-            return item.fromDiscover ? (item.set.id + '-' + item.card.numShort) : stateKey(item.set.id, item.card.numShort, item.card.name);
-          }
-          var freshCards = freshItems.filter(function(i) { return isCardInWishlist(wlKey2(i), wlId); });
-          var freshLd = { wl: listData.find(function(l) { return l.wl.id === wlId; }).wl, cards: freshCards };
-          grid.innerHTML = '';
-          _populateWlGrid(main, freshLd);
+        if (grid && !grid.children.length) {
+          var ld = listData.find(function(l) { return l.wl.id === wlId; });
+          if (ld) _populateWlGrid(main, ld);
         }
       }
     });
@@ -3730,7 +3122,7 @@ function _populateWlGrid(main, ld) {
     var origCard = dset ? dset.cards.find(function(c2) { return c2.num === item.card.numShort; }) : null;
     if (!origCard || !dset) return;
     var div = buildDiscoverCardEl(dset, origCard, { showLists: true, removeWlId: ld.wl.id });
-    bindDiscoverCardEvents(div, { fadeOnStatuses: ['shipping', 'owned'], onAfterUpdate: wlAfterMutation });
+    bindDiscoverCardEvents(div, { fadeOnStatuses: ['shipping', 'owned'], onAfterUpdate: refreshWishlistCounters });
     grid.appendChild(div);
   });
 }
@@ -3872,7 +3264,11 @@ function renderUserCollection(username) {
       var thumbsHtml = '';
       cards.slice(0, MAX_THUMBS).forEach(function(item) {
         var cls = item.status === 'owned' ? ' thumb-owned' : item.status === 'shipping' ? ' thumb-shipping' : ' thumb-wanted';
-        thumbsHtml += discoverThumbHtml(item.set.id, item.card.num || item.card.numShort, item.card.img, cls);
+        if (item.card.img) {
+          thumbsHtml += '<div class="dash-thumb' + cls + '"><img src="' + item.card.img + '" onload="this.style.opacity=1" style="opacity:0;transition:opacity 0.3s"></div>';
+        } else {
+          thumbsHtml += '<div class="dash-thumb' + cls + '"><span class="thumb-placeholder">?</span></div>';
+        }
       });
       if (cards.length > MAX_THUMBS) thumbsHtml += '<div class="dash-thumb-more">+' + (cards.length - MAX_THUMBS) + '</div>';
 
@@ -3913,10 +3309,11 @@ function renderUserCollection(username) {
       var condCode = uConditions[item.key] || '';
       var condObj = condCode ? (CM_CONDITIONS || []).find(function(c){ return c.code === condCode; }) : null;
       var condBadge = condObj ? '<span class="condition-badge" style="background:' + condObj.color + '22;color:' + condObj.color + ';position:absolute;bottom:2px;right:2px">' + condObj.code + '</span>' : '';
-      var title = (item.card.fr || item.card.en) + ' (' + item.set.id + ')';
-      var thumb = discoverThumbHtml(item.set.id, item.card.num || item.card.numShort, item.card.img, ' thumb-owned', title);
-      // Inject condBadge + position:relative
-      html += thumb.replace('class="dash-thumb', 'style="position:relative" class="dash-thumb').replace('</div>', condBadge + '</div>');
+      if (item.card.img) {
+        html += '<div class="dash-thumb thumb-owned" style="position:relative"><img src="' + item.card.img + '" onload="this.style.opacity=1" title="' + (item.card.fr || item.card.en) + ' (' + item.set.id + ')" style="opacity:0;transition:opacity 0.3s">' + condBadge + '</div>';
+      } else {
+        html += '<div class="dash-thumb thumb-owned" title="' + (item.card.fr || item.card.en) + '"><span class="thumb-placeholder">?</span></div>';
+      }
     });
     html += '</div>';
   }
@@ -4002,7 +3399,6 @@ function renderSetView() {
         '</div>' +
         '<div class="header-actions">' +
           '<a class="btn-cm-all" href="' + cmSetUrl(set) + '" target="_blank">' + EXT_SVG + ' CardMarket JP+KR</a>' +
-          '<button class="btn-sync-card" id="btn-sync-set-' + set.id + '" onclick="startCmSyncSet(\'' + set.id + '\',this)" style="font-size:10px;padding:6px 10px">⟳ Sync ce set</button>' +
         '</div>' +
       '</div>' +
     '</div>' +
@@ -4128,69 +3524,6 @@ function updateSetStats(set) {
 // ═══════════════════════════════════════════════════════════════════════════
 // LIGHTBOX
 // ═══════════════════════════════════════════════════════════════════════════
-// ═══════════════════════════════════════════════════════════════════════════
-// EXPORT CSV
-// ═══════════════════════════════════════════════════════════════════════════
-function exportToCSV() {
-  var rows = [['Set','Num','Nom FR','Nom EN','Rareté','Statut','Wishlists','Date possession','Condition','Langue','Prix achat','Meilleur prix JP FR','Meilleur prix KR FR','Meilleur prix CN FR','URL CM','URL CM CN']];
-
-  DISCOVER_DB.forEach(function(dset) {
-    dset.cards.forEach(function(c) {
-      var key = dset.id + '-' + c.num;
-      var st  = state[key] || '';
-      if (!st) return; // n'exporte que les cartes trackées
-
-      var wls = (wishlistCards[key] || []).map(function(wlId) {
-        var wl = wishlists.find(function(w) { return w.id === wlId; });
-        return wl ? wl.name : '';
-      }).filter(Boolean).join(' | ');
-
-      var jpFR = prices[key + '__cm_jp_FR'] || '';
-      var krFR = prices[key + '__cm_kr_FR'] || '';
-      var cnFR = prices[key + '__cm_cn_FR'] || '';
-
-      rows.push([
-        dset.id,
-        c.num,
-        c.fr || '',
-        c.en || '',
-        c.rarity || '',
-        st,
-        wls,
-        ownedDates[key] || '',
-        cardConditions[key] || '',
-        cardLangs[key] || '',
-        buyPrices[key] !== undefined ? buyPrices[key] : '',
-        jpFR,
-        krFR,
-        cnFR,
-        c.cmUrl || '',
-        c.cmUrlCn || ''
-      ]);
-    });
-  });
-
-  // Encode CSV (séparateur ; pour Excel FR)
-  var csv = rows.map(function(row) {
-    return row.map(function(cell) {
-      var s = String(cell).replace(/"/g, '""');
-      return (s.includes(';') || s.includes('"') || s.includes('\n')) ? '"' + s + '"' : s;
-    }).join(';');
-  }).join('\r\n');
-
-  // BOM UTF-8 pour Excel
-  var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-  var url  = URL.createObjectURL(blob);
-  var a    = document.createElement('a');
-  var date = new Date().toISOString().slice(0, 10);
-  a.href     = url;
-  a.download = 'ar-tracker-' + (currentUser || 'export') + '-' + date + '.csv';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
 function openLightbox(src, alt) {
   document.getElementById('lightbox-img').src = src;
   document.getElementById('lightbox-img').alt = alt;
@@ -4295,8 +3628,8 @@ function syncUserPayload() {
 }
 function syncPricesPayload() {
   return JSON.stringify({
-    savedAt:    new Date().toISOString(),
-    prices:     prices,
+    savedAt: new Date().toISOString(),
+    prices:  prices,
   });
 }
 
@@ -4314,7 +3647,6 @@ async function syncPush() {
     var userFile = 'user_' + cfg.user + '.json';
     body.files[userFile] = { content: syncUserPayload() };
     body.files['prices.json'] = { content: syncPricesPayload() };
-    body.files['reports.json'] = { content: JSON.stringify({ reports: reports }, null, 2) };
     var url, method;
     if (cfg.gistId) {
       url    = 'https://api.github.com/gists/' + cfg.gistId;
@@ -4384,19 +3716,7 @@ async function syncPull(silent) {
         var pricesPayload = JSON.parse(files['prices.json'].content);
         prices = pricesPayload.prices || {};
         localStorage.setItem('pkmn-ar-prices', JSON.stringify(prices));
-
       } catch(ep) {}
-    }
-
-    // ── Load shared reports ──
-    if (files['reports.json']) {
-      try {
-        var reportsPayload = JSON.parse(files['reports.json'].content);
-        reports = reportsPayload.reports || [];
-        localStorage.setItem('pkmn-ar-reports', JSON.stringify(reports));
-        refreshReportsBadge();
-        if (activeView === 'reports') renderReports();
-      } catch(er) {}
     }
 
     // ── Load own user file ──
@@ -4545,8 +3865,8 @@ function mobileSyncTap() {
 }
 
 // ── Config modal ──────────────────────────────────────────────
-var ALLOWED_USERS = ['xanthin', 'julien', 'remi', 'louise'];
-var USER_DISPLAY = { 'xanthin': 'Xanthin', 'julien': 'Julien', 'remi': 'Rémi', 'louise': 'Louise' };
+var ALLOWED_USERS = ['xanthin', 'julien', 'remi'];
+var USER_DISPLAY = { 'xanthin': 'Xanthin', 'julien': 'Julien', 'remi': 'Rémi' };
 
 function userDisplayName(username) {
   return USER_DISPLAY[username] || username;
@@ -4668,49 +3988,13 @@ document.addEventListener('click', function(e) {
 
 
 // ═══════════════════════════════════════════════════════════════════════════
-// PATCHES — overrides.json → patche img/cmUrl/cmUrlCn dans DISCOVER_DB
-// Les clés de collection (setId-num) ne sont jamais touchées.
-// ═══════════════════════════════════════════════════════════════════════════
-async function loadOverrides() {
-  try {
-    var r = await fetch('./overrides.json', { cache: 'no-store' });
-    if (!r.ok) return;
-    var patches = await r.json();
-    var idx = {};
-    DISCOVER_DB.forEach(function(s) { idx[s.id] = s; });
-    var n = 0;
-    for (var key in patches) {
-      var dash = key.lastIndexOf('-');
-      if (dash < 0) continue;
-      var setId = key.slice(0, dash);
-      var num   = parseInt(key.slice(dash + 1), 10);
-      var set   = idx[setId];
-      if (!set) continue;
-      var card = set.cards.find(function(c) { return parseInt(c.num, 10) === num; });
-      if (!card) continue;
-      var p = patches[key];
-      if (p.img)     card.img     = p.img;
-      if (p.cmUrl)   card.cmUrl   = p.cmUrl;
-      if (p.cmUrlCn) card.cmUrlCn = p.cmUrlCn;
-      n++;
-    }
-    console.log('[patches] ' + n + ' carte(s) patchée(s)');
-  } catch(e) {
-    console.warn('[patches] overrides.json indisponible:', e.message);
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════════════════
 loadState();
-(async function() {
-  await loadOverrides();
-  renderSidebar();
-  renderNavOverlayList('');
-  updateGlobalStats();
-  renderDashboard();
-})();
+renderSidebar();
+renderNavOverlayList('');
+updateGlobalStats();
+renderDashboard();
 
 document.getElementById('set-search').addEventListener('input', function(e) {
   renderSidebar(e.target.value.toLowerCase().trim());
@@ -5479,7 +4763,7 @@ window.addEventListener('message', function(event) {
   if (event.source !== window || !event.data) return;
   var d = event.data;
 
-  // a) Le content script CM confirme qu'il est actif (réponse à un ping)
+  // a) Le content script confirme qu'il est actif (réponse à un ping)
   if (d.__cmBridgeReady) {
     console.log('[Bridge] content_tracker.js détecté ✅');
     _cmBridgeReady = true;
@@ -5490,16 +4774,10 @@ window.addEventListener('message', function(event) {
     return;
   }
 
-  // a2) Pokellector bridge prêt
-  if (d.__pkBridgeReady) { return; }
-
   // b) Réponse directe à un cmSend() — identifiée par reqId
   if (d.__cmBridgeReply) return; // géré dans cmSend() via son propre listener
 
-  // b2) Réponse Pokellector
-  if (d.__pkBridgeReply) return;
-
-  // c) Message spontané du background CM
+  // c) Message spontané du background (PRICE_UPDATED, SYNC_PROGRESS, etc.)
   if (d.__cmBridgeEvent && d.msg) {
     var msg = d.msg;
     console.log('[Bridge] ← background:', msg.type, msg.key || '');
@@ -5520,129 +4798,25 @@ window.addEventListener('message', function(event) {
     if (msg.type === 'PRICE_NOT_FOUND') {
       var h2 = window.__singleSyncHandlers && window.__singleSyncHandlers[msg.key];
       if (h2) { h2(msg); delete window.__singleSyncHandlers[msg.key]; }
-      autoReportSyncError(msg.key);
     }
     if (msg.type === 'SYNC_COMPLETE') {
       cmSyncActive = false;
       updateCmSyncButton(false);
       updateCmSyncProgressBar(msg.count, cmSyncTotal);
-      var errKeys = Object.keys(msg.errors || {});
-      setCmSyncStatus('✅ ' + msg.count + ' prix mis à jour' + (errKeys.length ? ' (' + errKeys.length + ' erreurs)' : ''), 'ok');
-      var didReport = false;
-      errKeys.forEach(function(k) { if (autoReportSyncError(k)) didReport = true; });
-      if (didReport) { saveReports(); refreshReportsBadge(); }
-      if (window.__wlSyncBtn) { window.__wlSyncBtn.textContent = '🔄'; window.__wlSyncBtn.disabled = false; window.__wlSyncBtn = null; }
-      if (activeView !== 'encyclopedia') renderCurrentView();
+      setCmSyncStatus('✅ ' + msg.count + ' prix mis à jour' +
+        (Object.keys(msg.errors || {}).length ? ' (' + Object.keys(msg.errors).length + ' erreurs)' : ''), 'ok');
+      renderCurrentView();
       syncAutoPush();
     }
     if (msg.type === 'SYNC_CANCELLED') {
       cmSyncActive = false;
       updateCmSyncButton(false);
       setCmSyncStatus('Sync annulé', 'err');
-      if (window.__wlSyncBtn) { window.__wlSyncBtn.textContent = '🔄'; window.__wlSyncBtn.disabled = false; window.__wlSyncBtn = null; }
     }
     if (msg.type === 'CAPTCHA_NEEDED') {
       setCmSyncStatus('⚠️ CAPTCHA — résous-le dans l\'onglet CM', 'busy');
     }
   }
-
-  // d) Messages spontanés de l'extension Pokellector image sync
-  if (d.__pkBridgeEvent && d.msg) {
-    var pmsg = d.msg;
-    if (pmsg.type === 'IMAGE_SYNC_PROGRESS') {
-      var pct = pmsg.total > 0 ? Math.round(pmsg.done / pmsg.total * 100) : 0;
-      var pkStatus = document.getElementById('pk-sync-status');
-      if (pkStatus) pkStatus.textContent = '🖼 ' + pmsg.done + ' / ' + pmsg.total + ' (' + pct + '%)';
-    }
-    if (pmsg.type === 'IMAGE_UPDATED') {
-      // Stocke l'image dans localStorage
-      var pkImages = JSON.parse(localStorage.getItem('pkmn-ar-cardimages') || '{}');
-      pkImages[pmsg.key] = pmsg.imageUrl;
-      localStorage.setItem('pkmn-ar-cardimages', JSON.stringify(pkImages));
-      // Met à jour le DOM si la carte est visible
-      var imgEls = document.querySelectorAll('[data-card-key="' + pmsg.key + '"] img');
-      imgEls.forEach(function(img) {
-        if (!img.src || img.naturalWidth === 0) {
-          img.src = pmsg.imageUrl;
-          img.style.opacity = '0';
-          img.onload = function() { img.style.opacity = '1'; };
-        }
-      });
-    }
-    if (pmsg.type === 'IMAGE_SYNC_COMPLETE') {
-      var pkStatus2 = document.getElementById('pk-sync-status');
-      if (pkStatus2) pkStatus2.textContent = '✅ ' + pmsg.count + ' images récupérées';
-      setTimeout(function() { if (pkStatus2) pkStatus2.textContent = ''; }, 4000);
-    }
-    if (pmsg.type === 'GET_MISSING_IMAGES') {
-      // géré dans le listener content_tracker via sendResponse
-    }
-  }
-});
-
-// ── Handler GET_MISSING_IMAGES — répond à l'extension Pokellector ─────────
-window.addEventListener('message', function(event) {
-  if (!event.data || !event.data.__pkGetMissing) return;
-  var pkImages = JSON.parse(localStorage.getItem('pkmn-ar-cardimages') || '{}');
-  var cards = [];
-  var POKELLECTOR_SLUGS = {
-    M4:'Ninja-Spinner-Expansion', M3:'Nihil-Zero-Expansion',
-    M2a:'MEGA-Dream-ex-Expansion', M2:'Inferno-X-Expansion',
-    M1S:'Mega-Symphonia-Expansion', M1L:'Mega-Brave-Expansion',
-    SV11W:'White-Flare-Expansion', SV11B:'Black-Bolt-Expansion',
-    SV10:'Glory-of-Team-Rocket-Expansion',
-    SV9a:'Heat-Wave-Arena-Expansion', SV9:'Battle-Partners-Expansion',
-    SV8a:'Terastal-Festival-ex-Expansion', SV8:'Super-Electric-Breaker-Expansion',
-    SV7a:'Paradise-Dragona-Expansion', SV7:'Stellar-Miracle-Expansion',
-    SV6a:'Night-Wanderer-Expansion', SV6:'Mask-of-Change-Expansion',
-    SV5a:'Crimson-Haze-Expansion', SV5M:'Cyber-Judge-Expansion', SV5K:'Wild-Force-Expansion',
-    SV4a:'Shiny-Treasure-ex-Expansion', SV4K:'Ancient-Roar-Expansion', SV4M:'Future-Flash-Expansion',
-    SV3a:'Raging-Surf-Expansion', SV3:'Ruler-of-the-Black-Flame-Expansion',
-    SV2a:'Pokemon-Card-151-Expansion', SV2D:'Clay-Burst-Expansion', SV2P:'Snow-Hazard-Expansion',
-    SV1a:'Triple-Beat-Expansion', SV1V:'Violet-ex-Expansion', SV1S:'Scarlet-ex-Expansion',
-    SVG:'SV-Promo-Expansion',
-    S12a:'VSTAR-Universe-Expansion', S12:'Paradigm-Trigger-Expansion',
-    S11a:'Incandescent-Arcana-Expansion', S11:'Lost-Abyss-Expansion',
-    S10b:'Pokemon-Go-Expansion', S10a:'Dark-Phantasma-Expansion',
-    S10P:'Space-Juggler-Expansion', S10D:'Time-Gazer-Expansion',
-    S9a:'Battle-Legion-Expansion', S9:'Star-Birth-Expansion',
-    S8b:'VMAX-Climax-Expansion', S8a:'Eevee-Heroes-Expansion', S8:'Fusion-Arts-Expansion',
-    S7R:'Matchless-Fighter-Expansion', S7D:'Blue-Sky-Stream-Expansion',
-    S6a:'Silver-Lance-Expansion', S6H:'Jet-Black-Poltergeist-Expansion',
-    S5a:'Rapid-Strike-Master-Expansion', S5R:'Single-Strike-Master-Expansion',
-    S4a:'Shiny-Star-V-Expansion', S4K:'Vivid-Voltage-Expansion',
-    S3a:'Legendary-Heartbeat-Expansion', S3:'Infinity-Zone-Expansion',
-    S2a:'Explosive-Walker-Expansion',
-    S1W:'Sword-Expansion', S1H:'Shield-Expansion', S1a:'VMAX-Rising-Expansion',
-    SM12a:'Tag-All-Stars-Expansion', SM12:'Super-Burst-Impact-Expansion',
-    SM11b:'Remix-Bout-Expansion', SM11a:'Dream-League-Expansion', SM11:'Miracle-Twin-Expansion',
-    SM10b:'Night-Unison-Expansion', SM10a:'GX-Ultra-Shiny-Expansion', SM10:'Double-Blaze-Expansion',
-    SM9b:'Full-Metal-Wall-Expansion', SM9a:'Tag-Bolt-Expansion', SM9:'Tag-Bolt-Expansion',
-    SM8b:'Sky-Legend-Expansion', SM8a:'Super-Burst-Impact-Expansion', SM8:'Explosive-Impact-Expansion',
-    SM7b:'Fairy-Rise-Expansion', SM7a:'Thunderclap-Spark-Expansion', SM7:'Celestial-Storm-Expansion',
-    SM6b:'Champion-Road-Expansion', SM6a:'Forbidden-Light-Expansion', SM6:'Ultra-Force-Expansion',
-    SM5S:'Ultra-Sun-Expansion', SM5M:'Ultra-Moon-Expansion',
-    SM4S:'GX-Battle-Boost-Expansion', SM4A:'SM-Alter-Genesis-Expansion',
-    SM3H:'Darkness-that-Consumes-Light-Expansion', SM3N:'Awakened-Heroes-Expansion',
-    SM2L:'Alolan-Moonlight-Expansion', SM2K:'Islands-Waiting-for-You-Expansion',
-    SM1S:'Islands-Waiting-for-You-Expansion', SM1M:'Facing-a-New-Trial-Expansion',
-    SMD:'Strength-Expansion-Pack-Dragon-Storm',
-  };
-  DISCOVER_DB.forEach(function(dset) {
-    var slug = POKELLECTOR_SLUGS[dset.id];
-    if (!slug) return;
-    dset.cards.forEach(function(c) {
-      var key = dset.id + '-' + c.num;
-      // Carte manquante si : pas d'img Limitless ET pas encore dans pkImages
-      if (!c.img && !pkImages[key]) {
-        var url = 'https://jp.pokellector.com/' + slug + '/' +
-          (c.en || c.fr || 'Card').replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-') +
-          '-Card-' + c.num;
-        cards.push({ key: key, name: (c.fr || c.en || key), url: url });
-      }
-    });
-  });
-  window.postMessage({ __pkMissingCards: true, cards: cards }, '*');
 });
 
 // ── 2. Envoie un message au background et attend la réponse ──────────────
@@ -5726,35 +4900,33 @@ function pingExtension(callback) {
 
 function isCmExtensionInstalled() { return _cmBridgeReady; }
 
-// Raretés incluses dans le bulk sync automatique
-var BULK_RARITIES = { AR:1, SAR:1, SR:1, MUR:1 };
-
-function buildCardsForSync(setIdFilter, applyRarityFilter) {
-  var cards = [];
+function buildCardsForSync() {
+  var groups = [];
   DISCOVER_DB.forEach(function(dset) {
-    if (setIdFilter && dset.id !== setIdFilter) return;
     dset.cards.forEach(function(card) {
-      if ((!setIdFilter || applyRarityFilter) && !BULK_RARITIES[card.rarity]) return;
-      var key  = dset.id + '-' + card.num;
-      var name = (card.en || card.fr) + ' (' + dset.id + ')';
-      if (card.cmUrl)   cards.push({ key: key,          url: card.cmUrl,   name: name,          isCn: false });
-      if (card.cmUrlCn) cards.push({ key: key + '__cn', url: card.cmUrlCn, name: name + ' [CN]', isCn: true  });
+      var key   = dset.id + '-' + card.num;
+      var name  = (card.en || card.fr) + ' (' + dset.id + ')';
+      var links = [];
+      if (card.cmUrl)   links.push({ url: card.cmUrl,   suffix: '',      isCn: false });
+      if (card.cmUrlCn) links.push({ url: card.cmUrlCn, suffix: '__cn',  isCn: true  });
+      if (links.length) groups.push({ key: key, name: name, links: links });
     });
   });
+  // Also check SETS for cards with cmSlug (legacy)
   SETS.forEach(function(set) {
-    if (setIdFilter && set.id !== setIdFilter) return;
     if (!set.cmSlug) return;
     set.cards.forEach(function(card) {
-      if ((!setIdFilter || applyRarityFilter) && !BULK_RARITIES[card.rarity]) return;
       if (card.noCmJP && !card.cmUrlCn) return;
       var key  = stateKey(set.id, card.numShort, card.name);
-      if (cards.some(function(c) { return c.key === key; })) return;
-      var name = (card.nameEn || card.name) + ' (' + set.id + ')';
-      if (!card.noCmJP) cards.push({ key: key,          url: cmCardUrl(set, card), name: name,          isCn: false });
-      if (!card.noCn && card.cmUrlCn) cards.push({ key: key + '__cn', url: cmCnUrl(card), name: name + ' [CN]', isCn: true });
+      if (groups.some(function(g) { return g.key === key; })) return;
+      var name  = (card.nameEn || card.name) + ' (' + set.id + ')';
+      var links = [];
+      if (!card.noCmJP)                links.push({ url: cmCardUrl(set, card), suffix: '',      isCn: false });
+      if (!card.noCn && card.cmUrlCn)  links.push({ url: cmCnUrl(card),        suffix: '__cn',  isCn: true  });
+      if (links.length) groups.push({ key: key, name: name, links: links });
     });
   });
-  return cards;
+  return groups;
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -5774,67 +4946,46 @@ function syncSingleCard(btn, key, e) {
 
 function _doSyncSingleCard(btn, key) {
 
-  // Trouve la carte dans tous les sets
-  var found    = null;
-  var foundCn  = null;
-
-  // 1. Cherche dans DISCOVER_DB (cartes AR/SAR/SR avec cmUrl direct)
-  DISCOVER_DB.forEach(function(dset) {
-    if (found) return;
-    dset.cards.forEach(function(card) {
-      if (found) return;
-      if (dset.id + '-' + card.num !== key) return;
-      var name = card.en || card.fr || '';
-      if (card.cmUrl) {
-        found = { key: key, url: card.cmUrl, name: name, isCn: false };
-      }
-      if (card.cmUrlCn) {
-        foundCn = { key: key + '__cn', url: card.cmUrlCn, name: name + ' [CN]', isCn: true };
-      }
+  // Construit les liens pour cette carte (JP + CN si dispo)
+  var links = [];
+  SETS.forEach(function(set) {
+    if (links.length || !set.cmSlug) return;
+    set.cards.forEach(function(card) {
+      if (stateKey(set.id, card.numShort, card.name) !== key) return;
+      if (!card.noCmJP)               links.push({ url: cmCardUrl(set, card), suffix: '',      isCn: false });
+      if (!card.noCn && card.cmUrlCn) links.push({ url: cmCnUrl(card),        suffix: '__cn',  isCn: true  });
     });
   });
-
-  // 2. Cherche dans SETS si pas trouvé dans DISCOVER_DB
-  if (!found) {
-    SETS.forEach(function(set) {
-      if (found || !set.cmSlug) return;
-      set.cards.forEach(function(card) {
-        if (found) return;
-        if (stateKey(set.id, card.numShort, card.name) !== key) return;
-        var name = card.nameEn || card.name;
-        if (!card.noCmJP) {
-          found = { key: key, url: cmCardUrl(set, card), name: name };
-        } else if (card.cmUrlCn) {
-          found = { key: key, url: cmCnUrl(card), name: name };
-        }
-        if (!card.noCn && card.cmUrlCn && !card.noCmJP) {
-          foundCn = { key: key + '__cn', url: cmCnUrl(card), name: name + ' [CN]' };
-        }
+  if (!links.length) {
+    DISCOVER_DB.forEach(function(dset) {
+      if (links.length) return;
+      dset.cards.forEach(function(card) {
+        if (dset.id + '-' + card.num !== key) return;
+        if (card.cmUrl)   links.push({ url: card.cmUrl,   suffix: '',     isCn: false });
+        if (card.cmUrlCn) links.push({ url: card.cmUrlCn, suffix: '__cn', isCn: true  });
       });
     });
   }
 
-  if (!found) {
+  if (!links.length) {
     setCmSyncStatus('❌ URL CM introuvable pour cette carte', 'err');
     return;
   }
 
-  var cards = foundCn ? [found, foundCn] : [found];
+  var groups = [{ key: key, name: key, links: links }];
 
   // UI du bouton
   btn.classList.add('syncing');
   btn.textContent = '⟳ …';
   btn.disabled = true;
 
-  // Attend les deux réponses si CN présent
-  var expected = cards.length;
+  // Attend toutes les réponses (JP + CN éventuellement)
+  var expectedKeys = links.map(function(l) { return key + l.suffix; });
   var received = 0;
   var done     = false;
 
   var handler = function(msg) {
-    var isMain = msg.key === key;
-    var isCn   = msg.key === key + '__cn';
-    if (!isMain && !isCn) return;
+    if (expectedKeys.indexOf(msg.key) === -1) return;
     if (msg.type !== 'PRICE_UPDATED' && msg.type !== 'PRICE_NOT_FOUND') return;
 
     received++;
@@ -5844,8 +4995,7 @@ function _doSyncSingleCard(btn, key) {
       applyPriceFromSync(priceKey, msg.data);
     }
 
-    // On attend toutes les réponses avant de fermer le bouton
-    if (received >= expected && !done) {
+    if (received >= expectedKeys.length && !done) {
       done = true;
       clearTimeout(timeout);
       btn.classList.remove('syncing');
@@ -5859,7 +5009,7 @@ function _doSyncSingleCard(btn, key) {
     }
   };
 
-  // Timeout 30s si pas de réponse
+  // Timeout 30s
   var timeout = setTimeout(function() {
     if (done) return;
     done = true;
@@ -5869,13 +5019,12 @@ function _doSyncSingleCard(btn, key) {
     setCmSyncStatus('Timeout — aucune réponse de l\'extension', 'err');
   }, 30000);
 
-  // Enregistre le handler temporaire (écoute main + CN)
+  // Enregistre le handler pour chaque clé attendue
   window.__singleSyncHandlers = window.__singleSyncHandlers || {};
-  window.__singleSyncHandlers[key] = handler;
-  if (foundCn) window.__singleSyncHandlers[key + '__cn'] = handler;
+  expectedKeys.forEach(function(k) { window.__singleSyncHandlers[k] = handler; });
 
-  // Lance le sync (1 ou 2 cartes)
-  cmSend({ type: 'START_SYNC', cards: cards, single: true, extractConfig: CM_EXTRACT_CONFIG }).then(function(r) {
+  // Lance le sync groupé
+  cmSend({ type: 'START_SYNC', cards: groups, single: true, extractConfig: CM_EXTRACT_CONFIG }).then(function(r) {
     if (!r.ok) {
       done = true;
       clearTimeout(timeout);
@@ -5912,93 +5061,6 @@ function startCmSync() {
   });
 }
 
-function startCmSyncSet(setId, btn, applyRarityFilter) {
-  pingExtension(function(ok) {
-    if (!ok) {
-      setCmSyncStatus('❌ Extension non détectée', 'err');
-      return;
-    }
-    if (cmSyncActive) { cancelCmSync(); return; }
-    var cards = buildCardsForSync(setId, applyRarityFilter);
-    if (cards.length === 0) { setCmSyncStatus('Aucune carte AR/SAR/SR/MUR à syncer pour ' + setId, 'err'); return; }
-    cmSyncActive  = true;
-    cmSyncTotal   = cards.length;
-    cmSyncCurrent = 0;
-    if (btn) { btn.textContent = '⟳…'; btn.disabled = true; }
-    setCmSyncStatus('Sync ' + setId + ' — ' + cards.length + ' cartes…', 'busy');
-    updateCmSyncButton(true);
-    updateCmSyncProgressBar(0, cards.length);
-    cmSend({ type: 'START_SYNC', cards: cards, extractConfig: CM_EXTRACT_CONFIG }).then(function(r) {
-      if (!r.ok) {
-        setCmSyncStatus('Erreur extension — réessaie', 'err');
-        cmSyncActive = false;
-        if (btn) { btn.textContent = '⟳'; btn.disabled = false; }
-        updateCmSyncButton(false);
-      }
-    });
-  });
-}
-
-function buildCardsForSyncWishlist(wlId) {
-  var cards = [];
-  Object.keys(wishlistCards).forEach(function(key) {
-    if (!wishlistCards[key].includes(wlId)) return;
-    DISCOVER_DB.forEach(function(dset) {
-      dset.cards.forEach(function(card) {
-        if (dset.id + '-' + card.num !== key) return;
-        var name = (card.en || card.fr) + ' (' + dset.id + ')';
-        if (card.cmUrl)   cards.push({ key: key,          url: card.cmUrl,   name: name,          isCn: false });
-        if (card.cmUrlCn) cards.push({ key: key + '__cn', url: card.cmUrlCn, name: name + ' [CN]', isCn: true  });
-      });
-    });
-    if (!cards.some(function(c) { return c.key === key; })) {
-      SETS.forEach(function(set) {
-        if (!set.cmSlug) return;
-        set.cards.forEach(function(card) {
-          if (stateKey(set.id, card.numShort, card.name) !== key) return;
-          var name = (card.nameEn || card.name) + ' (' + set.id + ')';
-          if (!card.noCmJP) cards.push({ key: key,          url: cmCardUrl(set, card), name: name,          isCn: false });
-          if (!card.noCn && card.cmUrlCn) cards.push({ key: key + '__cn', url: cmCnUrl(card), name: name + ' [CN]', isCn: true });
-        });
-      });
-    }
-  });
-  return cards;
-}
-
-function startCmSyncWishlist(wlId, btn) {
-  pingExtension(function(ok) {
-    if (!ok) {
-      setCmSyncStatus('❌ Extension non détectée — vérifie chrome://extensions', 'err');
-      return;
-    }
-    if (cmSyncActive) { cancelCmSync(); return; }
-    var cards = buildCardsForSyncWishlist(wlId);
-    if (cards.length === 0) {
-      setCmSyncStatus('Aucune carte avec URL CM dans cette wishlist', 'err');
-      return;
-    }
-    cmSyncActive  = true;
-    cmSyncTotal   = cards.length;
-    cmSyncCurrent = 0;
-    var wl = wishlists.find(function(w) { return w.id === wlId; });
-    var wlName = wl ? wl.name : 'Wishlist';
-    if (btn) { btn.textContent = '⟳'; btn.disabled = true; }
-    setCmSyncStatus('Sync "' + wlName + '" — ' + cards.length + ' cartes…', 'busy');
-    updateCmSyncButton(true);
-    updateCmSyncProgressBar(0, cards.length);
-    window.__wlSyncBtn = btn;
-    cmSend({ type: 'START_SYNC', cards: cards, extractConfig: CM_EXTRACT_CONFIG }).then(function(r) {
-      if (!r.ok) {
-        setCmSyncStatus('Erreur extension — réessaie', 'err');
-        cmSyncActive = false;
-        if (btn) { btn.textContent = '🔄'; btn.disabled = false; }
-        updateCmSyncButton(false);
-      }
-    });
-  });
-}
-
 function cancelCmSync() {
   if (!isCmExtensionInstalled()) return;
   cmSend({ type: 'CANCEL_SYNC' });
@@ -6011,7 +5073,6 @@ function cancelCmSync() {
 // Nouveau format v5: data = { jp: { FR: 2.80, DE: 2.59 }, kr: { FR: 1.50 }, cn: { FR: 3.00 } }
 // Ancien format v4:  data = { FR: { price: 2.80, lang: 'jp' }, ... }
 function applyPriceFromSync(key, data) {
-
   var anyUpdate = false;
 
   // Detect format: new = keys are lang codes, old = keys are country codes
@@ -6033,12 +5094,13 @@ function applyPriceFromSync(key, data) {
         prices[slot] = String(parseFloat(price).toFixed(2));
         prices[slot + '__date'] = new Date().toISOString();
         anyUpdate = true;
+        // DOM update
         var row = document.querySelector(
           '.price-country-row[data-price-key="' + key + '"][data-price-country="' + c.code + '"][data-price-lang="' + lang + '"]'
         );
         if (row) {
           var priceEl = row.querySelector('.pcr-price');
-          if (priceEl) { priceEl.textContent = parseFloat(price).toFixed(2); priceEl.classList.remove('empty'); }
+          if (priceEl) { priceEl.textContent = parseFloat(price).toFixed(2) + ' €'; priceEl.classList.remove('empty'); }
           row.classList.add('synced');
           setTimeout(function() { row.classList.remove('synced'); }, 2000);
         }
@@ -6059,38 +5121,13 @@ function applyPriceFromSync(key, data) {
       );
       if (row) {
         var priceEl = row.querySelector('.pcr-price');
-        if (priceEl) { priceEl.textContent = entry.price.toFixed(2); priceEl.classList.remove('empty'); }
+        if (priceEl) { priceEl.textContent = entry.price.toFixed(2) + ' €'; priceEl.classList.remove('empty'); }
         row.classList.add('synced');
         setTimeout(function() { row.classList.remove('synced'); }, 2000);
       }
     });
   }
-  if (anyUpdate) {
-    prices[key + '__syncdate'] = new Date().toISOString();
-    prices[key + '__syncuser'] = currentUser || '';
-    // Update meta DOM element if visible
-    var metaEl = document.querySelector('.pcr-sync-meta[data-sync-key="' + key + '"]');
-    if (metaEl) metaEl.outerHTML = buildPriceSyncMeta(key).replace('class="pcr-sync-meta"', 'class="pcr-sync-meta" data-sync-key="' + key + '"');
-    savePrices(); updateOwnedInfoDelta(key);
-    // ── Mise à jour live des prix dans l'encyclopédie ──
-    var encCard = document.querySelector('.enc-card[data-card-key="' + key + '"]');
-    if (encCard) {
-      var _jp = getBestEncPrice(key, 'jp');
-      var _kr = getBestEncPrice(key, 'kr');
-      var _cn = getBestEncPrice(key, 'cn');
-      var existingRow = encCard.querySelector('.enc-price-row');
-      var _mkCell = function(flag, val) {
-        return '<div class="enc-price-cell"><img src="https://flagcdn.com/w20/' + flag + '.png" style="width:12px;height:8px;object-fit:cover;border-radius:1px;opacity:0.8"><span>' + (val ? val + '€' : '—') + '</span></div>';
-      };
-      var newRow = '<div class="enc-price-row">' + _mkCell('jp',_jp) + _mkCell('kr',_kr) + _mkCell('cn',_cn) + '</div>';
-      if (existingRow) {
-        existingRow.outerHTML = newRow;
-      } else if (_jp || _kr || _cn) {
-        var _body = encCard.querySelector('.card-body');
-        if (_body) _body.insertAdjacentHTML('beforeend', newRow);
-      }
-    }
-  }
+  if (anyUpdate) { savePrices(); updateOwnedInfoDelta(key); }
 }
 
 // Legacy alias — both now use the same unified function
@@ -6314,7 +5351,6 @@ function triggerInstall() {
       <button class="sync-profile-btn" data-user="xanthin" onclick="selectSyncUser(this)" style="flex:1;padding:10px;border-radius:6px;border:2px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;transition:all 0.2s;">👤 Xanthin</button>
       <button class="sync-profile-btn" data-user="julien" onclick="selectSyncUser(this)" style="flex:1;padding:10px;border-radius:6px;border:2px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;transition:all 0.2s;">👤 Julien</button>
       <button class="sync-profile-btn" data-user="remi" onclick="selectSyncUser(this)" style="flex:1;padding:10px;border-radius:6px;border:2px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;transition:all 0.2s;">👤 Rémi</button>
-      <button class="sync-profile-btn" data-user="louise" onclick="selectSyncUser(this)" style="flex:1;padding:10px;border-radius:6px;border:2px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;transition:all 0.2s;">👤 Louise</button>
     </div>
     <input id="sync-user-input" type="hidden" value="">
     <label style="font-size:9px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;">GitHub Token (ghp_…)</label>
