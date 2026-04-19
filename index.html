@@ -1502,26 +1502,42 @@ function buildLangPicker(key) {
 // If the lowest price is exactly 1.00 € (CardMarket placeholder), use the second-lowest instead.
 function getBestCmPrice(key, langOverride) {
   var lang = langOverride || cardLangs[key] || 'jp';
-  // key format: {cardKey}__cm_{lang}_{country}
-  var candidates = [];
-  CM_COUNTRIES.forEach(function(c) {
-    var raw = prices[key + '__cm_' + lang + '_' + c.code];
-    if (!raw) return;
-    var p = parseFloat(raw.split('|')[0]);
-    if (!isNaN(p)) candidates.push({ price: p, country: c.code });
+
+  function bestForLang(l) {
+    var candidates = [];
+    CM_COUNTRIES.forEach(function(c) {
+      var raw = prices[key + '__cm_' + l + '_' + c.code];
+      if (!raw) return;
+      var p = parseFloat(raw.split('|')[0]);
+      if (!isNaN(p)) candidates.push({ price: p, country: c.code, lang: l });
+    });
+    if (!candidates.length) return null;
+    candidates.sort(function(a, b) { return a.price - b.price; });
+    var best = candidates[0];
+    if (best.price === 1.00 && candidates.length > 1) best = candidates[1];
+    return best;
+  }
+
+  // 1. Try selected lang
+  var result = bestForLang(lang);
+  if (result) return result;
+
+  // 2. Fallback: best across all other langs
+  var fallback = null;
+  CM_CARD_LANGS.forEach(function(l) {
+    if (l.code === lang) return;
+    var r = bestForLang(l.code);
+    if (r && (fallback === null || r.price < fallback.price)) fallback = r;
   });
-  if (!candidates.length) return { price: null, country: null };
-  candidates.sort(function(a, b) { return a.price - b.price; });
-  var best = candidates[0];
-  if (best.price === 1.00 && candidates.length > 1) best = candidates[1];
-  return best;
+  return fallback || { price: null, country: null, lang: null };
 }
 
 function buildOwnedInfo(key, card) {
   var buyVal  = buyPrices[key] !== undefined ? parseFloat(buyPrices[key]) : null;
   var lang    = cardLangs[key] || 'jp';
   var _best   = getBestCmPrice(key, lang);
-  var bestPrice = _best.price; var bestCountry = _best.country;
+  var bestPrice = _best.price; var bestCountry = _best.country; var bestLang = _best.lang;
+  var isFallbackLang = bestLang && bestLang !== lang; // prix vient d'une autre langue
 
   var deltaHtml = '<span class="owned-info-val neu">—</span>';
   if (buyVal !== null && bestPrice !== null) {
@@ -1531,18 +1547,14 @@ function buildOwnedInfo(key, card) {
     deltaHtml = '<span class="owned-info-val ' + cls + '">' + sign + delta.toFixed(2) + ' €</span>';
   }
 
-  var langPicker =
-    '<div class="delta-source-toggle">' +
-      '<button class="card-lang-btn' + (lang === 'jp' ? ' active' : '') + '" data-lang-key="' + key + '" data-lang-val="jp">' +
-        '<img src="https://flagcdn.com/w20/jp.png" alt="JP"> JP' +
-      '</button>' +
-      '<button class="card-lang-btn' + (lang === 'kr' ? ' active' : '') + '" data-lang-key="' + key + '" data-lang-val="kr">' +
-        '<img src="https://flagcdn.com/w20/kr.png" alt="KR"> KR' +
-      '</button>' +
-      '<button class="card-lang-btn' + (lang === 'cn' ? ' active' : '') + '" data-lang-key="' + key + '" data-lang-val="cn">' +
-        '<img src="https://flagcdn.com/w20/cn.png" alt="CN"> CN' +
-      '</button>' +
-    '</div>';
+  // Lang picker généré depuis CM_CARD_LANGS
+  var langPicker = '<div class="delta-source-toggle">';
+  CM_CARD_LANGS.forEach(function(l) {
+    langPicker += '<button class="card-lang-btn' + (lang === l.code ? ' active' : '') + '" data-lang-key="' + key + '" data-lang-val="' + l.code + '">' +
+      '<img src="https://flagcdn.com/w20/' + l.flag + '.png" alt="' + l.label + '"> ' + l.label +
+    '</button>';
+  });
+  langPicker += '</div>';
 
   var ownedDateStr = ownedDates[key] || '';
   var ownedDateDisplay = ownedDateStr ? new Date(ownedDateStr + 'T00:00:00').toLocaleDateString('fr-FR') : '—';
@@ -1578,7 +1590,11 @@ function buildOwnedInfo(key, card) {
     '<div class="owned-info-row">' +
       '<span class="owned-info-label">Meilleur CM</span>' +
       '<span class="owned-info-val cm-fr-val" data-fr-key="' + key + '">' +
-        (bestPrice !== null ? bestPrice.toFixed(2) + ' €' + (bestCountry ? ' <span style="opacity:0.5;font-size:8px">' + bestCountry + '</span>' : '') : '—') +
+        (bestPrice !== null
+          ? bestPrice.toFixed(2) + ' €' +
+            (bestCountry ? ' <span style="opacity:0.5;font-size:8px">' + bestCountry + '</span>' : '') +
+            (isFallbackLang ? ' <span style="opacity:0.45;font-size:8px;color:var(--accent2)">(' + bestLang.toUpperCase() + ')</span>' : '')
+          : '—') +
       '</span>' +
     '</div>' +
     '<div class="owned-info-row">' +
@@ -1591,12 +1607,17 @@ function buildOwnedInfo(key, card) {
 function updateOwnedInfoDelta(key) {
   var buyVal  = buyPrices[key] !== undefined ? parseFloat(buyPrices[key]) : null;
   var lang    = cardLangs[key] || 'jp';
-  var _best = getBestCmPrice(key, lang);
-  var bestPrice = _best.price; var bestCountry = _best.country;
+  var _best   = getBestCmPrice(key, lang);
+  var bestPrice = _best.price; var bestCountry = _best.country; var bestLang = _best.lang;
+  var isFallback = bestLang && bestLang !== lang;
 
   // Update best price display
   document.querySelectorAll('.cm-fr-val[data-fr-key="' + key + '"]').forEach(function(el) {
-    el.innerHTML = bestPrice !== null ? bestPrice.toFixed(2) + ' € <span style="opacity:0.5;font-size:8px">' + bestCountry + '</span>' : '—';
+    el.innerHTML = bestPrice !== null
+      ? bestPrice.toFixed(2) + ' €' +
+        (bestCountry ? ' <span style="opacity:0.5;font-size:8px">' + bestCountry + '</span>' : '') +
+        (isFallback   ? ' <span style="opacity:0.45;font-size:8px;color:var(--accent2)">(' + bestLang.toUpperCase() + ')</span>' : '')
+      : '—';
   });
 
   // Update delta display
