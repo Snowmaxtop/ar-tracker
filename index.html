@@ -254,10 +254,10 @@
   .btn-cm-cn.auto:hover { opacity: 1; }
   .btn-cm-fr { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.35); color: #60a5fa; }
   .btn-cm-fr:hover { background: rgba(59,130,246,0.2); border-color: rgba(59,130,246,0.55); }
-  .btn-cm-card svg { width: 9px; height: 9px; }
-
   .card-cm-links { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; align-items: center; }
   .card-cm-links .lbl { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing:.05em; flex-basis:100%; margin-bottom:1px; }
+  .btn-cm-card svg { width: 9px; height: 9px; }
+
   .btn-sync-card {
     display: inline-flex; align-items: center; justify-content: center; gap: 4px;
     font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.1em; padding: 5px 8px;
@@ -1636,9 +1636,7 @@ function renderCard(set, card, showSetBadge) {
         (!card.noCmJP ? '<a class="btn-cm-card" href="' + cmCardUrl(set, card) + '" target="_blank">' + EXT_SVG + ' JP &amp; KR</a>' : '') +
         (function() {
           if (card.noCn) return '';
-          if (card.cmUrlCn) {
-            return '<a class="btn-cm-cn btn-cm-card" href="' + card.cmUrlCn + '" target="_blank">' + EXT_SVG + ' CN</a>';
-          }
+          if (card.cmUrlCn) return '<a class="btn-cm-cn btn-cm-card" href="' + card.cmUrlCn + '" target="_blank">' + EXT_SVG + ' CN</a>';
           var q = encodeURIComponent(card.nameEn || card.name);
           return '<a class="btn-cm-cn btn-cm-card auto" href="https://www.cardmarket.com/en/Pokemon/Products/Singles?searchString=' + q + '&language=3" target="_blank" title="Recherche auto CN">' + EXT_SVG + ' CN?</a>';
         })() +
@@ -4792,7 +4790,6 @@ window.addEventListener('message', function(event) {
     }
     if (msg.type === 'PRICE_UPDATED') {
       console.log('[Bridge] PRICE_UPDATED pour', msg.key, msg.data);
-      // Strip __cn / __fr suffix if present (legacy)
       var priceKey = msg.key.replace(/__cn$/, '').replace(/__fr$/, '');
       applyPriceFromSync(priceKey, msg.data);
       var h = window.__singleSyncHandlers && (window.__singleSyncHandlers[msg.key] || window.__singleSyncHandlers[priceKey]);
@@ -4924,9 +4921,9 @@ function buildCardsForSync() {
       if (groups.some(function(g) { return g.key === key; })) return;
       var name  = (card.nameEn || card.name) + ' (' + set.id + ')';
       var links = [];
-      if (!card.noCmJP)                links.push({ url: cmCardUrl(set, card), suffix: '',      isCn: false });
-      if (!card.noCn && card.cmUrlCn)  links.push({ url: cmCnUrl(card),        suffix: '__cn',  isCn: true  });
-      if (card.cmUrlFr)                links.push({ url: card.cmUrlFr,          suffix: '__fr',  isCn: false });
+      if (!card.noCmJP)               links.push({ url: cmCardUrl(set, card), suffix: '',      isCn: false });
+      if (!card.noCn && card.cmUrlCn) links.push({ url: cmCnUrl(card),        suffix: '__cn',  isCn: true  });
+      if (card.cmUrlFr)               links.push({ url: card.cmUrlFr,          suffix: '__fr',  isCn: false });
       if (links.length) groups.push({ key: key, name: name, links: links });
     });
   });
@@ -4950,15 +4947,14 @@ function syncSingleCard(btn, key, e) {
 
 function _doSyncSingleCard(btn, key) {
 
-  // Construit les liens disponibles pour cette carte
   var links = [];
   SETS.forEach(function(set) {
     if (links.length || !set.cmSlug) return;
     set.cards.forEach(function(card) {
       if (stateKey(set.id, card.numShort, card.name) !== key) return;
-      if (!card.noCmJP)               links.push({ url: cmCardUrl(set, card), suffix: '',     isCn: false });
-      if (!card.noCn && card.cmUrlCn) links.push({ url: cmCnUrl(card),        suffix: '__cn', isCn: true  });
-      if (card.cmUrlFr)               links.push({ url: card.cmUrlFr,          suffix: '__fr', isCn: false });
+      if (!card.noCmJP)               links.push({ url: cmCardUrl(set, card), suffix: '',      isCn: false });
+      if (!card.noCn && card.cmUrlCn) links.push({ url: cmCnUrl(card),        suffix: '__cn',  isCn: true  });
+      if (card.cmUrlFr)               links.push({ url: card.cmUrlFr,          suffix: '__fr',  isCn: false });
     });
   });
   if (!links.length) {
@@ -4966,9 +4962,9 @@ function _doSyncSingleCard(btn, key) {
       if (links.length) return;
       dset.cards.forEach(function(card) {
         if (dset.id + '-' + card.num !== key) return;
-        if (card.cmUrl)   links.push({ url: card.cmUrl,   suffix: '',     isCn: false });
-        if (card.cmUrlCn) links.push({ url: card.cmUrlCn, suffix: '__cn', isCn: true  });
-        if (card.cmUrlFr) links.push({ url: card.cmUrlFr, suffix: '__fr', isCn: false });
+        if (card.cmUrl)   links.push({ url: card.cmUrl,   suffix: '',      isCn: false });
+        if (card.cmUrlCn) links.push({ url: card.cmUrlCn, suffix: '__cn',  isCn: true  });
+        if (card.cmUrlFr) links.push({ url: card.cmUrlFr, suffix: '__fr',  isCn: false });
       });
     });
   }
@@ -4978,12 +4974,10 @@ function _doSyncSingleCard(btn, key) {
     return;
   }
 
-  // UI du bouton
   btn.classList.add('syncing');
   btn.textContent = '⟳ …';
   btn.disabled = true;
 
-  // Attend toutes les réponses (JP + CN + FR si dispo)
   var expectedKeys = links.map(function(l) { return key + l.suffix; });
   var received = 0;
   var done = false;
@@ -4993,7 +4987,6 @@ function _doSyncSingleCard(btn, key) {
     if (msg.type !== 'PRICE_UPDATED' && msg.type !== 'PRICE_NOT_FOUND') return;
     received++;
     if (msg.type === 'PRICE_UPDATED') {
-      // Strip suffix pour la clé de stockage prix
       var priceKey = msg.key.replace(/__cn$/, '').replace(/__fr$/, '');
       applyPriceFromSync(priceKey, msg.data);
     }
