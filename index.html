@@ -1434,7 +1434,7 @@ const CM_EXTRACT_CONFIG = {
   locationPrefix:'Item location: ',
   langAttr:      'aria-label',
   langMap: {
-    'Japanese':'jp','Korean':'kr','Chinese':'cn','English':'gb',
+    'Japanese':'jp','Korean':'kr','Chinese':'cn','S-Chinese':'cn','T-Chinese':'cn','English':'gb',
     'French':'fr','German':'de','Spanish':'es','Italian':'it',
     'Portuguese':'pt','Dutch':'nl','Polish':'pl','Russian':'ru',
   },
@@ -1650,14 +1650,14 @@ function renderCard(set, card, showSetBadge) {
       '</div>' +
       ((!card.noCmJP || !card.noCn || card.cmUrlFr) ? '<div class="card-cm-links">' +
         '<span class="lbl">Ouvrir sur CM</span>' +
-        (!card.noCmJP ? '<a class="btn-cm-card" href="' + cmCardUrl(set, card) + '" target="_blank">' + EXT_SVG + ' JP &amp; KR</a>' : '') +
+        (!card.noCmJP ? '<a class="btn-cm-card" href="' + cmCardUrl(set, card) + '#cmkey=' + key + '" target="_blank">' + EXT_SVG + ' JP &amp; KR</a>' : '') +
         (function() {
           if (card.noCn) return '';
-          if (card.cmUrlCn) return '<a class="btn-cm-cn btn-cm-card" href="' + card.cmUrlCn + '" target="_blank">' + EXT_SVG + ' CN</a>';
+          if (card.cmUrlCn) return '<a class="btn-cm-cn btn-cm-card" href="' + card.cmUrlCn + '#cmkey=' + key + '__cn" target="_blank">' + EXT_SVG + ' CN</a>';
           var q = encodeURIComponent(card.nameEn || card.name);
           return '<a class="btn-cm-cn btn-cm-card auto" href="https://www.cardmarket.com/en/Pokemon/Products/Singles?searchString=' + q + '&language=3" target="_blank" title="Recherche auto CN">' + EXT_SVG + ' CN?</a>';
         })() +
-        (card.cmUrlFr ? '<a class="btn-cm-fr btn-cm-card" href="' + card.cmUrlFr + '" target="_blank">' + EXT_SVG + ' FR</a>' : '') +
+        (card.cmUrlFr ? '<a class="btn-cm-fr btn-cm-card" href="' + card.cmUrlFr + '#cmkey=' + key + '__fr" target="_blank">' + EXT_SVG + ' FR</a>' : '') +
       '</div>' : '') +
       (!card.noCmJP || card.cmUrlCn || card.cmUrlFr ? '<div class="card-actions">' +
         '<button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\',event)" style="width:100%">⟳ Sync prix CM</button>' +
@@ -1695,9 +1695,9 @@ function buildDiscoverCardEl(dset, c, opts) {
 
   // CM links — boutons "ouvrir sur CM" (restent ouverts)
   var cmLinksHtml = '';
-  if (c.cmUrl)   cmLinksHtml += '<a class="btn-cm-card" href="' + c.cmUrl + '" target="_blank">' + EXT_SVG + ' JP &amp; KR</a>';
-  if (c.cmUrlCn) cmLinksHtml += '<a class="btn-cm-cn btn-cm-card" href="' + c.cmUrlCn + '" target="_blank">' + EXT_SVG + ' CN</a>';
-  if (c.cmUrlFr) cmLinksHtml += '<a class="btn-cm-fr btn-cm-card" href="' + c.cmUrlFr + '" target="_blank">' + EXT_SVG + ' FR</a>';
+  if (c.cmUrl)   cmLinksHtml += '<a class="btn-cm-card" href="' + c.cmUrl + '#cmkey=' + key + '" target="_blank">' + EXT_SVG + ' JP &amp; KR</a>';
+  if (c.cmUrlCn) cmLinksHtml += '<a class="btn-cm-cn btn-cm-card" href="' + c.cmUrlCn + '#cmkey=' + key + '__cn" target="_blank">' + EXT_SVG + ' CN</a>';
+  if (c.cmUrlFr) cmLinksHtml += '<a class="btn-cm-fr btn-cm-card" href="' + c.cmUrlFr + '#cmkey=' + key + '__fr" target="_blank">' + EXT_SVG + ' FR</a>';
 
   // Price table — adapt card object for buildCountryPriceFields
   var fakeCard = { noCn: !c.cmUrlCn, cmUrlCn: c.cmUrlCn || null };
