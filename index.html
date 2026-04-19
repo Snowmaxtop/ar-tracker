@@ -3887,8 +3887,8 @@ function mobileSyncTap() {
 }
 
 // ── Config modal ──────────────────────────────────────────────
-var ALLOWED_USERS = ['xanthin', 'julien', 'remi'];
-var USER_DISPLAY = { 'xanthin': 'Xanthin', 'julien': 'Julien', 'remi': 'Rémi' };
+var ALLOWED_USERS = ['xanthin', 'julien', 'remi', 'louise'];
+var USER_DISPLAY = { 'xanthin': 'Xanthin', 'julien': 'Julien', 'remi': 'Rémi', 'louise': 'Louise' };
 
 function userDisplayName(username) {
   return USER_DISPLAY[username] || username;
@@ -5364,6 +5364,7 @@ function triggerInstall() {
       <button class="sync-profile-btn" data-user="xanthin" onclick="selectSyncUser(this)" style="flex:1;padding:10px;border-radius:6px;border:2px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;transition:all 0.2s;">👤 Xanthin</button>
       <button class="sync-profile-btn" data-user="julien" onclick="selectSyncUser(this)" style="flex:1;padding:10px;border-radius:6px;border:2px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;transition:all 0.2s;">👤 Julien</button>
       <button class="sync-profile-btn" data-user="remi" onclick="selectSyncUser(this)" style="flex:1;padding:10px;border-radius:6px;border:2px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;transition:all 0.2s;">👤 Rémi</button>
+      <button class="sync-profile-btn" data-user="louise" onclick="selectSyncUser(this)" style="flex:1;padding:10px;border-radius:6px;border:2px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;transition:all 0.2s;">👤 Louise</button>
     </div>
     <input id="sync-user-input" type="hidden" value="">
     <label style="font-size:9px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;">GitHub Token (ghp_…)</label>
