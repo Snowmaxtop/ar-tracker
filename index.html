@@ -1502,7 +1502,6 @@ function buildLangPicker(key) {
 // If the lowest price is exactly 1.00 € (CardMarket placeholder), use the second-lowest instead.
 function getBestCmPrice(key, langOverride) {
   var lang = langOverride || cardLangs[key] || 'jp';
-
   function bestForLang(l) {
     var candidates = [];
     CM_COUNTRIES.forEach(function(c) {
@@ -1517,12 +1516,8 @@ function getBestCmPrice(key, langOverride) {
     if (best.price === 1.00 && candidates.length > 1) best = candidates[1];
     return best;
   }
-
-  // 1. Try selected lang
   var result = bestForLang(lang);
   if (result) return result;
-
-  // 2. Fallback: best across all other langs
   var fallback = null;
   CM_CARD_LANGS.forEach(function(l) {
     if (l.code === lang) return;
@@ -1535,9 +1530,8 @@ function getBestCmPrice(key, langOverride) {
 function buildOwnedInfo(key, card) {
   var buyVal  = buyPrices[key] !== undefined ? parseFloat(buyPrices[key]) : null;
   var lang    = cardLangs[key] || 'jp';
-  var _best   = getBestCmPrice(key, lang);
-  var bestPrice = _best.price; var bestCountry = _best.country; var bestLang = _best.lang;
-  var isFallbackLang = bestLang && bestLang !== lang; // prix vient d'une autre langue
+
+  var bestPrice = _best.price; var bestCountry = _best.country;
 
   var deltaHtml = '<span class="owned-info-val neu">—</span>';
   if (buyVal !== null && bestPrice !== null) {
@@ -1547,12 +1541,14 @@ function buildOwnedInfo(key, card) {
     deltaHtml = '<span class="owned-info-val ' + cls + '">' + sign + delta.toFixed(2) + ' €</span>';
   }
 
+  var _best   = getBestCmPrice(key, lang);
+  var bestLang = _best.lang;
+  var isFallbackLang = bestLang && bestLang !== lang;
   // Lang picker généré depuis CM_CARD_LANGS
   var langPicker = '<div class="delta-source-toggle">';
   CM_CARD_LANGS.forEach(function(l) {
     langPicker += '<button class="card-lang-btn' + (lang === l.code ? ' active' : '') + '" data-lang-key="' + key + '" data-lang-val="' + l.code + '">' +
-      '<img src="https://flagcdn.com/w20/' + l.flag + '.png" alt="' + l.label + '"> ' + l.label +
-    '</button>';
+      '<img src="https://flagcdn.com/w20/' + l.flag + '.png" alt="' + l.label + '"> ' + l.label + '</button>';
   });
   langPicker += '</div>';
 
@@ -1608,15 +1604,15 @@ function updateOwnedInfoDelta(key) {
   var buyVal  = buyPrices[key] !== undefined ? parseFloat(buyPrices[key]) : null;
   var lang    = cardLangs[key] || 'jp';
   var _best   = getBestCmPrice(key, lang);
-  var bestPrice = _best.price; var bestCountry = _best.country; var bestLang = _best.lang;
-  var isFallback = bestLang && bestLang !== lang;
+  var bestPrice = _best.price; var bestCountry = _best.country; var bestLang2 = _best.lang;
+  var isFallback = bestLang2 && bestLang2 !== lang;
 
   // Update best price display
   document.querySelectorAll('.cm-fr-val[data-fr-key="' + key + '"]').forEach(function(el) {
     el.innerHTML = bestPrice !== null
       ? bestPrice.toFixed(2) + ' €' +
         (bestCountry ? ' <span style="opacity:0.5;font-size:8px">' + bestCountry + '</span>' : '') +
-        (isFallback   ? ' <span style="opacity:0.45;font-size:8px;color:var(--accent2)">(' + bestLang.toUpperCase() + ')</span>' : '')
+        (isFallback ? ' <span style="opacity:0.45;font-size:8px;color:var(--accent2)">(' + bestLang2.toUpperCase() + ')</span>' : '')
       : '—';
   });
 
@@ -3887,8 +3883,8 @@ function mobileSyncTap() {
 }
 
 // ── Config modal ──────────────────────────────────────────────
-var ALLOWED_USERS = ['xanthin', 'julien', 'remi', 'louise'];
-var USER_DISPLAY = { 'xanthin': 'Xanthin', 'julien': 'Julien', 'remi': 'Rémi', 'louise': 'Louise' };
+var ALLOWED_USERS = ['xanthin', 'julien', 'remi'];
+var USER_DISPLAY = { 'xanthin': 'Xanthin', 'julien': 'Julien', 'remi': 'Rémi' };
 
 function userDisplayName(username) {
   return USER_DISPLAY[username] || username;
@@ -4811,8 +4807,9 @@ window.addEventListener('message', function(event) {
     }
     if (msg.type === 'PRICE_UPDATED') {
       console.log('[Bridge] PRICE_UPDATED pour', msg.key, msg.data);
+      var forceLang = msg.key.endsWith('__cn') ? 'cn' : msg.key.endsWith('__fr') ? 'fr' : null;
       var priceKey = msg.key.replace(/__cn$/, '').replace(/__fr$/, '');
-      applyPriceFromSync(priceKey, msg.data);
+      applyPriceFromSync(priceKey, msg.data, forceLang);
       var h = window.__singleSyncHandlers && (window.__singleSyncHandlers[msg.key] || window.__singleSyncHandlers[priceKey]);
       if (h) { h(msg); }
     }
@@ -4928,9 +4925,9 @@ function buildCardsForSync() {
       var key   = dset.id + '-' + card.num;
       var name  = (card.en || card.fr) + ' (' + dset.id + ')';
       var links = [];
-      if (card.cmUrl)   links.push({ url: card.cmUrl,   suffix: '',      isCn: false });
-      if (card.cmUrlCn) links.push({ url: card.cmUrlCn, suffix: '__cn',  isCn: true  });
-      if (card.cmUrlFr) links.push({ url: card.cmUrlFr, suffix: '__fr',  isCn: false });
+      if (card.cmUrl)   links.push({ url: card.cmUrl,   suffix: '',     isCn: false });
+      if (card.cmUrlCn) links.push({ url: card.cmUrlCn, suffix: '__cn', isCn: true  });
+      if (card.cmUrlFr) links.push({ url: card.cmUrlFr, suffix: '__fr', isCn: false });
       if (links.length) groups.push({ key: key, name: name, links: links });
     });
   });
@@ -4942,9 +4939,9 @@ function buildCardsForSync() {
       if (groups.some(function(g) { return g.key === key; })) return;
       var name  = (card.nameEn || card.name) + ' (' + set.id + ')';
       var links = [];
-      if (!card.noCmJP)               links.push({ url: cmCardUrl(set, card), suffix: '',      isCn: false });
-      if (!card.noCn && card.cmUrlCn) links.push({ url: cmCnUrl(card),        suffix: '__cn',  isCn: true  });
-      if (card.cmUrlFr)               links.push({ url: card.cmUrlFr,          suffix: '__fr',  isCn: false });
+      if (!card.noCmJP)               links.push({ url: cmCardUrl(set, card), suffix: '',     isCn: false });
+      if (!card.noCn && card.cmUrlCn) links.push({ url: cmCnUrl(card),        suffix: '__cn', isCn: true  });
+      if (card.cmUrlFr)               links.push({ url: card.cmUrlFr,          suffix: '__fr', isCn: false });
       if (links.length) groups.push({ key: key, name: name, links: links });
     });
   });
@@ -4973,9 +4970,9 @@ function _doSyncSingleCard(btn, key) {
     if (links.length || !set.cmSlug) return;
     set.cards.forEach(function(card) {
       if (stateKey(set.id, card.numShort, card.name) !== key) return;
-      if (!card.noCmJP)               links.push({ url: cmCardUrl(set, card), suffix: '',      isCn: false });
-      if (!card.noCn && card.cmUrlCn) links.push({ url: cmCnUrl(card),        suffix: '__cn',  isCn: true  });
-      if (card.cmUrlFr)               links.push({ url: card.cmUrlFr,          suffix: '__fr',  isCn: false });
+      if (!card.noCmJP)               links.push({ url: cmCardUrl(set, card), suffix: '',     isCn: false });
+      if (!card.noCn && card.cmUrlCn) links.push({ url: cmCnUrl(card),        suffix: '__cn', isCn: true  });
+      if (card.cmUrlFr)               links.push({ url: card.cmUrlFr,          suffix: '__fr', isCn: false });
     });
   });
   if (!links.length) {
@@ -4983,9 +4980,9 @@ function _doSyncSingleCard(btn, key) {
       if (links.length) return;
       dset.cards.forEach(function(card) {
         if (dset.id + '-' + card.num !== key) return;
-        if (card.cmUrl)   links.push({ url: card.cmUrl,   suffix: '',      isCn: false });
-        if (card.cmUrlCn) links.push({ url: card.cmUrlCn, suffix: '__cn',  isCn: true  });
-        if (card.cmUrlFr) links.push({ url: card.cmUrlFr, suffix: '__fr',  isCn: false });
+        if (card.cmUrl)   links.push({ url: card.cmUrl,   suffix: '',     isCn: false });
+        if (card.cmUrlCn) links.push({ url: card.cmUrlCn, suffix: '__cn', isCn: true  });
+        if (card.cmUrlFr) links.push({ url: card.cmUrlFr, suffix: '__fr', isCn: false });
       });
     });
   }
@@ -5008,8 +5005,9 @@ function _doSyncSingleCard(btn, key) {
     if (msg.type !== 'PRICE_UPDATED' && msg.type !== 'PRICE_NOT_FOUND') return;
     received++;
     if (msg.type === 'PRICE_UPDATED') {
+      var forceLang = msg.key.endsWith('__cn') ? 'cn' : msg.key.endsWith('__fr') ? 'fr' : null;
       var priceKey = msg.key.replace(/__cn$/, '').replace(/__fr$/, '');
-      applyPriceFromSync(priceKey, msg.data);
+      applyPriceFromSync(priceKey, msg.data, forceLang);
     }
     if (received >= expectedKeys.length && !done) {
       done = true;
@@ -5049,6 +5047,7 @@ function _doSyncSingleCard(btn, key) {
   });
 }
 
+
 function startCmSync() {
   pingExtension(function(ok) {
     if (!ok) {
@@ -5085,7 +5084,7 @@ function cancelCmSync() {
 // Applique les prix reçus du sync extension
 // Nouveau format v5: data = { jp: { FR: 2.80, DE: 2.59 }, kr: { FR: 1.50 }, cn: { FR: 3.00 } }
 // Ancien format v4:  data = { FR: { price: 2.80, lang: 'jp' }, ... }
-function applyPriceFromSync(key, data) {
+function applyPriceFromSync(key, data, forceLang) {
   var anyUpdate = false;
 
   // Detect format: new = keys are lang codes, old = keys are country codes
@@ -5097,8 +5096,27 @@ function applyPriceFromSync(key, data) {
 
   if (isNewFormat) {
     // v5 format: { lang: { country: price, ... }, ... }
-    Object.keys(data).forEach(function(lang) {
-      var countries = data[lang];
+    // Si forceLang est défini (ex: __fr, __cn), on regroupe tous les prix sous cette langue
+    // car CM peut retourner 'gb' ou autre pour une page de cartes FR/CN
+    var effectiveData = data;
+    if (forceLang) {
+      var merged = {};
+      Object.keys(data).forEach(function(lang) {
+        var countries = data[lang];
+        if (!countries || typeof countries !== 'object') return;
+        if (!merged[forceLang]) merged[forceLang] = {};
+        Object.keys(countries).forEach(function(country) {
+          var p = countries[country];
+          if (p === null || p === undefined) return;
+          if (merged[forceLang][country] === undefined || p < merged[forceLang][country]) {
+            merged[forceLang][country] = p;
+          }
+        });
+      });
+      effectiveData = merged;
+    }
+    Object.keys(effectiveData).forEach(function(lang) {
+      var countries = effectiveData[lang];
       if (!countries || typeof countries !== 'object') return;
       CM_COUNTRIES.forEach(function(c) {
         var price = countries[c.code];
@@ -5364,7 +5382,6 @@ function triggerInstall() {
       <button class="sync-profile-btn" data-user="xanthin" onclick="selectSyncUser(this)" style="flex:1;padding:10px;border-radius:6px;border:2px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;transition:all 0.2s;">👤 Xanthin</button>
       <button class="sync-profile-btn" data-user="julien" onclick="selectSyncUser(this)" style="flex:1;padding:10px;border-radius:6px;border:2px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;transition:all 0.2s;">👤 Julien</button>
       <button class="sync-profile-btn" data-user="remi" onclick="selectSyncUser(this)" style="flex:1;padding:10px;border-radius:6px;border:2px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;transition:all 0.2s;">👤 Rémi</button>
-      <button class="sync-profile-btn" data-user="louise" onclick="selectSyncUser(this)" style="flex:1;padding:10px;border-radius:6px;border:2px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;transition:all 0.2s;">👤 Louise</button>
     </div>
     <input id="sync-user-input" type="hidden" value="">
     <label style="font-size:9px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;">GitHub Token (ghp_…)</label>
