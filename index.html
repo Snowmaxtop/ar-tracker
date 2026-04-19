@@ -254,6 +254,8 @@
   .btn-cm-cn.auto:hover { opacity: 1; }
   .btn-cm-card svg { width: 9px; height: 9px; }
 
+  .card-cm-links { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .card-cm-links .lbl { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing:.04em; flex-basis:100%; margin-bottom:2px; }
   .btn-sync-card {
     display: inline-flex; align-items: center; justify-content: center; gap: 4px;
     font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.1em; padding: 5px 8px;
@@ -1626,21 +1628,24 @@ function renderCard(set, card, showSetBadge) {
         '<button class="btn-status' + (status === 'shipping' ? ' shipping' : '') + '" data-key="' + key + '" data-status="shipping">📦 En livraison</button>' +
         '<button class="btn-status' + (status === 'owned'  ? ' owned'  : '') + '" data-key="' + key + '" data-status="owned">✓ Possédée</button>' +
       '</div>' +
-      '<div class="card-actions">' +
-        (!card.noCmJP ? '<a class="btn-cm-card" href="' + cmCardUrl(set, card) + '" target="_blank">' + EXT_SVG + ' CM <img src="https://flagcdn.com/w40/jp.png" style="width:16px;height:11px;object-fit:cover;border-radius:2px;vertical-align:middle"> &amp; <img src="https://flagcdn.com/w40/kr.png" style="width:16px;height:11px;object-fit:cover;border-radius:2px;vertical-align:middle"></a>' : '') +
+      ((!card.noCmJP || !card.noCn) ? '<div class="card-cm-links">' +
+        '<span class="lbl">Ouvrir sur CM</span>' +
+        (!card.noCmJP ? '<a class="btn-cm-card" href="' + cmCardUrl(set, card) + '" target="_blank">' + EXT_SVG + ' JP &amp; KR</a>' : '') +
         (function() {
           if (card.noCn) return '';
           var cnFlag = '<img src="https://flagcdn.com/w40/cn.png" style="width:16px;height:11px;object-fit:cover;border-radius:2px;vertical-align:middle">';
           if (card.cmUrlCn) {
-            return '<a class="btn-cm-cn btn-cm-card" href="' + card.cmUrlCn + '" target="_blank">' + EXT_SVG + ' CM ' + cnFlag + '</a>';
+            return '<a class="btn-cm-cn btn-cm-card" href="' + card.cmUrlCn + '" target="_blank">' + EXT_SVG + ' CN</a>';
           } else {
             var q = encodeURIComponent(card.nameEn || card.name);
             var searchUrl = 'https://www.cardmarket.com/en/Pokemon/Products/Singles?searchString=' + q + '&language=3';
-            return '<a class="btn-cm-cn btn-cm-card auto" href="' + searchUrl + '" target="_blank" title="Recherche auto CN — non vérifié">' + EXT_SVG + ' CM ' + cnFlag + '</a>';
+            return '<a class="btn-cm-cn btn-cm-card auto" href="' + searchUrl + '" target="_blank" title="Recherche auto CN — non vérifié">' + EXT_SVG + ' CN?</a>';
           }
         })() +
-        (!card.noCmJP || card.cmUrlCn ? '<button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\',event)">⟳ Sync</button>' : '') +
-      '</div>' +
+      '</div>' : '') +
+      (!card.noCmJP || card.cmUrlCn ? '<div class="card-actions">' +
+        '<button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\',event)" style="width:100%">⟳ Sync prix CM</button>' +
+      '</div>' : '') +
       '<div class="card-prices" style="display:' + hidePrices + '">' +
         '<div class="prices-by-country">' +
           buildCountryPriceFields(key, card) +
@@ -1672,13 +1677,13 @@ function buildDiscoverCardEl(dset, c, opts) {
     ? '<img src="'+c.img+'" onload="this.style.opacity=1" onerror="this.style.display=\'none\'" style="opacity:0;transition:opacity 0.3s;width:100%;height:100%;object-fit:contain">'
     : '<span class="thumb-placeholder">?</span>';
 
-  // CM links (only if card has them — will be populated from Excel later)
+  // CM links — boutons "ouvrir sur CM" (restent ouverts)
   var cmLinksHtml = '';
   if (c.cmUrl) {
-    cmLinksHtml += '<a class="btn-cm-card" href="' + c.cmUrl + '" target="_blank">' + EXT_SVG + ' CM <img src="https://flagcdn.com/w40/jp.png" style="width:16px;height:11px;object-fit:cover;border-radius:2px;vertical-align:middle"> &amp; <img src="https://flagcdn.com/w40/kr.png" style="width:16px;height:11px;object-fit:cover;border-radius:2px;vertical-align:middle"></a>';
+    cmLinksHtml += '<a class="btn-cm-card" href="' + c.cmUrl + '" target="_blank">' + EXT_SVG + ' JP &amp; KR</a>';
   }
   if (c.cmUrlCn) {
-    cmLinksHtml += '<a class="btn-cm-cn btn-cm-card" href="' + c.cmUrlCn + '" target="_blank">' + EXT_SVG + ' CM <img src="https://flagcdn.com/w40/cn.png" style="width:16px;height:11px;object-fit:cover;border-radius:2px;vertical-align:middle"></a>';
+    cmLinksHtml += '<a class="btn-cm-cn btn-cm-card" href="' + c.cmUrlCn + '" target="_blank">' + EXT_SVG + ' CN</a>';
   }
 
   // Price table — adapt card object for buildCountryPriceFields
@@ -1727,7 +1732,7 @@ function buildDiscoverCardEl(dset, c, opts) {
         '</span>' : '') +
       (opts.readOnly ? '' : '</div>') +
       (st && comments[key] !== undefined ? '' : '') +
-      (cmLinksHtml && st !== 'owned' ? '<div class="card-actions">' + cmLinksHtml + '</div>' : '') +
+      (cmLinksHtml && st !== 'owned' ? '<div class="card-cm-links"><span class="lbl">Ouvrir sur CM</span>' + cmLinksHtml + '</div>' : '') +
       (c.cmUrl && (st === 'owned' || st === 'wanted' || (wishlistCards[key] && wishlistCards[key].length) || opts.removeWlId || opts.showLists) ?
         '<div class="card-actions" style="margin-top:2px"><button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\',event)" style="width:100%;justify-content:center">⟳ Sync prix CM</button></div>' : '') +
       removeHtml +
@@ -4901,15 +4906,19 @@ function pingExtension(callback) {
 function isCmExtensionInstalled() { return _cmBridgeReady; }
 
 function buildCardsForSync() {
-  var groups = [];
+  var cards = [];
   DISCOVER_DB.forEach(function(dset) {
     dset.cards.forEach(function(card) {
-      var key   = dset.id + '-' + card.num;
-      var name  = (card.en || card.fr) + ' (' + dset.id + ')';
-      var links = [];
-      if (card.cmUrl)   links.push({ url: card.cmUrl,   suffix: '',      isCn: false });
-      if (card.cmUrlCn) links.push({ url: card.cmUrlCn, suffix: '__cn',  isCn: true  });
-      if (links.length) groups.push({ key: key, name: name, links: links });
+      var key  = dset.id + '-' + card.num;
+      var name = (card.en || card.fr) + ' (' + dset.id + ')';
+      // JP/KR link
+      if (card.cmUrl) {
+        cards.push({ key: key, url: card.cmUrl, name: name, isCn: false });
+      }
+      // CN link (separate entry with __cn suffix for merge)
+      if (card.cmUrlCn) {
+        cards.push({ key: key + '__cn', url: card.cmUrlCn, name: name + ' [CN]', isCn: true });
+      }
     });
   });
   // Also check SETS for cards with cmSlug (legacy)
@@ -4918,15 +4927,18 @@ function buildCardsForSync() {
     set.cards.forEach(function(card) {
       if (card.noCmJP && !card.cmUrlCn) return;
       var key  = stateKey(set.id, card.numShort, card.name);
-      if (groups.some(function(g) { return g.key === key; })) return;
-      var name  = (card.nameEn || card.name) + ' (' + set.id + ')';
-      var links = [];
-      if (!card.noCmJP)                links.push({ url: cmCardUrl(set, card), suffix: '',      isCn: false });
-      if (!card.noCn && card.cmUrlCn)  links.push({ url: cmCnUrl(card),        suffix: '__cn',  isCn: true  });
-      if (links.length) groups.push({ key: key, name: name, links: links });
+      // Skip if already added from DISCOVER_DB
+      if (cards.some(function(c) { return c.key === key; })) return;
+      var name = (card.nameEn || card.name) + ' (' + set.id + ')';
+      if (!card.noCmJP) {
+        cards.push({ key: key, url: cmCardUrl(set, card), name: name, isCn: false });
+      }
+      if (!card.noCn && card.cmUrlCn) {
+        cards.push({ key: key + '__cn', url: cmCnUrl(card), name: name + ' [CN]', isCn: true });
+      }
     });
   });
-  return groups;
+  return cards;
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -4946,46 +4958,52 @@ function syncSingleCard(btn, key, e) {
 
 function _doSyncSingleCard(btn, key) {
 
-  // Construit les liens pour cette carte (JP + CN si dispo)
-  var links = [];
+  // Trouve la carte dans tous les sets
+  var found    = null;
+  var foundCn  = null;
   SETS.forEach(function(set) {
-    if (links.length || !set.cmSlug) return;
+    if (found || !set.cmSlug) return;
     set.cards.forEach(function(card) {
+      if (found) return;
       if (stateKey(set.id, card.numShort, card.name) !== key) return;
-      if (!card.noCmJP)               links.push({ url: cmCardUrl(set, card), suffix: '',      isCn: false });
-      if (!card.noCn && card.cmUrlCn) links.push({ url: cmCnUrl(card),        suffix: '__cn',  isCn: true  });
+      var name = card.nameEn || card.name;
+      if (!card.noCmJP) {
+        found = { key: key, url: cmCardUrl(set, card), name: name };
+      } else if (card.cmUrlCn) {
+        found = { key: key, url: cmCnUrl(card), name: name };
+      }
+      if (!card.noCn && card.cmUrlCn && !card.noCmJP) {
+        foundCn = { key: key + '__cn', url: cmCnUrl(card), name: name + ' [CN]' };
+      }
     });
   });
-  if (!links.length) {
-    DISCOVER_DB.forEach(function(dset) {
-      if (links.length) return;
-      dset.cards.forEach(function(card) {
-        if (dset.id + '-' + card.num !== key) return;
-        if (card.cmUrl)   links.push({ url: card.cmUrl,   suffix: '',     isCn: false });
-        if (card.cmUrlCn) links.push({ url: card.cmUrlCn, suffix: '__cn', isCn: true  });
-      });
-    });
-  }
 
-  if (!links.length) {
+  if (!found) {
     setCmSyncStatus('❌ URL CM introuvable pour cette carte', 'err');
     return;
   }
 
-  var groups = [{ key: key, name: key, links: links }];
+  var cards = foundCn ? [found, foundCn] : [found];
+
+  if (!found) {
+    setCmSyncStatus('❌ URL CM introuvable pour cette carte', 'err');
+    return;
+  }
 
   // UI du bouton
   btn.classList.add('syncing');
   btn.textContent = '⟳ …';
   btn.disabled = true;
 
-  // Attend toutes les réponses (JP + CN éventuellement)
-  var expectedKeys = links.map(function(l) { return key + l.suffix; });
+  // Attend les deux réponses si CN présent
+  var expected = cards.length;
   var received = 0;
   var done     = false;
 
   var handler = function(msg) {
-    if (expectedKeys.indexOf(msg.key) === -1) return;
+    var isMain = msg.key === key;
+    var isCn   = msg.key === key + '__cn';
+    if (!isMain && !isCn) return;
     if (msg.type !== 'PRICE_UPDATED' && msg.type !== 'PRICE_NOT_FOUND') return;
 
     received++;
@@ -4995,7 +5013,8 @@ function _doSyncSingleCard(btn, key) {
       applyPriceFromSync(priceKey, msg.data);
     }
 
-    if (received >= expectedKeys.length && !done) {
+    // On attend toutes les réponses avant de fermer le bouton
+    if (received >= expected && !done) {
       done = true;
       clearTimeout(timeout);
       btn.classList.remove('syncing');
@@ -5009,7 +5028,7 @@ function _doSyncSingleCard(btn, key) {
     }
   };
 
-  // Timeout 30s
+  // Timeout 30s si pas de réponse
   var timeout = setTimeout(function() {
     if (done) return;
     done = true;
@@ -5019,12 +5038,13 @@ function _doSyncSingleCard(btn, key) {
     setCmSyncStatus('Timeout — aucune réponse de l\'extension', 'err');
   }, 30000);
 
-  // Enregistre le handler pour chaque clé attendue
+  // Enregistre le handler temporaire (écoute main + CN)
   window.__singleSyncHandlers = window.__singleSyncHandlers || {};
-  expectedKeys.forEach(function(k) { window.__singleSyncHandlers[k] = handler; });
+  window.__singleSyncHandlers[key] = handler;
+  if (foundCn) window.__singleSyncHandlers[key + '__cn'] = handler;
 
-  // Lance le sync groupé
-  cmSend({ type: 'START_SYNC', cards: groups, single: true, extractConfig: CM_EXTRACT_CONFIG }).then(function(r) {
+  // Lance le sync (1 ou 2 cartes)
+  cmSend({ type: 'START_SYNC', cards: cards, single: true, extractConfig: CM_EXTRACT_CONFIG }).then(function(r) {
     if (!r.ok) {
       done = true;
       clearTimeout(timeout);
