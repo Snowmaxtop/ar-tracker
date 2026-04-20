@@ -355,7 +355,7 @@
   .price-country-row.synced { background: rgba(74,222,128,0.13); }
   .price-country-row .pcr-flag { width: 13px; height: 9px; object-fit: cover; border-radius: 1px; flex-shrink: 0; }
   .price-country-row .pcr-code { color: var(--muted); font-size: 9px; letter-spacing: 0.06em; flex-shrink: 0; width: 16px; }
-  .price-country-row .pcr-price { color: var(--text); flex: 1; text-align: right; font-size: 10px; }
+  .price-country-row .pcr-price { color: var(--text); flex: 1; text-align: right; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   .price-country-row .pcr-price.empty { color: var(--muted); opacity: 0.35; }
   .price-country-row .pcr-sep { color: var(--muted); opacity: 0.3; font-size: 8px; }
   .price-country-row .pcr-lang { width: 13px; height: 9px; object-fit: cover; border-radius: 1px; flex-shrink: 0; opacity: 0.75; }
@@ -1438,7 +1438,16 @@ const CM_EXTRACT_CONFIG = {
     'French':'fr','German':'de','Spanish':'es','Italian':'it',
     'Portuguese':'pt','Dutch':'nl','Polish':'pl','Russian':'ru',
   },
-  rowSearchDepth: 12,
+  rowSearchDepth: 999,        // monté de 12 -> 999 : on parcourt TOUTE la table
+  // ─── Nouveau contrat avec l'extension (v6) ────────────────────────────
+  // Si l'extension supporte ce flag, elle doit renvoyer TOUTES les lignes
+  // brutes du tableau CM sans pré-agréger, sous la forme :
+  //   data = { rows: [{ price: 1.50, country: 'FR', lang: 'jp' }, ...] }
+  // L'agrégation min(price) par (lang, country) est faite côté client dans
+  // applyPriceFromSync(). Si l'extension ignore ce flag et renvoie l'ancien
+  // format v5/v4, ça reste compatible.
+  rawMode: true,
+  ignorePlaceholderPrice: 1.00, // hint extension : 1.00 € est un placeholder à ignorer si possible
 };
 
 function buildOnePriceRow(key, country, lang) {
@@ -1454,7 +1463,7 @@ function buildOnePriceRow(key, country, lang) {
       d.toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit'}) + '</span>';
   }
   var priceHtml = price
-    ? '<span class="pcr-price">' + price + ' €</span>'
+    ? '<span class="pcr-price">' + fmtPrice(price) + '</span>'
     : '<span class="pcr-price empty">—</span>';
   return '<div class="price-country-row"' +
     ' data-price-key="' + key + '"' +
@@ -1496,6 +1505,16 @@ function buildLangPicker(key) {
     '</button>' +
     '<div class="lang-picker-dropdown">' + options + '</div>' +
     '</div>';
+}
+
+// Formate un prix de façon compacte pour tenir dans les petites cellules.
+// < 1000 : 2 décimales (ex: "12.34 €"). >= 1000 : arrondi sans décimales (ex: "1234 €").
+// Évite que les prix à 4 chiffres débordent de leur conteneur.
+function fmtPrice(p) {
+  var n = (typeof p === 'number') ? p : parseFloat(p);
+  if (isNaN(n)) return '';
+  if (n >= 1000) return Math.round(n) + ' €';
+  return n.toFixed(2) + ' €';
 }
 
 // Returns {price, country} of the best CM price across 4 countries.
@@ -1541,7 +1560,8 @@ function buildOwnedInfo(key, card) {
     var delta = bestPrice - buyVal;
     var sign  = delta >= 0 ? '+' : '';
     var cls   = delta > 0.01 ? 'pos' : delta < -0.01 ? 'neg' : 'neu';
-    deltaHtml = '<span class="owned-info-val ' + cls + '">' + sign + delta.toFixed(2) + ' €</span>';
+    var deltaStr = (Math.abs(delta) >= 1000) ? Math.round(delta) + ' €' : delta.toFixed(2) + ' €';
+    deltaHtml = '<span class="owned-info-val ' + cls + '">' + sign + deltaStr + '</span>';
   }
 
   // Lang picker généré depuis CM_CARD_LANGS
@@ -1587,7 +1607,7 @@ function buildOwnedInfo(key, card) {
       '<span class="owned-info-label">Meilleur CM</span>' +
       '<span class="owned-info-val cm-fr-val" data-fr-key="' + key + '">' +
         (bestPrice !== null
-          ? bestPrice.toFixed(2) + ' €' +
+          ? fmtPrice(bestPrice) +
             (bestCountry ? ' <span style="opacity:0.5;font-size:8px">' + bestCountry + '</span>' : '') +
             (isFallbackLang ? ' <span style="opacity:0.45;font-size:8px;color:var(--accent2)">(' + bestLang.toUpperCase() + ')</span>' : '')
           : '—') +
@@ -1610,7 +1630,7 @@ function updateOwnedInfoDelta(key) {
   // Update best price display
   document.querySelectorAll('.cm-fr-val[data-fr-key="' + key + '"]').forEach(function(el) {
     el.innerHTML = bestPrice !== null
-      ? bestPrice.toFixed(2) + ' €' +
+      ? fmtPrice(bestPrice) +
         (bestCountry ? ' <span style="opacity:0.5;font-size:8px">' + bestCountry + '</span>' : '') +
         (isFallback ? ' <span style="opacity:0.45;font-size:8px;color:var(--accent2)">(' + bestLang2.toUpperCase() + ')</span>' : '')
       : '—';
@@ -1622,7 +1642,8 @@ function updateOwnedInfoDelta(key) {
     var delta = bestPrice - buyVal;
     var sign  = delta >= 0 ? '+' : '';
     var cls   = delta > 0.01 ? 'pos' : delta < -0.01 ? 'neg' : 'neu';
-    deltaHtml = '<span class="owned-info-val ' + cls + '">' + sign + delta.toFixed(2) + ' €</span>';
+    var deltaStr = (Math.abs(delta) >= 1000) ? Math.round(delta) + ' €' : delta.toFixed(2) + ' €';
+    deltaHtml = '<span class="owned-info-val ' + cls + '">' + sign + deltaStr + '</span>';
   }
   document.querySelectorAll('.owned-info-delta[data-delta-key="' + key + '"]').forEach(function(el) {
     el.innerHTML = deltaHtml;
@@ -5082,10 +5103,62 @@ function cancelCmSync() {
 }
 
 // Applique les prix reçus du sync extension
-// Nouveau format v5: data = { jp: { FR: 2.80, DE: 2.59 }, kr: { FR: 1.50 }, cn: { FR: 3.00 } }
-// Ancien format v4:  data = { FR: { price: 2.80, lang: 'jp' }, ... }
+// Nouveau format v6: data = { rows: [{ price: 1.50, country: 'FR', lang: 'jp' }, ...] }
+//                    ─> on agrège ici par min(price) pour chaque (lang, country),
+//                       en ignorant 1.00 € (placeholder CM) si on a mieux.
+// Format v5:        data = { jp: { FR: 2.80, DE: 2.59 }, kr: { FR: 1.50 }, cn: { FR: 3.00 } }
+// Ancien format v4: data = { FR: { price: 2.80, lang: 'jp' }, ... }
 function applyPriceFromSync(key, data, forceLang) {
   var anyUpdate = false;
+
+  // ─── v6 RAW FORMAT ─────────────────────────────────────────────────────
+  // Si l'extension a renvoyé un dump brut de toutes les lignes du tableau CM,
+  // on agrège ici. Avantage : on est SÛR d'avoir le prix le plus bas par
+  // (lang, country) sans dépendre du comportement de l'extension.
+  if (data && Array.isArray(data.rows)) {
+    // 1) Reconstruire le "tableau" en mémoire : aggMap[lang][country] = [prix, prix, ...]
+    var aggMap = {};
+    data.rows.forEach(function(r) {
+      if (!r || r.price == null) return;
+      var p = parseFloat(r.price);
+      if (isNaN(p) || p <= 0) return;
+      var rawLang = forceLang || r.lang || 'unknown';
+      var ctry = r.country;
+      if (!ctry) return;
+      // Ne garder que les pays/langues qu'on suit
+      var langOk = CM_CARD_LANGS.some(function(l) { return l.code === rawLang; });
+      var ctryOk = CM_COUNTRIES.some(function(c) { return c.code === ctry; });
+      if (!langOk || !ctryOk) return;
+      if (!aggMap[rawLang]) aggMap[rawLang] = {};
+      if (!aggMap[rawLang][ctry]) aggMap[rawLang][ctry] = [];
+      aggMap[rawLang][ctry].push(p);
+    });
+    // 2) Trash les excédents : on garde min(), en évitant 1.00 € si on a mieux
+    Object.keys(aggMap).forEach(function(lang) {
+      Object.keys(aggMap[lang]).forEach(function(ctry) {
+        var arr = aggMap[lang][ctry].sort(function(a, b) { return a - b; });
+        var pick = arr[0];
+        if (pick === 1.00 && arr.length > 1) pick = arr[1]; // skip placeholder
+        var slot = key + '__cm_' + lang + '_' + ctry;
+        prices[slot] = String(pick.toFixed(2));
+        prices[slot + '__date'] = new Date().toISOString();
+        anyUpdate = true;
+        var row = document.querySelector(
+          '.price-country-row[data-price-key="' + key + '"][data-price-country="' + ctry + '"][data-price-lang="' + lang + '"]'
+        );
+        if (row) {
+          var priceEl = row.querySelector('.pcr-price');
+          if (priceEl) { priceEl.textContent = fmtPrice(pick); priceEl.classList.remove('empty'); }
+          row.classList.add('synced');
+          setTimeout(function() { row.classList.remove('synced'); }, 2000);
+        }
+      });
+    });
+    if (anyUpdate) { savePrices(); updateOwnedInfoDelta(key); }
+    console.log('[applyPriceFromSync] v6 raw — agrégé', data.rows.length, 'lignes →',
+      Object.keys(aggMap).reduce(function(n, l) { return n + Object.keys(aggMap[l]).length; }, 0), 'slots');
+    return;
+  }
 
   // Detect format: new = keys are lang codes, old = keys are country codes
   var firstKey = Object.keys(data)[0] || '';
@@ -5131,7 +5204,7 @@ function applyPriceFromSync(key, data, forceLang) {
         );
         if (row) {
           var priceEl = row.querySelector('.pcr-price');
-          if (priceEl) { priceEl.textContent = parseFloat(price).toFixed(2) + ' €'; priceEl.classList.remove('empty'); }
+          if (priceEl) { priceEl.textContent = fmtPrice(price); priceEl.classList.remove('empty'); }
           row.classList.add('synced');
           setTimeout(function() { row.classList.remove('synced'); }, 2000);
         }
@@ -5152,7 +5225,7 @@ function applyPriceFromSync(key, data, forceLang) {
       );
       if (row) {
         var priceEl = row.querySelector('.pcr-price');
-        if (priceEl) { priceEl.textContent = entry.price.toFixed(2) + ' €'; priceEl.classList.remove('empty'); }
+        if (priceEl) { priceEl.textContent = fmtPrice(entry.price); priceEl.classList.remove('empty'); }
         row.classList.add('synced');
         setTimeout(function() { row.classList.remove('synced'); }, 2000);
       }
