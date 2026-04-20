@@ -355,7 +355,7 @@
   .price-country-row.synced { background: rgba(74,222,128,0.13); }
   .price-country-row .pcr-flag { width: 13px; height: 9px; object-fit: cover; border-radius: 1px; flex-shrink: 0; }
   .price-country-row .pcr-code { color: var(--muted); font-size: 9px; letter-spacing: 0.06em; flex-shrink: 0; width: 16px; }
-  .price-country-row .pcr-price { color: var(--text); flex: 1; text-align: right; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .price-country-row .pcr-price { color: var(--text); flex: 1; text-align: right; font-size: 10px; white-space: nowrap; }
   .price-country-row .pcr-price.empty { color: var(--muted); opacity: 0.35; }
   .price-country-row .pcr-sep { color: var(--muted); opacity: 0.3; font-size: 8px; }
   .price-country-row .pcr-lang { width: 13px; height: 9px; object-fit: cover; border-radius: 1px; flex-shrink: 0; opacity: 0.75; }
@@ -1509,10 +1509,12 @@ function buildLangPicker(key) {
 
 // Formate un prix de façon compacte pour tenir dans les petites cellules.
 // < 1000 : 2 décimales (ex: "12.34 €"). >= 1000 : arrondi sans décimales (ex: "1234 €").
-// Évite que les prix à 4 chiffres débordent de leur conteneur.
+// Retourne "—" si l'entrée n'est pas un nombre valide (ne renvoie JAMAIS "")
+// pour éviter de faire disparaître silencieusement les cellules.
 function fmtPrice(p) {
-  var n = (typeof p === 'number') ? p : parseFloat(p);
-  if (isNaN(n)) return '';
+  if (p === null || p === undefined || p === '') return '—';
+  var n = (typeof p === 'number') ? p : parseFloat(String(p).split('|')[0]);
+  if (isNaN(n)) return '—';
   if (n >= 1000) return Math.round(n) + ' €';
   return n.toFixed(2) + ' €';
 }
@@ -5116,24 +5118,30 @@ function applyPriceFromSync(key, data, forceLang) {
   // on agrège ici. Avantage : on est SÛR d'avoir le prix le plus bas par
   // (lang, country) sans dépendre du comportement de l'extension.
   if (data && Array.isArray(data.rows)) {
+    if (data.rows.length === 0) {
+      // Rien reçu — on ne touche RIEN aux prix existants
+      console.warn('[applyPriceFromSync] v6 raw — 0 lignes reçues pour', key, '— prix existants conservés');
+      return;
+    }
     // 1) Reconstruire le "tableau" en mémoire : aggMap[lang][country] = [prix, prix, ...]
+    //    On NE filtre PAS par CM_CARD_LANGS / CM_COUNTRIES : on stocke ce
+    //    qui arrive, l'affichage filtrera lui-même. Ça évite de tout jeter
+    //    silencieusement si la détection de langue dans l'extension renvoie
+    //    'unknown' ou un code qu'on n'a pas dans nos listes.
     var aggMap = {};
     data.rows.forEach(function(r) {
       if (!r || r.price == null) return;
       var p = parseFloat(r.price);
       if (isNaN(p) || p <= 0) return;
-      var rawLang = forceLang || r.lang || 'unknown';
+      var rawLang = forceLang || r.lang;
       var ctry = r.country;
-      if (!ctry) return;
-      // Ne garder que les pays/langues qu'on suit
-      var langOk = CM_CARD_LANGS.some(function(l) { return l.code === rawLang; });
-      var ctryOk = CM_COUNTRIES.some(function(c) { return c.code === ctry; });
-      if (!langOk || !ctryOk) return;
+      if (!rawLang || !ctry) return;
       if (!aggMap[rawLang]) aggMap[rawLang] = {};
       if (!aggMap[rawLang][ctry]) aggMap[rawLang][ctry] = [];
       aggMap[rawLang][ctry].push(p);
     });
     // 2) Trash les excédents : on garde min(), en évitant 1.00 € si on a mieux
+    var slotsWritten = 0;
     Object.keys(aggMap).forEach(function(lang) {
       Object.keys(aggMap[lang]).forEach(function(ctry) {
         var arr = aggMap[lang][ctry].sort(function(a, b) { return a - b; });
@@ -5142,6 +5150,7 @@ function applyPriceFromSync(key, data, forceLang) {
         var slot = key + '__cm_' + lang + '_' + ctry;
         prices[slot] = String(pick.toFixed(2));
         prices[slot + '__date'] = new Date().toISOString();
+        slotsWritten++;
         anyUpdate = true;
         var row = document.querySelector(
           '.price-country-row[data-price-key="' + key + '"][data-price-country="' + ctry + '"][data-price-lang="' + lang + '"]'
@@ -5154,9 +5163,10 @@ function applyPriceFromSync(key, data, forceLang) {
         }
       });
     });
-    if (anyUpdate) { savePrices(); updateOwnedInfoDelta(key); }
     console.log('[applyPriceFromSync] v6 raw — agrégé', data.rows.length, 'lignes →',
-      Object.keys(aggMap).reduce(function(n, l) { return n + Object.keys(aggMap[l]).length; }, 0), 'slots');
+      slotsWritten, 'slots écrits',
+      slotsWritten === 0 ? '⚠️ aucun slot écrit, vérifie la détection de langue côté extension' : '');
+    if (anyUpdate) { savePrices(); updateOwnedInfoDelta(key); }
     return;
   }
 
