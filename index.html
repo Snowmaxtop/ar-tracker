@@ -1107,6 +1107,7 @@
     </div>
   </div>
   <div style="display:flex;gap:6px;padding:0 10px 6px;"><button class="scan-sidebar-btn" style="flex:1;justify-content:center;" onclick="startScan(true)">📷 Scanner</button><button class="scan-sidebar-btn" style="flex:1;justify-content:center;" onclick="startScan(false)">🖼 Importer</button></div>
+  <div style="padding:0 10px 6px;"><button id="btn-export-xlsx" class="scan-sidebar-btn" style="width:100%;justify-content:center;" onclick="exportCollectionWishlist()" title="Exporter Collection + Wishlist en Excel">📊 Export Excel</button></div>
   <div class="sync-bar">
     <button class="sync-btn" id="sync-pull-btn" onclick="syncPull()" title="Télécharger depuis le cloud">⬇ Cloud</button>
     <button class="sync-btn" id="sync-push-btn" onclick="syncPush()" title="Sauvegarder vers le cloud">⬆ Sauv.</button>
@@ -1189,6 +1190,9 @@
     <div style="display:flex;gap:6px;padding:6px 12px 4px;">
       <button class="scan-sidebar-btn" style="flex:1;justify-content:center;" onclick="closeNavMenu();startScan(true)">📷 Scanner</button>
       <button class="scan-sidebar-btn" style="flex:1;justify-content:center;" onclick="closeNavMenu();startScan(false)">🖼 Importer</button>
+    </div>
+    <div style="padding:4px 12px 2px;">
+      <button id="btn-export-xlsx-mobile" class="scan-sidebar-btn" style="width:100%;justify-content:center;" onclick="closeNavMenu();exportCollectionWishlist()">📊 Export Excel</button>
     </div>
     <div class="sync-bar" style="padding:4px 12px 2px;">
       <button class="sync-btn" onclick="syncPull()" title="Télécharger depuis le cloud">⬇ Cloud</button>
@@ -5345,6 +5349,151 @@ function triggerInstall() {
   if (!deferredPrompt) return;
   deferredPrompt.prompt();
   deferredPrompt.userChoice.then(function() { deferredPrompt = null; });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EXPORT COLLECTION & WISHLIST → EXCEL (.xlsx)
+// ═══════════════════════════════════════════════════════════════════════════
+// SheetJS chargée à la demande (pas de poids au chargement initial).
+// Format: 1 fichier, 2 feuilles (Collection + Wishlist).
+// ═══════════════════════════════════════════════════════════════════════════
+var _xlsxLoadPromise = null;
+function _loadXlsx() {
+  if (window.XLSX) return Promise.resolve(window.XLSX);
+  if (_xlsxLoadPromise) return _xlsxLoadPromise;
+  _xlsxLoadPromise = new Promise(function(resolve, reject) {
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload  = function() { resolve(window.XLSX); };
+    s.onerror = function() { _xlsxLoadPromise = null; reject(new Error('Échec chargement SheetJS (vérifie ta connexion)')); };
+    document.head.appendChild(s);
+  });
+  return _xlsxLoadPromise;
+}
+
+function _setExportBtnState(txt, disabled) {
+  ['btn-export-xlsx','btn-export-xlsx-mobile'].forEach(function(id) {
+    var b = document.getElementById(id);
+    if (b) { b.textContent = txt; b.disabled = !!disabled; }
+  });
+}
+
+function exportCollectionWishlist() {
+  _setExportBtnState('⏳ Chargement…', true);
+  _loadXlsx().then(function(XLSX) {
+    var wlNamesById = {};
+    wishlists.forEach(function(w) { wlNamesById[w.id] = w.name; });
+
+    var collRows = [];
+    var wlRows   = [];
+
+    DISCOVER_DB.forEach(function(dset) {
+      dset.cards.forEach(function(card) {
+        var key = dset.id + '-' + card.num;
+        var st  = state[key];
+        if (!st || (st !== 'owned' && st !== 'wanted' && st !== 'shipping')) return;
+
+        var bestAny = getBestCmPrice(key); // langue utilisateur ou fallback
+        var best    = bestAny || { price: null, country: null, lang: null };
+
+        // ── COLLECTION (owned + shipping) ──
+        if (st === 'owned' || st === 'shipping') {
+          var lang   = cardLangs[key] || 'jp';
+          var buyVal = buyPrices[key] !== undefined && buyPrices[key] !== '' ? parseFloat(buyPrices[key]) : null;
+          var delta  = (buyVal !== null && best.price !== null && !isNaN(buyVal)) ? (best.price - buyVal) : null;
+          collRows.push({
+            'Set':              dset.id,
+            'Set Name':         dset.name || '',
+            'N°':               card.num,
+            'Nom FR':           card.fr || '',
+            'Nom EN':           card.en || '',
+            'Rareté':           card.rarity || '',
+            'Statut':           st === 'owned' ? 'Possédée' : 'En livraison',
+            'Langue carte':     lang.toUpperCase(),
+            'État':             cardConditions[key] || '',
+            'Prix achat (€)':   (buyVal !== null && !isNaN(buyVal)) ? buyVal : '',
+            'Meilleur CM (€)':  best.price !== null ? best.price : '',
+            'Pays CM':          best.country || '',
+            'Langue CM':        best.lang ? best.lang.toUpperCase() : '',
+            'Plus-value (€)':   delta !== null ? Number(delta.toFixed(2)) : '',
+            'Date acquisition': ownedDates[key] || '',
+            'Commentaire':      comments[key] || '',
+          });
+        }
+
+        // ── WISHLIST (wanted + shipping) ──
+        if (st === 'wanted' || st === 'shipping') {
+          var wlIds = wishlistCards[key] || [];
+          var wlList = wlIds.map(function(id) { return wlNamesById[id] || id; }).join(', ');
+          wlRows.push({
+            'Set':              dset.id,
+            'Set Name':         dset.name || '',
+            'N°':               card.num,
+            'Nom FR':           card.fr || '',
+            'Nom EN':           card.en || '',
+            'Rareté':           card.rarity || '',
+            'Statut':           st === 'wanted' ? 'Souhaitée' : 'En livraison',
+            'Listes':           wlList,
+            'Meilleur CM (€)':  best.price !== null ? best.price : '',
+            'Pays CM':          best.country || '',
+            'Langue CM':        best.lang ? best.lang.toUpperCase() : '',
+            'Commentaire':      comments[key] || '',
+          });
+        }
+      });
+    });
+
+    if (!collRows.length && !wlRows.length) {
+      alert('Aucune carte à exporter (collection + wishlist vides).');
+      _setExportBtnState('📊 Export Excel', false);
+      return;
+    }
+
+    var wb = XLSX.utils.book_new();
+
+    function addSheet(name, rows, emptyHeaders) {
+      var ws;
+      if (!rows.length) {
+        ws = XLSX.utils.aoa_to_sheet([emptyHeaders, ['(aucune carte)']]);
+      } else {
+        ws = XLSX.utils.json_to_sheet(rows);
+        var headers = Object.keys(rows[0]);
+        ws['!cols'] = headers.map(function(h) {
+          var maxLen = h.length;
+          rows.forEach(function(r) {
+            var v = r[h];
+            if (v == null) return;
+            var s = String(v);
+            if (s.length > maxLen) maxLen = s.length;
+          });
+          return { wch: Math.min(Math.max(maxLen + 2, 8), 45) };
+        });
+        ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+      }
+      XLSX.utils.book_append_sheet(wb, ws, name);
+    }
+
+    addSheet('Collection', collRows, [
+      'Set','Set Name','N°','Nom FR','Nom EN','Rareté','Statut','Langue carte',
+      'État','Prix achat (€)','Meilleur CM (€)','Pays CM','Langue CM',
+      'Plus-value (€)','Date acquisition','Commentaire'
+    ]);
+    addSheet('Wishlist', wlRows, [
+      'Set','Set Name','N°','Nom FR','Nom EN','Rareté','Statut','Listes',
+      'Meilleur CM (€)','Pays CM','Langue CM','Commentaire'
+    ]);
+
+    var user  = currentUser || 'tracker';
+    var stamp = new Date().toISOString().slice(0, 10);
+    var fname = 'Collection_' + user + '_' + stamp + '.xlsx';
+    XLSX.writeFile(wb, fname);
+
+    _setExportBtnState('✓ Exporté', false);
+    setTimeout(function() { _setExportBtnState('📊 Export Excel', false); }, 2000);
+  }).catch(function(err) {
+    alert('Erreur export Excel : ' + (err && err.message ? err.message : err));
+    _setExportBtnState('📊 Export Excel', false);
+  });
 }
 </script>
 
