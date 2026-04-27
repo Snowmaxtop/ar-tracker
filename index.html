@@ -1763,7 +1763,7 @@ function buildDiscoverCardEl(dset, c, opts) {
   // Remove button (for wishlist view)
   var removeHtml = '';
   if (opts.removeWlId) {
-    removeHtml = '<div class="card-actions" style="margin-top:2px">' +
+    removeHtml = '<div class="card-actions" style="margin-top:2px;grid-column:1/-1;padding:0 12px">' +
       '<button class="btn-enc-remove" data-key="' + key + '" data-wl="' + opts.removeWlId + '" style="font-size:10px;padding:6px 10px;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:6px;color:var(--red);cursor:pointer;position:relative;z-index:2;width:100%;text-align:center">✕ Retirer de cette liste</button>' +
     '</div>';
   }
@@ -1788,10 +1788,10 @@ function buildDiscoverCardEl(dset, c, opts) {
       (opts.readOnly ? '' : '</div>') +
       (st && comments[key] !== undefined ? '' : '') +
       (cmLinksHtml ? '<div class="card-cm-links"><span class="lbl">Ouvrir sur CM</span>' + cmLinksHtml + '</div>' : '') +
-      ((c.cmUrl || c.cmUrlFr) && (st === 'owned' || st === 'wanted' || (wishlistCards[key] && wishlistCards[key].length) || opts.removeWlId || opts.showLists) ?
-        '<div class="card-actions" style="margin-top:2px"><button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\',event)" style="width:100%;justify-content:center">⟳ Sync prix CM</button></div>' : '') +
-      removeHtml +
     '</div>' +
+      ((c.cmUrl || c.cmUrlFr) && (st === 'owned' || st === 'wanted' || (wishlistCards[key] && wishlistCards[key].length) || opts.removeWlId || opts.showLists) ?
+        '<div class="card-actions" style="margin-top:2px;grid-column:1/-1;padding:0 12px"><button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\',event)" style="width:100%;justify-content:center">⟳ Sync prix CM</button></div>' : '') +
+      removeHtml +
     '<div class="card-prices" style="display:' + (st === 'owned' ? 'none' : 'block') + ';grid-column:1/-1">' +
       '<div class="prices-by-country">' + priceHtml + '</div>' +
     '</div>' +
