@@ -179,6 +179,29 @@
   /* ── CARD GRID ── */
   .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; position: relative; z-index: 1; }
 
+  /* ── 3 colonnes forcées sur Collection + Wishlists développées (desktop only) ── */
+  @media (min-width: 701px) {
+    #collection-grid,
+    .wl-card-grid,
+    .uwl-card-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    #collection-grid .card,
+    .wl-card-grid .card,
+    .uwl-card-grid .card {
+      grid-template-columns: 100px 1fr;
+      gap: 14px;
+      padding: 14px;
+    }
+    #collection-grid .card-img-wrap,
+    .wl-card-grid .card-img-wrap,
+    .uwl-card-grid .card-img-wrap {
+      width: 100px;
+      height: 140px;
+    }
+  }
+
   .card {
     display: grid; grid-template-columns: 82px 1fr; gap: 12px; padding: 12px;
     background: #13131c; border: 1px solid var(--border); border-radius: 4px;
