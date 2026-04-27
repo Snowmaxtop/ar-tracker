@@ -264,9 +264,9 @@
   .card.is-owned .btn-remove-card, .card.is-wanted .btn-remove-card, .card.is-shipping .btn-remove-card { display: none; /* display: flex; */ }
 
   .btn-cm-card {
-    display: inline-flex; align-items: center; justify-content: center; gap: 4px; flex: 1;
-    font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.1em; padding: 5px 10px;
-    border-radius: 2px; cursor: pointer; text-transform: uppercase;
+    display: inline-flex; align-items: center; justify-content: center; gap: 3px; flex: 1;
+    font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.05em; padding: 5px 6px;
+    border-radius: 2px; cursor: pointer; text-transform: uppercase; white-space: nowrap;
     border: 1px solid rgba(124,92,252,0.3); background: rgba(124,92,252,0.08);
     color: var(--accent2); text-decoration: none; transition: all 0.15s;
   }
@@ -1451,6 +1451,8 @@ const CM_CARD_LANGS = [
   { code: 'kr', label: 'KR', flag: 'kr' },
   { code: 'cn', label: 'CN', flag: 'cn' },
   { code: 'fr', label: 'FR', flag: 'fr' },
+  { code: 'en', label: 'EN', flag: 'gb' },
+  { code: 'tw', label: 'TW', flag: 'tw' },
 ];
 
 // Config transmise à l'extension — modifiable ici sans toucher à l'extension
@@ -1546,33 +1548,23 @@ function fmtPrice(p) {
   return n.toFixed(2) + ' €';
 }
 
-// Returns {price, country} of the best CM price across 4 countries.
+// Returns {price, country} of the best CM price across 4 countries FOR THE CHOSEN LANGUAGE ONLY.
+// If no price exists in the chosen language, returns null (no fallback to other languages).
 // If the lowest price is exactly 1.00 € (CardMarket placeholder), use the second-lowest instead.
 function getBestCmPrice(key, langOverride) {
   var lang = langOverride || cardLangs[key] || 'jp';
-  function bestForLang(l) {
-    var candidates = [];
-    CM_COUNTRIES.forEach(function(c) {
-      var raw = prices[key + '__cm_' + l + '_' + c.code];
-      if (!raw) return;
-      var p = parseFloat(raw.split('|')[0]);
-      if (!isNaN(p)) candidates.push({ price: p, country: c.code, lang: l });
-    });
-    if (!candidates.length) return null;
-    candidates.sort(function(a, b) { return a.price - b.price; });
-    var best = candidates[0];
-    if (best.price === 1.00 && candidates.length > 1) best = candidates[1];
-    return best;
-  }
-  var result = bestForLang(lang);
-  if (result) return result;
-  var fallback = null;
-  CM_CARD_LANGS.forEach(function(l) {
-    if (l.code === lang) return;
-    var r = bestForLang(l.code);
-    if (r && (fallback === null || r.price < fallback.price)) fallback = r;
+  var candidates = [];
+  CM_COUNTRIES.forEach(function(c) {
+    var raw = prices[key + '__cm_' + lang + '_' + c.code];
+    if (!raw) return;
+    var p = parseFloat(raw.split('|')[0]);
+    if (!isNaN(p)) candidates.push({ price: p, country: c.code, lang: lang });
   });
-  return fallback || { price: null, country: null, lang: null };
+  if (!candidates.length) return { price: null, country: null, lang: null };
+  candidates.sort(function(a, b) { return a.price - b.price; });
+  var best = candidates[0];
+  if (best.price === 1.00 && candidates.length > 1) best = candidates[1];
+  return best;
 }
 
 function buildOwnedInfo(key, card) {
@@ -1639,7 +1631,7 @@ function buildOwnedInfo(key, card) {
           ? fmtPrice(bestPrice) +
             (bestCountry ? ' <span style="opacity:0.5;font-size:8px">' + bestCountry + '</span>' : '') +
             (isFallbackLang ? ' <span style="opacity:0.45;font-size:8px;color:var(--accent2)">(' + bestLang.toUpperCase() + ')</span>' : '')
-          : '—') +
+          : '<span style="color:var(--muted);font-style:italic;font-size:11px">No data</span>') +
       '</span>' +
     '</div>' +
     '<div class="owned-info-row">' +
@@ -1662,7 +1654,7 @@ function updateOwnedInfoDelta(key) {
       ? fmtPrice(bestPrice) +
         (bestCountry ? ' <span style="opacity:0.5;font-size:8px">' + bestCountry + '</span>' : '') +
         (isFallback ? ' <span style="opacity:0.45;font-size:8px;color:var(--accent2)">(' + bestLang2.toUpperCase() + ')</span>' : '')
-      : '—';
+      : '<span style="color:var(--muted);font-style:italic;font-size:11px">No data</span>';
   });
 
   // Update delta display
