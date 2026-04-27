@@ -1827,14 +1827,12 @@ function bindDiscoverCardEvents(div, opts) {
       var k = btn.dataset.key;
       var next = btn.dataset.status;
 
-      // ── Wishlist context: re-clicking "Souhaitée" on a wanted card removes it from THIS list ──
+      // ── Wishlist context: re-clicking "Souhaitée" on a wanted card removes it from THIS list only ──
+      // Same behavior as the "Retirer de cette liste" button: state[k] stays 'wanted' so the card
+      // remains in any other wishlist it belongs to. If it was the last list, assignOrphanCardsToDefault
+      // will reassign it to the default wishlist on next load.
       if (opts.removeWlId && next === 'wanted' && state[k] === 'wanted') {
         removeCardFromWishlist(k, opts.removeWlId);
-        // If no more wishlists, also clear the global state to avoid an orphan "wanted" card
-        if (!wishlistCards[k] || !wishlistCards[k].length) {
-          delete state[k];
-          saveState();
-        }
         div.style.transition = 'opacity 0.3s, transform 0.3s';
         div.style.opacity = '0';
         div.style.transform = 'scale(0.95)';
