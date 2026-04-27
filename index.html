@@ -1051,6 +1051,15 @@
     background:var(--bg); border:1px solid var(--accent); border-radius:6px;
     color:var(--text); outline:none; resize:vertical; min-height:50px; margin-top:4px;
   }
+  .card-comment-display {
+    font-family:'DM Sans',sans-serif; font-size:11px; color:var(--text);
+    background:var(--surface2); border:1px solid var(--border); border-radius:4px;
+    padding:5px 9px; cursor:text;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    transition:border-color 0.15s, background 0.15s;
+  }
+  .card-comment-display:hover { border-color:var(--accent); background:rgba(124,92,252,0.08); }
+  .card-comment-display.empty { color:var(--muted); font-style:italic; font-size:10px; }
 
   /* ── CARD CONDITION ── */
   .condition-picker { display:flex; gap:3px; flex-wrap:wrap; }
@@ -1782,12 +1791,18 @@ function buildDiscoverCardEl(dset, c, opts) {
         (st !== 'owned' && st !== 'shipping' ? '<button class="btn-status' + (st==='wanted'?' wanted':'') + '" data-key="' + key + '" data-status="wanted">♡ Souhaitée</button>' : '') +
         (st !== 'owned' ? '<button class="btn-status' + (st==='shipping'?' shipping':'') + '" data-key="' + key + '" data-status="shipping">📦 En livraison</button>' : '') +
         '<button class="btn-status' + (st==='owned'?' owned':'') + '" data-key="' + key + '" data-status="owned">✓ Possédée</button>' +
-        (st ? '<span class="card-comment-icon' + (comments[key] ? ' has-comment' : '') + '" data-comment-key="' + key + '" title="Commenter">?' +
+        (st && !opts.removeWlId ? '<span class="card-comment-icon' + (comments[key] ? ' has-comment' : '') + '" data-comment-key="' + key + '" title="Commenter">?' +
           (comments[key] ? '<span class="card-comment-tooltip">' + comments[key].replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>' : '') +
         '</span>' : '') +
       (opts.readOnly ? '' : '</div>') +
       (st && comments[key] !== undefined ? '' : '') +
     '</div>' +
+      (opts.removeWlId ? (function(){
+        var ct = comments[key] || '';
+        var safe = ct.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        var titleAttr = ct ? safe.replace(/"/g,'&quot;') + ' — Cliquer pour modifier' : 'Ajouter un commentaire';
+        return '<div class="card-comment-display' + (ct ? '' : ' empty') + '" style="grid-column:1/-1;margin:6px 12px 0" data-comment-key="' + key + '" title="' + titleAttr + '">' + (ct ? safe : '+ Ajouter un commentaire') + '</div>';
+      })() : '') +
       (cmLinksHtml ? '<div class="card-cm-links" style="grid-column:1/-1;padding:0 12px"><span class="lbl">Ouvrir sur CM</span>' + cmLinksHtml + '</div>' : '') +
       ((c.cmUrl || c.cmUrlFr) && (st === 'owned' || st === 'wanted' || (wishlistCards[key] && wishlistCards[key].length) || opts.removeWlId || opts.showLists) ?
         '<div class="card-actions" style="margin-top:2px;grid-column:1/-1;padding:0 12px"><button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\',event)" style="width:100%;justify-content:center">⟳ Sync prix CM</button></div>' : '') +
@@ -1811,6 +1826,22 @@ function bindDiscoverCardEvents(div, opts) {
       e.stopPropagation();
       var k = btn.dataset.key;
       var next = btn.dataset.status;
+
+      // ── Wishlist context: re-clicking "Souhaitée" on a wanted card removes it from THIS list ──
+      if (opts.removeWlId && next === 'wanted' && state[k] === 'wanted') {
+        removeCardFromWishlist(k, opts.removeWlId);
+        // If no more wishlists, also clear the global state to avoid an orphan "wanted" card
+        if (!wishlistCards[k] || !wishlistCards[k].length) {
+          delete state[k];
+          saveState();
+        }
+        div.style.transition = 'opacity 0.3s, transform 0.3s';
+        div.style.opacity = '0';
+        div.style.transform = 'scale(0.95)';
+        setTimeout(function() { div.remove(); if (opts.onAfterUpdate) opts.onAfterUpdate(); }, 300);
+        return;
+      }
+
       state[k] = state[k] === next ? undefined : next;
       if (!state[k]) delete state[k];
       saveState();
@@ -1952,6 +1983,48 @@ function bindDiscoverCardEvents(div, opts) {
       input.addEventListener('blur', saveComment);
       input.addEventListener('keydown', function(ev) {
         if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); saveComment(); }
+      });
+    });
+  }
+
+  // ── Comment display (wishlist view): click to edit inline ──
+  var commentDisplay = div.querySelector('.card-comment-display');
+  if (commentDisplay) {
+    commentDisplay.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var k = this.dataset.commentKey;
+      var displayEl = this;
+      if (displayEl.parentNode.querySelector('.card-comment-input')) return;
+      var input = document.createElement('textarea');
+      input.className = 'card-comment-input';
+      input.style.gridColumn = '1/-1';
+      input.style.margin = '6px 12px 0';
+      input.value = comments[k] || '';
+      input.placeholder = 'Ajouter un commentaire\u2026';
+      displayEl.style.display = 'none';
+      displayEl.insertAdjacentElement('afterend', input);
+      input.focus();
+      function saveCommentInline() {
+        var val = input.value.trim();
+        if (val) {
+          comments[k] = val;
+          displayEl.classList.remove('empty');
+          displayEl.textContent = val;
+          displayEl.title = val + ' \u2014 Cliquer pour modifier';
+        } else {
+          delete comments[k];
+          displayEl.classList.add('empty');
+          displayEl.textContent = '+ Ajouter un commentaire';
+          displayEl.title = 'Ajouter un commentaire';
+        }
+        localStorage.setItem('pkmn-ar-comments', JSON.stringify(comments));
+        syncAutoPush();
+        input.remove();
+        displayEl.style.display = '';
+      }
+      input.addEventListener('blur', saveCommentInline);
+      input.addEventListener('keydown', function(ev) {
+        if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); saveCommentInline(); }
       });
     });
   }
