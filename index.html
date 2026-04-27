@@ -1795,7 +1795,7 @@ function buildDiscoverCardEl(dset, c, opts) {
         '</span>' : '') +
       (opts.readOnly ? '' : '</div>') +
       (st && comments[key] !== undefined ? '' : '') +
-      (cmLinksHtml && st !== 'owned' ? '<div class="card-cm-links"><span class="lbl">Ouvrir sur CM</span>' + cmLinksHtml + '</div>' : '') +
+      (cmLinksHtml ? '<div class="card-cm-links"><span class="lbl">Ouvrir sur CM</span>' + cmLinksHtml + '</div>' : '') +
       ((c.cmUrl || c.cmUrlFr) && (st === 'owned' || st === 'wanted' || (wishlistCards[key] && wishlistCards[key].length) || opts.removeWlId || opts.showLists) ?
         '<div class="card-actions" style="margin-top:2px"><button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\',event)" style="width:100%;justify-content:center">⟳ Sync prix CM</button></div>' : '') +
       removeHtml +
