@@ -1823,7 +1823,7 @@ function buildDiscoverCardEl(dset, c, opts) {
       '</div>' +
       listsHtml +
       (opts.readOnly ? '' : '<div class="card-actions" style="align-items:center">') +
-        (st !== 'owned' && st !== 'shipping' ? '<button class="btn-status' + (st==='wanted'?' wanted':'') + '" data-key="' + key + '" data-status="wanted">♡ Souhaitée</button>' : '') +
+        (st !== 'owned' && st !== 'shipping' && !opts.removeWlId ? '<button class="btn-status' + (st==='wanted'?' wanted':'') + '" data-key="' + key + '" data-status="wanted">♡ Souhaitée</button>' : '') +
         (st !== 'owned' ? '<button class="btn-status' + (st==='shipping'?' shipping':'') + '" data-key="' + key + '" data-status="shipping">📦 En livraison</button>' : '') +
         '<button class="btn-status' + (st==='owned'?' owned':'') + '" data-key="' + key + '" data-status="owned">✓ Possédée</button>' +
         (opts.removeWlId ? '<button class="btn-enc-list" data-key="' + key + '" title="Gérer les listes" style="flex-shrink:0">📋</button>' : '') +
@@ -3183,8 +3183,23 @@ function renderWishlist() {
     return item.fromDiscover ? (item.set.id + '-' + item.card.num) : stateKey(item.set.id, item.card.numShort, item.card.name);
   }
 
+  // Rarity ordering — high rarity first (SAR before AR, UR before SR, etc.)
+  // Same RARITY_ORDER as encyclopedia: higher index = rarer.
+  var WL_RARITY_ORDER = ['C','UC','R','RH','RP','RS','RR','RRR','CHR','CSR','BWR','AMZ','PR','K','S','SSR','LGD','PROMO','MA','MUR','TR','AR','SAR','SR','UR','HR'];
+  function wlRarityRank(r) {
+    var i = WL_RARITY_ORDER.indexOf(r);
+    return i === -1 ? -1 : i;
+  }
+
   var listData = wishlists.map(function(wl) {
     var cards = allItems.filter(function(i) { return isCardInWishlist(wlKey(i), wl.id); });
+    cards.sort(function(a, b) {
+      var rDiff = wlRarityRank(b.card.rarity) - wlRarityRank(a.card.rarity);
+      if (rDiff !== 0) return rDiff;
+      // Tiebreaker: by set id then card num for stable ordering
+      if (a.set.id !== b.set.id) return a.set.id < b.set.id ? -1 : 1;
+      return (a.card.numShort || a.card.num || '').localeCompare(b.card.numShort || b.card.num || '');
+    });
     return { wl: wl, cards: cards };
   });
 
