@@ -2121,8 +2121,19 @@ function bindListPickerButton(btn, parentDiv, k, opts) {
 
     popup.querySelectorAll('input[type=checkbox]').forEach(function(cb) {
       cb.addEventListener('change', function() {
-        if (cb.checked) { addCardToWishlist(k, cb.dataset.wl); }
-        else { removeCardFromWishlist(k, cb.dataset.wl); }
+        if (cb.checked) {
+          addCardToWishlist(k, cb.dataset.wl);
+        } else {
+          removeCardFromWishlist(k, cb.dataset.wl);
+          // If no lists remain and the card was 'wanted', clear state — a card belonging to no list
+          // shouldn't keep the wanted highlight. Owned/shipping states are preserved (independent of lists).
+          if ((!wishlistCards[k] || !wishlistCards[k].length) && state[k] === 'wanted') {
+            delete state[k];
+            delete ownedDates[k];
+            localStorage.setItem('pkmn-ar-owneddates', JSON.stringify(ownedDates));
+            saveState();
+          }
+        }
         if (opts.afterStateChange) opts.afterStateChange();
         if (opts.onAfterUpdate) opts.onAfterUpdate();
         // If user just unchecked the current wishlist (in wishlist tab), fade out the card
@@ -2605,13 +2616,19 @@ function refreshEncGrid() {
     if (listBtn) {
       bindListPickerButton(listBtn, div, listBtn.dataset.key, {
         afterStateChange: function() {
-          // Update want button if card just became wanted (addCardToWishlist auto-sets state)
           var k2 = listBtn.dataset.key;
           var wantBtn = div.querySelector('.btn-enc-want');
           var curSt = state[k2] || '';
-          if (curSt === 'wanted') {
-            div.classList.add('is-wanted');
-            if (wantBtn) { wantBtn.textContent = '♡ Souhaitée'; wantBtn.classList.add('active-want'); }
+          // Sync the encyclopedia card visual (orange "wanted" highlight) with current state
+          div.classList.toggle('is-wanted', curSt === 'wanted');
+          if (wantBtn) {
+            if (curSt === 'wanted') {
+              wantBtn.textContent = '♡ Souhaitée';
+              wantBtn.classList.add('active-want');
+            } else if (curSt === '') {
+              wantBtn.textContent = '☆ Souhaiter';
+              wantBtn.classList.remove('active-want', 'active-ship');
+            }
           }
         },
       });
