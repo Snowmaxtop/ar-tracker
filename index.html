@@ -1826,6 +1826,7 @@ function buildDiscoverCardEl(dset, c, opts) {
         (st !== 'owned' && st !== 'shipping' ? '<button class="btn-status' + (st==='wanted'?' wanted':'') + '" data-key="' + key + '" data-status="wanted">♡ Souhaitée</button>' : '') +
         (st !== 'owned' ? '<button class="btn-status' + (st==='shipping'?' shipping':'') + '" data-key="' + key + '" data-status="shipping">📦 En livraison</button>' : '') +
         '<button class="btn-status' + (st==='owned'?' owned':'') + '" data-key="' + key + '" data-status="owned">✓ Possédée</button>' +
+        (opts.removeWlId ? '<button class="btn-enc-list" data-key="' + key + '" title="Gérer les listes" style="flex-shrink:0">📋</button>' : '') +
         (st && !opts.removeWlId ? '<span class="card-comment-icon' + (comments[key] ? ' has-comment' : '') + '" data-comment-key="' + key + '" title="Commenter">?' +
           (comments[key] ? '<span class="card-comment-tooltip">' + comments[key].replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>' : '') +
         '</span>' : '') +
@@ -1862,18 +1863,15 @@ function bindDiscoverCardEvents(div, opts) {
       var k = btn.dataset.key;
       var next = btn.dataset.status;
 
-      // ── Wishlist context: re-clicking "Souhaitée" on a wanted card removes it from THIS list only ──
-      // Same behavior as the "Retirer de cette liste" button. The card stays 'wanted' as long as it
-      // remains in any other wishlist. If it was removed from its last list, state[k] is cleared too
-      // so the encyclopedia popup checkbox + Souhaiter button visually reflect the removal.
+      // ── Wishlist context: re-clicking "Souhaitée" on a wanted card just clears the state ──
+      // The wishlistCards[k] memberships are PRESERVED — the lists "remember" the card.
+      // The card disappears from all wishlist views (state-filtered) but stays checked in the
+      // encyclopedia popup, so the user can re-mark it as wanted later via that popup or button.
       if (opts.removeWlId && next === 'wanted' && state[k] === 'wanted') {
-        removeCardFromWishlist(k, opts.removeWlId);
-        if (!wishlistCards[k] || !wishlistCards[k].length) {
-          delete state[k];
-          delete ownedDates[k];
-          localStorage.setItem('pkmn-ar-owneddates', JSON.stringify(ownedDates));
-          saveState();
-        }
+        delete state[k];
+        delete ownedDates[k];
+        localStorage.setItem('pkmn-ar-owneddates', JSON.stringify(ownedDates));
+        saveState();
         div.style.transition = 'opacity 0.3s, transform 0.3s';
         div.style.opacity = '0';
         div.style.transform = 'scale(0.95)';
@@ -2076,19 +2074,91 @@ function bindDiscoverCardEvents(div, opts) {
       var wlId = this.dataset.wl;
       if (!k || !wlId) return;
       removeCardFromWishlist(k, wlId);
-      // If this was the last wishlist, clear state too so the encyclopedia popup + button reflect the removal
-      if (!wishlistCards[k] || !wishlistCards[k].length) {
-        delete state[k];
-        delete ownedDates[k];
-        localStorage.setItem('pkmn-ar-owneddates', JSON.stringify(ownedDates));
-        saveState();
-      }
       div.style.transition = 'opacity 0.3s, transform 0.3s';
       div.style.opacity = '0';
       div.style.transform = 'scale(0.95)';
       setTimeout(function() { div.remove(); if (opts.onAfterUpdate) opts.onAfterUpdate(); }, 300);
     });
   }
+
+  // ── List picker button (📋) — shows popup with checkboxes for each wishlist ──
+  var listBtn = div.querySelector('.btn-enc-list');
+  if (listBtn) {
+    bindListPickerButton(listBtn, div, listBtn.dataset.key, {
+      currentWlId: opts.removeWlId,  // if user unchecks the current list, fade out the card
+      onAfterUpdate: opts.onAfterUpdate,
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LIST PICKER POPUP (shared by encyclopedia + wishlist cards)
+// Opens a popup of checkboxes, one per wishlist, plus "Create new list".
+// opts.currentWlId   — if set, unchecking that list also fades out parentDiv
+// opts.onAfterUpdate — callback invoked after every check/uncheck (e.g. counter refresh)
+// opts.afterStateChange — callback to update sibling UI (e.g. the encyclopedia want button)
+// ═══════════════════════════════════════════════════════════════════════════
+function bindListPickerButton(btn, parentDiv, k, opts) {
+  opts = opts || {};
+  btn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    document.querySelectorAll('.enc-list-popup').forEach(function(p) { p.remove(); });
+    var popup = document.createElement('div');
+    popup.className = 'enc-list-popup';
+    if (!wishlists.length) {
+      popup.innerHTML = '<div class="enc-list-popup-create">＋ Créer une liste</div>';
+    } else {
+      var html = '';
+      wishlists.forEach(function(wl) {
+        var checked = isCardInWishlist(k, wl.id) ? ' checked' : '';
+        html += '<label class="enc-list-popup-item"><input type="checkbox" data-wl="' + wl.id + '"' + checked + '> ' + wl.name + '</label>';
+      });
+      html += '<div class="enc-list-popup-create">＋ Nouvelle liste</div>';
+      popup.innerHTML = html;
+    }
+    btn.parentNode.style.position = 'relative';
+    btn.parentNode.appendChild(popup);
+
+    popup.querySelectorAll('input[type=checkbox]').forEach(function(cb) {
+      cb.addEventListener('change', function() {
+        if (cb.checked) { addCardToWishlist(k, cb.dataset.wl); }
+        else { removeCardFromWishlist(k, cb.dataset.wl); }
+        if (opts.afterStateChange) opts.afterStateChange();
+        if (opts.onAfterUpdate) opts.onAfterUpdate();
+        // If user just unchecked the current wishlist (in wishlist tab), fade out the card
+        if (!cb.checked && opts.currentWlId && cb.dataset.wl === opts.currentWlId) {
+          popup.remove();
+          parentDiv.style.transition = 'opacity 0.3s, transform 0.3s';
+          parentDiv.style.opacity = '0';
+          parentDiv.style.transform = 'scale(0.95)';
+          setTimeout(function() { parentDiv.remove(); if (opts.onAfterUpdate) opts.onAfterUpdate(); }, 300);
+        }
+      });
+    });
+
+    var createBtn = popup.querySelector('.enc-list-popup-create');
+    if (createBtn) {
+      createBtn.addEventListener('click', function() {
+        var name = prompt('Nom de la nouvelle liste :');
+        if (name && name.trim()) {
+          var newId = createWishlist(name.trim());
+          addCardToWishlist(k, newId);
+          popup.remove();
+          if (opts.afterStateChange) opts.afterStateChange();
+          if (opts.onAfterUpdate) opts.onAfterUpdate();
+        }
+      });
+    }
+
+    setTimeout(function() {
+      document.addEventListener('click', function closePopup(ev) {
+        if (!popup.contains(ev.target) && ev.target !== btn) {
+          popup.remove();
+          document.removeEventListener('click', closePopup);
+        }
+      });
+    }, 10);
+  });
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2479,6 +2549,13 @@ function refreshEncGrid() {
       div.classList.toggle('is-wanted', newSt === 'wanted');
       this.textContent = newSt === 'wanted' ? '♡ Souhaitée' : '☆ Souhaiter';
       this.classList.toggle('active-want', newSt === 'wanted');
+      // ── Live-update any open enc-list-popup so its checkboxes reflect the new wishlistCards state ──
+      var openPopup = div.querySelector('.enc-list-popup');
+      if (openPopup) {
+        openPopup.querySelectorAll('input[type=checkbox][data-wl]').forEach(function(cb) {
+          cb.checked = isCardInWishlist(k, cb.dataset.wl);
+        });
+      }
       updateSetStatsByKey(k);
       if (encStatus !== 'all') { div.style.opacity = '0.35'; setTimeout(function(){ div.remove(); }, 400); }
     });
@@ -2526,70 +2603,17 @@ function refreshEncGrid() {
     }
     var listBtn = div.querySelector('.btn-enc-list');
     if (listBtn) {
-      listBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        var k = this.dataset.key;
-        var btn = this;
-        // Close any other open popups
-        document.querySelectorAll('.enc-list-popup').forEach(function(p) { p.remove(); });
-        // Build popup
-        var popup = document.createElement('div');
-        popup.className = 'enc-list-popup';
-        if (!wishlists.length) {
-          popup.innerHTML = '<div class="enc-list-popup-create" id="enc-popup-create">＋ Créer une liste</div>';
-        } else {
-          var html = '';
-          wishlists.forEach(function(wl) {
-            var checked = isCardInWishlist(k, wl.id) ? ' checked' : '';
-            html += '<label class="enc-list-popup-item"><input type="checkbox" data-wl="' + wl.id + '"' + checked + '> ' + wl.name + '</label>';
-          });
-          html += '<div class="enc-list-popup-create" id="enc-popup-create">＋ Nouvelle liste</div>';
-          popup.innerHTML = html;
-        }
-        btn.parentNode.style.position = 'relative';
-        btn.parentNode.appendChild(popup);
-        // Checkbox changes
-        popup.querySelectorAll('input[type=checkbox]').forEach(function(cb) {
-          cb.addEventListener('change', function() {
-            if (cb.checked) { addCardToWishlist(k, cb.dataset.wl); }
-            else { removeCardFromWishlist(k, cb.dataset.wl); }
-            // Update want button if card just became wanted
-            var wantBtn = div.querySelector('.btn-enc-want');
-            var curSt = state[k] || '';
-            if (curSt === 'wanted') {
-              div.classList.add('is-wanted');
-              if (wantBtn) { wantBtn.textContent = '♡ Souhaitée'; wantBtn.classList.add('active-want'); }
-            }
-          });
-        });
-        // Create new list from popup
-        var createBtn = popup.querySelector('#enc-popup-create');
-        if (createBtn) {
-          createBtn.addEventListener('click', function() {
-            var name = prompt('Nom de la nouvelle liste :');
-            if (name && name.trim()) {
-              var newId = createWishlist(name.trim());
-              addCardToWishlist(k, newId);
-              popup.remove();
-              // Update want button
-              var wantBtn = div.querySelector('.btn-enc-want');
-              var curSt = state[k] || '';
-              if (curSt === 'wanted') {
-                div.classList.add('is-wanted');
-                if (wantBtn) { wantBtn.textContent = '♡ Souhaitée'; wantBtn.classList.add('active-want'); }
-              }
-            }
-          });
-        }
-        // Close popup on outside click
-        setTimeout(function() {
-          document.addEventListener('click', function closePopup(ev) {
-            if (!popup.contains(ev.target) && ev.target !== btn) {
-              popup.remove();
-              document.removeEventListener('click', closePopup);
-            }
-          });
-        }, 10);
+      bindListPickerButton(listBtn, div, listBtn.dataset.key, {
+        afterStateChange: function() {
+          // Update want button if card just became wanted (addCardToWishlist auto-sets state)
+          var k2 = listBtn.dataset.key;
+          var wantBtn = div.querySelector('.btn-enc-want');
+          var curSt = state[k2] || '';
+          if (curSt === 'wanted') {
+            div.classList.add('is-wanted');
+            if (wantBtn) { wantBtn.textContent = '♡ Souhaitée'; wantBtn.classList.add('active-want'); }
+          }
+        },
       });
     }
     grid.appendChild(div);
