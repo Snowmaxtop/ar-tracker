@@ -663,6 +663,38 @@
   .bottom-nav-btn .bnav-label { font-size: 9px; margin-top: 1px; }
 
   /* ══════════════════════════════════════════════════════
+     FLOATING HAMBURGER — bottom-left, mobile only
+     Always visible regardless of URL bar / topbar overlap
+  ══════════════════════════════════════════════════════ */
+  .floating-hamburger {
+    display: none; /* shown only on mobile via media query */
+    position: fixed;
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    left: 14px;
+    z-index: 250;
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--accent2);
+    font-size: 22px;
+    align-items: center; justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: transform 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .floating-hamburger:hover, .floating-hamburger:active {
+    border-color: var(--accent); background: rgba(124,92,252,0.18); transform: scale(1.05);
+  }
+  @media (max-width: 700px) {
+    .floating-hamburger { display: flex; }
+    .mobile-hamburger { display: none; }
+    .mobile-topbar { gap: 0; }
+  }
+
+  /* ══════════════════════════════════════════════════════
      NAV OVERLAY MENU (mobile — triggered by hamburger)
   ══════════════════════════════════════════════════════ */
   .nav-overlay {
@@ -1197,6 +1229,9 @@
     <span class="bnav-label">Installer</span>
   </button>
 </nav>
+
+<!-- ══ FLOATING HAMBURGER (mobile only) — always visible above bottom-nav ══ -->
+<button class="floating-hamburger" onclick="openNavMenu()" title="Menu" aria-label="Menu">&#9776;</button>
 
 <!-- ══ NAV OVERLAY MENU ══ -->
 <div class="nav-overlay hidden" id="nav-overlay" onclick="handleNavOverlayClick(event)">
@@ -1828,11 +1863,17 @@ function bindDiscoverCardEvents(div, opts) {
       var next = btn.dataset.status;
 
       // ── Wishlist context: re-clicking "Souhaitée" on a wanted card removes it from THIS list only ──
-      // Same behavior as the "Retirer de cette liste" button: state[k] stays 'wanted' so the card
-      // remains in any other wishlist it belongs to. If it was the last list, assignOrphanCardsToDefault
-      // will reassign it to the default wishlist on next load.
+      // Same behavior as the "Retirer de cette liste" button. The card stays 'wanted' as long as it
+      // remains in any other wishlist. If it was removed from its last list, state[k] is cleared too
+      // so the encyclopedia popup checkbox + Souhaiter button visually reflect the removal.
       if (opts.removeWlId && next === 'wanted' && state[k] === 'wanted') {
         removeCardFromWishlist(k, opts.removeWlId);
+        if (!wishlistCards[k] || !wishlistCards[k].length) {
+          delete state[k];
+          delete ownedDates[k];
+          localStorage.setItem('pkmn-ar-owneddates', JSON.stringify(ownedDates));
+          saveState();
+        }
         div.style.transition = 'opacity 0.3s, transform 0.3s';
         div.style.opacity = '0';
         div.style.transform = 'scale(0.95)';
@@ -2035,6 +2076,13 @@ function bindDiscoverCardEvents(div, opts) {
       var wlId = this.dataset.wl;
       if (!k || !wlId) return;
       removeCardFromWishlist(k, wlId);
+      // If this was the last wishlist, clear state too so the encyclopedia popup + button reflect the removal
+      if (!wishlistCards[k] || !wishlistCards[k].length) {
+        delete state[k];
+        delete ownedDates[k];
+        localStorage.setItem('pkmn-ar-owneddates', JSON.stringify(ownedDates));
+        saveState();
+      }
       div.style.transition = 'opacity 0.3s, transform 0.3s';
       div.style.opacity = '0';
       div.style.transform = 'scale(0.95)';
