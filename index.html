@@ -3446,6 +3446,14 @@ function renderUserCollection(username) {
     });
   });
 
+  // Rarity ordering — high rarity first (SAR before AR, UR before SR, etc.)
+  // Same RARITY_ORDER as encyclopedia + own wishlist for consistency.
+  var UWL_RARITY_ORDER = ['C','UC','R','RH','RP','RS','RR','RRR','CHR','CSR','BWR','AMZ','PR','K','S','SSR','LGD','PROMO','MA','MUR','TR','AR','SAR','SR','UR','HR'];
+  function uwlRarityRank(r) {
+    var i = UWL_RARITY_ORDER.indexOf(r);
+    return i === -1 ? -1 : i;
+  }
+
   // Build wishlist data
   var wlData = uWishlists.map(function(wl) {
     var cards = [];
@@ -3456,6 +3464,12 @@ function renderUserCollection(username) {
           cards.push({ card: card, set: dset, status: uState[key] || '', key: key });
         }
       });
+    });
+    cards.sort(function(a, b) {
+      var rDiff = uwlRarityRank(b.card.rarity) - uwlRarityRank(a.card.rarity);
+      if (rDiff !== 0) return rDiff;
+      if (a.set.id !== b.set.id) return a.set.id < b.set.id ? -1 : 1;
+      return (a.card.num || '').localeCompare(b.card.num || '');
     });
     return { wl: wl, cards: cards };
   });
