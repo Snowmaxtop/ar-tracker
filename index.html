@@ -1823,7 +1823,7 @@ function buildDiscoverCardEl(dset, c, opts) {
       '</div>' +
       listsHtml +
       (opts.readOnly ? '' : '<div class="card-actions" style="align-items:center">') +
-        (st !== 'owned' && st !== 'shipping' ? '<button class="btn-status' + (st==='wanted'?' wanted':'') + '" data-key="' + key + '" data-status="wanted">♡ Souhaitée</button>' : '') +
+        (st !== 'owned' && st !== 'shipping' && !opts.removeWlId ? '<button class="btn-status' + (st==='wanted'?' wanted':'') + '" data-key="' + key + '" data-status="wanted">♡ Souhaitée</button>' : '') +
         (st !== 'owned' ? '<button class="btn-status' + (st==='shipping'?' shipping':'') + '" data-key="' + key + '" data-status="shipping">📦 En livraison</button>' : '') +
         '<button class="btn-status' + (st==='owned'?' owned':'') + '" data-key="' + key + '" data-status="owned">✓ Possédée</button>' +
         (opts.removeWlId ? '<button class="btn-enc-list" data-key="' + key + '" title="Gérer les listes" style="flex-shrink:0">📋</button>' : '') +
