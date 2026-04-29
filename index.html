@@ -1823,7 +1823,7 @@ function buildDiscoverCardEl(dset, c, opts) {
       '</div>' +
       listsHtml +
       (opts.readOnly ? '' : '<div class="card-actions" style="align-items:center">') +
-        (st !== 'owned' && st !== 'shipping' && !opts.removeWlId ? '<button class="btn-status' + (st==='wanted'?' wanted':'') + '" data-key="' + key + '" data-status="wanted">♡ Souhaitée</button>' : '') +
+        (st !== 'owned' && st !== 'shipping' ? '<button class="btn-status' + (st==='wanted'?' wanted':'') + '" data-key="' + key + '" data-status="wanted">♡ Souhaitée</button>' : '') +
         (st !== 'owned' ? '<button class="btn-status' + (st==='shipping'?' shipping':'') + '" data-key="' + key + '" data-status="shipping">📦 En livraison</button>' : '') +
         '<button class="btn-status' + (st==='owned'?' owned':'') + '" data-key="' + key + '" data-status="owned">✓ Possédée</button>' +
         (opts.removeWlId ? '<button class="btn-enc-list" data-key="' + key + '" title="Gérer les listes" style="flex-shrink:0">📋</button>' : '') +
@@ -2121,19 +2121,8 @@ function bindListPickerButton(btn, parentDiv, k, opts) {
 
     popup.querySelectorAll('input[type=checkbox]').forEach(function(cb) {
       cb.addEventListener('change', function() {
-        if (cb.checked) {
-          addCardToWishlist(k, cb.dataset.wl);
-        } else {
-          removeCardFromWishlist(k, cb.dataset.wl);
-          // If no lists remain and the card was 'wanted', clear state — a card belonging to no list
-          // shouldn't keep the wanted highlight. Owned/shipping states are preserved (independent of lists).
-          if ((!wishlistCards[k] || !wishlistCards[k].length) && state[k] === 'wanted') {
-            delete state[k];
-            delete ownedDates[k];
-            localStorage.setItem('pkmn-ar-owneddates', JSON.stringify(ownedDates));
-            saveState();
-          }
-        }
+        if (cb.checked) { addCardToWishlist(k, cb.dataset.wl); }
+        else { removeCardFromWishlist(k, cb.dataset.wl); }
         if (opts.afterStateChange) opts.afterStateChange();
         if (opts.onAfterUpdate) opts.onAfterUpdate();
         // If user just unchecked the current wishlist (in wishlist tab), fade out the card
@@ -3133,6 +3122,15 @@ function removeCardFromWishlist(cardKey, wlId) {
   if (!wishlistCards[cardKey]) return;
   wishlistCards[cardKey] = wishlistCards[cardKey].filter(function(id) { return id !== wlId; });
   if (!wishlistCards[cardKey].length) delete wishlistCards[cardKey];
+  // If the card no longer belongs to ANY wishlist and was 'wanted', clear state too.
+  // Preserves 'shipping'/'owned' which are independent of list memberships.
+  if ((!wishlistCards[cardKey] || !wishlistCards[cardKey].length) && state[cardKey] === 'wanted') {
+    delete state[cardKey];
+    delete ownedDates[cardKey];
+    localStorage.setItem('pkmn-ar-owneddates', JSON.stringify(ownedDates));
+    saveState();
+    return; // saveState already persists wishlistCards + triggers syncAutoPush
+  }
   saveWishlists();
 }
 function isCardInWishlist(cardKey, wlId) {
