@@ -1011,6 +1011,7 @@
   }
   .wl-action-btn:hover { color:var(--text); border-color:var(--text); }
   .wl-action-btn.danger:hover { color:var(--red); border-color:var(--red); }
+  .wl-action-btn.wl-sync-cm:hover { color:var(--yellow); border-color:rgba(250,204,21,0.6); background:rgba(250,204,21,0.08); }
   /* ── Wishlist collapsible ── */
   .wl-section-header {
     display:flex; align-items:center; gap:8px; padding:10px 14px;
@@ -1495,7 +1496,6 @@ const CM_CARD_LANGS = [
   { code: 'kr', label: 'KR', flag: 'kr' },
   { code: 'cn', label: 'CN', flag: 'cn' },
   { code: 'fr', label: 'FR', flag: 'fr' },
-  { code: 'en', label: 'EN', flag: 'gb' },
   { code: 'tw', label: 'TW', flag: 'tw' },
 ];
 
@@ -2098,6 +2098,58 @@ function bindDiscoverCardEvents(div, opts) {
 // opts.onAfterUpdate — callback invoked after every check/uncheck (e.g. counter refresh)
 // opts.afterStateChange — callback to update sibling UI (e.g. the encyclopedia want button)
 // ═══════════════════════════════════════════════════════════════════════════
+
+// Sync every rendered wishlist grid in the DOM to match wishlistCards[k]:
+//   - card present in wishlistCards[k] but not in grid X → add it (with fade-in)
+//   - card not in wishlistCards[k] but present in grid X → remove it (with fade-out)
+// Skips grids that haven't been expanded yet (those are lazy-loaded on first open
+// and would break the lazy-load if we partially populated them now).
+function syncAllWishlistViewsForCard(k) {
+  if (!k) return;
+  // Parse cardKey "SETID-NUM" — split on last '-' so set IDs with hyphens still work
+  var dashIdx = k.lastIndexOf('-');
+  if (dashIdx <= 0) return;
+  var setId = k.substring(0, dashIdx);
+  var num   = k.substring(dashIdx + 1);
+  var dset  = DISCOVER_DB.find(function(s) { return s.id === setId; });
+  var card  = dset && dset.cards.find(function(c) { return c.num === num; });
+
+  document.querySelectorAll('.wl-card-grid').forEach(function(grid) {
+    var wlId = grid.dataset.wlId;
+    if (!wlId) return;
+    // Skip empty grids — those sections were never expanded, lazy-load handles them
+    if (grid.children.length === 0) return;
+
+    var shouldBeInList = isCardInWishlist(k, wlId);
+    var ref = grid.querySelector('[data-key="' + k + '"]');
+    var existingCard = ref ? ref.closest('.card') : null;
+
+    if (shouldBeInList && !existingCard && dset && card) {
+      // ── Add card to this grid (fade-in) ──
+      var div = buildDiscoverCardEl(dset, card);
+      bindDiscoverCardEvents(div, {
+        fadeOnStatuses: ['shipping', 'owned'],
+        onAfterUpdate: refreshWishlistCounters,
+        removeWlId: wlId,
+      });
+      div.style.opacity = '0';
+      grid.appendChild(div);
+      requestAnimationFrame(function() {
+        div.style.transition = 'opacity 0.3s';
+        div.style.opacity = '1';
+      });
+    } else if (!shouldBeInList && existingCard) {
+      // ── Remove card from this grid (fade-out) ──
+      existingCard.style.transition = 'opacity 0.3s, transform 0.3s';
+      existingCard.style.opacity = '0';
+      existingCard.style.transform = 'scale(0.95)';
+      setTimeout(function() { existingCard.remove(); }, 300);
+    }
+  });
+
+  if (typeof refreshWishlistCounters === 'function') refreshWishlistCounters();
+}
+
 function bindListPickerButton(btn, parentDiv, k, opts) {
   opts = opts || {};
   btn.addEventListener('click', function(e) {
@@ -2125,14 +2177,10 @@ function bindListPickerButton(btn, parentDiv, k, opts) {
         else { removeCardFromWishlist(k, cb.dataset.wl); }
         if (opts.afterStateChange) opts.afterStateChange();
         if (opts.onAfterUpdate) opts.onAfterUpdate();
-        // If user just unchecked the current wishlist (in wishlist tab), fade out the card
-        if (!cb.checked && opts.currentWlId && cb.dataset.wl === opts.currentWlId) {
-          popup.remove();
-          parentDiv.style.transition = 'opacity 0.3s, transform 0.3s';
-          parentDiv.style.opacity = '0';
-          parentDiv.style.transform = 'scale(0.95)';
-          setTimeout(function() { parentDiv.remove(); if (opts.onAfterUpdate) opts.onAfterUpdate(); }, 300);
-        }
+        // Sync every rendered wishlist grid to match the new memberships.
+        // If the card was just removed from the list it's currently displayed in,
+        // its DOM node is faded + removed, which also disposes of the open popup.
+        syncAllWishlistViewsForCard(k);
       });
     });
 
@@ -3258,6 +3306,7 @@ function renderWishlist() {
             (wShip   ? '<span style="color:var(--blue)" data-wl-stat-ship="' + wl.id + '">&#128230; ' + wShip + '</span>'  : '<span data-wl-stat-ship="' + wl.id + '" style="display:none"></span>') +
             '<span style="color:var(--muted)" data-wl-stat-total="' + wl.id + '">' + cards.length + ' carte' + (cards.length > 1 ? 's' : '') + '</span>' +
           '</div>' +
+          '<button class="wl-action-btn wl-sync-cm" data-wl-id="' + wl.id + '" title="Sync prix CM de cette liste" style="margin-left:4px">&#10227;</button>' +
           '<button class="wl-action-btn wl-rename" data-wl-id="' + wl.id + '" title="Renommer" style="margin-left:4px">&#10000;</button>' +
           (wl.id !== DEFAULT_WL_ID ? '<button class="wl-action-btn danger wl-delete" data-wl-id="' + wl.id + '" title="Supprimer">&#10005;</button>' : '') +
           '<span class="wl-chevron">&#9654;</span>' +
@@ -3329,6 +3378,14 @@ function renderWishlist() {
       if (!wl) return;
       var newName = prompt('Renommer la liste :', wl.name);
       if (newName && newName.trim()) { renameWishlist(wlId, newName.trim()); renderWishlist(); }
+    });
+  });
+
+  main.querySelectorAll('.wl-sync-cm').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var wlId = btn.dataset.wlId;
+      startCmSyncForWishlist(wlId);
     });
   });
 
@@ -5290,6 +5347,51 @@ function startCmSync() {
     cmSyncTotal   = cards.length;
     cmSyncCurrent = 0;
     setCmSyncStatus('Démarrage — ' + cards.length + ' cartes…', 'busy');
+    updateCmSyncButton(true);
+    updateCmSyncProgressBar(0, cards.length);
+    cmSend({ type: 'START_SYNC', cards: cards, extractConfig: CM_EXTRACT_CONFIG }).then(function(r) {
+      if (!r.ok) {
+        setCmSyncStatus('Erreur extension — réessaie', 'err');
+        cmSyncActive = false;
+        updateCmSyncButton(false);
+      }
+    });
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// SYNC PAR WISHLIST
+// Filtre buildCardsForSync() pour ne garder que les cartes appartenant à
+// la wishlist `wlId`, puis lance le pipeline de sync existant.
+// ─────────────────────────────────────────────────────────────────────────
+function buildCardsForWishlist(wlId) {
+  var all = buildCardsForSync();
+  return all.filter(function(g) {
+    return wishlistCards[g.key] && wishlistCards[g.key].includes(wlId);
+  });
+}
+
+function startCmSyncForWishlist(wlId) {
+  pingExtension(function(ok) {
+    if (!ok) {
+      setCmSyncStatus('❌ Extension non détectée — vérifie qu\'elle est active dans chrome://extensions', 'err');
+      return;
+    }
+    if (cmSyncActive) {
+      setCmSyncStatus('⚠ Un sync est déjà en cours — annule-le d\'abord', 'err');
+      return;
+    }
+    var cards = buildCardsForWishlist(wlId);
+    if (cards.length === 0) {
+      setCmSyncStatus('Aucune carte à syncer dans cette liste', 'err');
+      return;
+    }
+    var wl = wishlists.find(function(w) { return w.id === wlId; });
+    var listName = wl ? wl.name : 'liste';
+    cmSyncActive  = true;
+    cmSyncTotal   = cards.length;
+    cmSyncCurrent = 0;
+    setCmSyncStatus('Sync « ' + listName + ' » — ' + cards.length + ' carte' + (cards.length>1?'s':'') + '…', 'busy');
     updateCmSyncButton(true);
     updateCmSyncProgressBar(0, cards.length);
     cmSend({ type: 'START_SYNC', cards: cards, extractConfig: CM_EXTRACT_CONFIG }).then(function(r) {
