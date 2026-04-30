@@ -5432,14 +5432,73 @@ function startCmSync() {
 
 // ─────────────────────────────────────────────────────────────────────────
 // SYNC PAR WISHLIST
-// Filtre buildCardsForSync() pour ne garder que les cartes appartenant à
-// la wishlist `wlId`, puis lance le pipeline de sync existant.
+// Construit la liste de cartes à sync DIRECTEMENT à partir des clés présentes
+// dans wishlistCards pour cette wishlist (source of truth), puis cherche
+// les liens CM pour chacune. Ne dépend pas du filtrage de buildCardsForSync()
+// qui pourrait dédupliquer DISCOVER_DB/SETS sur des clés divergentes et louper
+// des cartes.
 // ─────────────────────────────────────────────────────────────────────────
 function buildCardsForWishlist(wlId) {
-  var all = buildCardsForSync();
-  return all.filter(function(g) {
-    return wishlistCards[g.key] && wishlistCards[g.key].includes(wlId);
+  // 1. Toutes les clés (= cartes) appartenant à cette wishlist
+  var wlKeys = Object.keys(wishlistCards).filter(function(k) {
+    return wishlistCards[k] && wishlistCards[k].includes(wlId);
   });
+
+  var groups = [];
+  var skipped = [];
+
+  wlKeys.forEach(function(key) {
+    // 2a. Cherche d'abord dans DISCOVER_DB (key = "setId-num")
+    var found = false;
+    for (var i = 0; i < DISCOVER_DB.length && !found; i++) {
+      var dset = DISCOVER_DB[i];
+      if (key.indexOf(dset.id + '-') !== 0) continue;
+      var num = key.substring(dset.id.length + 1);
+      var card = dset.cards.find(function(c) { return c.num === num; });
+      if (!card) continue;
+      var name  = (card.en || card.fr) + ' (' + dset.id + ')';
+      var links = [];
+      if (card.cmUrl)   links.push({ url: card.cmUrl,   suffix: '',     isCn: false });
+      if (card.cmUrlCn) links.push({ url: card.cmUrlCn, suffix: '__cn', isCn: true  });
+      if (card.cmUrlFr) links.push({ url: card.cmUrlFr, suffix: '__fr', isCn: false });
+      if (links.length) {
+        groups.push({ key: key, name: name, links: links });
+      } else {
+        skipped.push({ key: key, name: name, reason: 'no cmUrl' });
+      }
+      found = true;
+    }
+
+    // 2b. Fallback: SETS (cartes plus anciennes sans entrée DISCOVER_DB)
+    if (!found) {
+      for (var j = 0; j < SETS.length && !found; j++) {
+        var set = SETS[j];
+        if (!set.cmSlug) continue;
+        var match = set.cards.find(function(c) {
+          return stateKey(set.id, c.numShort, c.name) === key;
+        });
+        if (!match) continue;
+        if (match.noCmJP && !match.cmUrlCn && !match.cmUrlFr) {
+          skipped.push({ key: key, name: match.name + ' (' + set.id + ')', reason: 'no cmUrl' });
+          found = true;
+          break;
+        }
+        var name  = (match.nameEn || match.name) + ' (' + set.id + ')';
+        var links = [];
+        if (!match.noCmJP)               links.push({ url: cmCardUrl(set, match), suffix: '',     isCn: false });
+        if (!match.noCn && match.cmUrlCn) links.push({ url: cmCnUrl(match),       suffix: '__cn', isCn: true  });
+        if (match.cmUrlFr)               links.push({ url: match.cmUrlFr,         suffix: '__fr', isCn: false });
+        if (links.length) groups.push({ key: key, name: name, links: links });
+        else              skipped.push({ key: key, name: name, reason: 'no valid cmUrl' });
+        found = true;
+      }
+    }
+
+    if (!found) skipped.push({ key: key, reason: 'card not in DB' });
+  });
+
+  console.log('[wlSync] wishlist=' + wlId + ' total=' + wlKeys.length + ' syncable=' + groups.length + ' skipped=' + skipped.length, { groups: groups, skipped: skipped });
+  return { groups: groups, skipped: skipped, total: wlKeys.length };
 }
 
 function startCmSyncForWishlist(wlId) {
@@ -5452,17 +5511,25 @@ function startCmSyncForWishlist(wlId) {
       setCmSyncStatus('⚠ Un sync est déjà en cours — annule-le d\'abord', 'err');
       return;
     }
-    var cards = buildCardsForWishlist(wlId);
+    var data = buildCardsForWishlist(wlId);
+    var cards = data.groups;
     if (cards.length === 0) {
-      setCmSyncStatus('Aucune carte à syncer dans cette liste', 'err');
+      var emptyMsg = data.total === 0
+        ? 'Aucune carte dans cette liste'
+        : 'Aucune carte syncable dans cette liste (' + data.total + ' carte' + (data.total>1?'s':'') + ' sans lien CM)';
+      setCmSyncStatus('❌ ' + emptyMsg, 'err');
       return;
     }
     var wl = wishlists.find(function(w) { return w.id === wlId; });
     var listName = wl ? wl.name : 'liste';
+    var skippedCount = data.skipped.length;
+    var statusMsg = 'Sync « ' + listName + ' » — ' + cards.length + ' carte' + (cards.length>1?'s':'');
+    if (skippedCount) statusMsg += ' (' + skippedCount + ' sans lien CM)';
+    statusMsg += '…';
     cmSyncActive  = true;
     cmSyncTotal   = cards.length;
     cmSyncCurrent = 0;
-    setCmSyncStatus('Sync « ' + listName + ' » — ' + cards.length + ' carte' + (cards.length>1?'s':'') + '…', 'busy');
+    setCmSyncStatus(statusMsg, 'busy');
     updateCmSyncButton(true);
     updateCmSyncProgressBar(0, cards.length);
     cmSend({ type: 'START_SYNC', cards: cards, extractConfig: CM_EXTRACT_CONFIG }).then(function(r) {
