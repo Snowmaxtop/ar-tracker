@@ -4173,9 +4173,17 @@ async function syncPull(silent) {
     // ── Load shared prices ──
     if (files['prices.json']) {
       try {
-        var pricesPayload = JSON.parse(files['prices.json'].content);
-        prices = pricesPayload.prices || {};
-        localStorage.setItem('pkmn-ar-prices', JSON.stringify(prices));
+        // v6.1 : safety net — si un push local est en attente (modif récente
+        // pas encore poussée), on n'écrase PAS les prices locaux par le cloud.
+        // Le push qui suivra dans quelques secondes contiendra TOUTES les modifs
+        // (locales + cloud parce que prices est shared).
+        if (silent && _pushScheduled) {
+          console.log('[sync] prices.json: skip overwrite local (push pending)');
+        } else {
+          var pricesPayload = JSON.parse(files['prices.json'].content);
+          prices = pricesPayload.prices || {};
+          localStorage.setItem('pkmn-ar-prices', JSON.stringify(prices));
+        }
       } catch(ep) {}
     }
 
@@ -4273,11 +4281,18 @@ async function syncPull(silent) {
 
 // ── Auto-push après modification (debounce 3s) ────────────────
 var _syncTimer = null;
+// v6.1 : flag levé dès qu'un push est en attente. Empêche syncOnFocus de pull
+// entre temps (ce qui écraserait les modifs locales par le Gist plus ancien).
+var _pushScheduled = false;
 function syncAutoPush() {
   var cfg = getSyncCfg();
   if (!cfg.token || !cfg.gistId) return;
+  _pushScheduled = true;
   clearTimeout(_syncTimer);
-  _syncTimer = setTimeout(function() { syncPush(); }, 3000);
+  _syncTimer = setTimeout(function() {
+    _pushScheduled = false;
+    syncPush();
+  }, 3000);
 }
 
 // ── Pull silencieux au premier plan (retour app) ──────────────
@@ -4285,6 +4300,17 @@ var _lastFocusPull = 0;
 function syncOnFocus() {
   var cfg = getSyncCfg();
   if (!cfg.token || !cfg.gistId) return;
+  // v6.1 : si un push est en attente (modif locale pas encore sauvée),
+  // on SKIP le pull. Sinon le pull écrase la modif par la version cloud.
+  if (_pushScheduled) {
+    console.log('[sync] Pull on focus skippé : push en attente');
+    return;
+  }
+  // v6.1 : pareil si un sync CM est en cours
+  if (typeof cmSyncActive !== 'undefined' && cmSyncActive) {
+    console.log('[sync] Pull on focus skippé : sync CM en cours');
+    return;
+  }
   var now = Date.now();
   if (now - _lastFocusPull < 30000) return; // max 1 pull / 30s
   _lastFocusPull = now;
