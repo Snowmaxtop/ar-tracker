@@ -179,29 +179,6 @@
   /* ── CARD GRID ── */
   .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; position: relative; z-index: 1; }
 
-  /* ── 3 colonnes forcées sur Collection + Wishlists développées (desktop only) ── */
-  @media (min-width: 701px) {
-    #collection-grid,
-    .wl-card-grid,
-    .uwl-card-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
-    }
-    #collection-grid .card,
-    .wl-card-grid .card,
-    .uwl-card-grid .card {
-      grid-template-columns: 100px 1fr;
-      gap: 14px;
-      padding: 14px;
-    }
-    #collection-grid .card-img-wrap,
-    .wl-card-grid .card-img-wrap,
-    .uwl-card-grid .card-img-wrap {
-      width: 100px;
-      height: 140px;
-    }
-  }
-
   .card {
     display: grid; grid-template-columns: 82px 1fr; gap: 12px; padding: 12px;
     background: #13131c; border: 1px solid var(--border); border-radius: 4px;
@@ -264,9 +241,9 @@
   .card.is-owned .btn-remove-card, .card.is-wanted .btn-remove-card, .card.is-shipping .btn-remove-card { display: none; /* display: flex; */ }
 
   .btn-cm-card {
-    display: inline-flex; align-items: center; justify-content: center; gap: 3px; flex: 1;
-    font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.05em; padding: 5px 6px;
-    border-radius: 2px; cursor: pointer; text-transform: uppercase; white-space: nowrap;
+    display: inline-flex; align-items: center; justify-content: center; gap: 4px; flex: 1;
+    font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.1em; padding: 5px 10px;
+    border-radius: 2px; cursor: pointer; text-transform: uppercase;
     border: 1px solid rgba(124,92,252,0.3); background: rgba(124,92,252,0.08);
     color: var(--accent2); text-decoration: none; transition: all 0.15s;
   }
@@ -345,12 +322,7 @@
   }
   .buy-price-input:focus { border-color: rgba(74,222,128,0.5); }
   .buy-price-currency { color: var(--muted); font-size: 9px; }
-  .card-prices-updated {
-    font-size: 9px; color: var(--muted); opacity: 0.7;
-    font-family: 'DM Mono', monospace; letter-spacing: 0.04em;
-    text-transform: uppercase;
-    padding: 0 4px 4px; cursor: help;
-  }
+  .pcr-date { font-size:8px; color:var(--muted); opacity:0.6; margin-left:4px; font-family:'DM Mono',monospace; cursor:help; }
   .price-field { display: flex; flex-direction: column; gap: 2px; flex: 1; }
   .price-field label { font-size: 9px; color: var(--muted); font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 0.04em; }
   .price-field input {
@@ -383,7 +355,7 @@
   .price-country-row.synced { background: rgba(74,222,128,0.13); }
   .price-country-row .pcr-flag { width: 13px; height: 9px; object-fit: cover; border-radius: 1px; flex-shrink: 0; }
   .price-country-row .pcr-code { color: var(--muted); font-size: 9px; letter-spacing: 0.06em; flex-shrink: 0; width: 16px; }
-  .price-country-row .pcr-price { color: var(--text); flex: 1; text-align: right; font-size: 10px; white-space: nowrap; }
+  .price-country-row .pcr-price { color: var(--text); flex: 1; text-align: right; font-size: 10px; }
   .price-country-row .pcr-price.empty { color: var(--muted); opacity: 0.35; }
   .price-country-row .pcr-sep { color: var(--muted); opacity: 0.3; font-size: 8px; }
   .price-country-row .pcr-lang { width: 13px; height: 9px; object-fit: cover; border-radius: 1px; flex-shrink: 0; opacity: 0.75; }
@@ -666,38 +638,6 @@
   .bottom-nav-btn.active { color: var(--accent2); }
   .bottom-nav-btn .bnav-icon { font-size: 20px; line-height: 1; }
   .bottom-nav-btn .bnav-label { font-size: 9px; margin-top: 1px; }
-
-  /* ══════════════════════════════════════════════════════
-     FLOATING HAMBURGER — bottom-left, mobile only
-     Always visible regardless of URL bar / topbar overlap
-  ══════════════════════════════════════════════════════ */
-  .floating-hamburger {
-    display: none; /* shown only on mobile via media query */
-    position: fixed;
-    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
-    left: 14px;
-    z-index: 250;
-    width: 48px; height: 48px;
-    border-radius: 50%;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--accent2);
-    font-size: 22px;
-    align-items: center; justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    transition: transform 0.15s, border-color 0.15s, background 0.15s;
-  }
-  .floating-hamburger:hover, .floating-hamburger:active {
-    border-color: var(--accent); background: rgba(124,92,252,0.18); transform: scale(1.05);
-  }
-  @media (max-width: 700px) {
-    .floating-hamburger { display: flex; }
-    .mobile-hamburger { display: none; }
-    .mobile-topbar { gap: 0; }
-  }
 
   /* ══════════════════════════════════════════════════════
      NAV OVERLAY MENU (mobile — triggered by hamburger)
@@ -1016,29 +956,6 @@
   }
   .wl-action-btn:hover { color:var(--text); border-color:var(--text); }
   .wl-action-btn.danger:hover { color:var(--red); border-color:var(--red); }
-  .wl-action-btn.wl-sync-cm:hover { color:var(--yellow); border-color:rgba(250,204,21,0.6); background:rgba(250,204,21,0.08); }
-  /* ── Wishlist search bar ── */
-  .wl-search-wrap {
-    position:relative; margin: 8px 0 14px; max-width: 480px;
-  }
-  .wl-search-input {
-    width:100%; box-sizing:border-box;
-    padding:9px 36px 9px 14px;
-    background:var(--surface); border:1px solid var(--border); border-radius:8px;
-    color:var(--text); font-family:'DM Sans', sans-serif; font-size:13px;
-    outline:none; transition:border-color 0.15s, background 0.15s;
-  }
-  .wl-search-input:focus { border-color:var(--accent); background:var(--surface2); }
-  .wl-search-input::placeholder { color:var(--muted); }
-  .wl-search-input::-webkit-search-cancel-button { display:none; }
-  .wl-search-clear {
-    position:absolute; right:8px; top:50%; transform:translateY(-50%);
-    width:22px; height:22px; padding:0;
-    background:transparent; border:none; cursor:pointer;
-    color:var(--muted); font-size:14px; line-height:1;
-    border-radius:4px; transition:background 0.15s, color 0.15s;
-  }
-  .wl-search-clear:hover { background:var(--surface2); color:var(--text); }
   /* ── Wishlist collapsible ── */
   .wl-section-header {
     display:flex; align-items:center; gap:8px; padding:10px 14px;
@@ -1111,15 +1028,6 @@
     background:var(--bg); border:1px solid var(--accent); border-radius:6px;
     color:var(--text); outline:none; resize:vertical; min-height:50px; margin-top:4px;
   }
-  .card-comment-display {
-    font-family:'DM Sans',sans-serif; font-size:11px; color:var(--text);
-    background:var(--surface2); border:1px solid var(--border); border-radius:4px;
-    padding:5px 9px; cursor:text;
-    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-    transition:border-color 0.15s, background 0.15s;
-  }
-  .card-comment-display:hover { border-color:var(--accent); background:rgba(124,92,252,0.08); }
-  .card-comment-display.empty { color:var(--muted); font-style:italic; font-size:10px; }
 
   /* ── CARD CONDITION ── */
   .condition-picker { display:flex; gap:3px; flex-wrap:wrap; }
@@ -1199,7 +1107,6 @@
     </div>
   </div>
   <div style="display:flex;gap:6px;padding:0 10px 6px;"><button class="scan-sidebar-btn" style="flex:1;justify-content:center;" onclick="startScan(true)">📷 Scanner</button><button class="scan-sidebar-btn" style="flex:1;justify-content:center;" onclick="startScan(false)">🖼 Importer</button></div>
-  <div style="padding:0 10px 6px;"><button id="btn-export-xlsx" class="scan-sidebar-btn" style="width:100%;justify-content:center;" onclick="exportCollectionWishlist()" title="Exporter Collection + Wishlist en Excel">📊 Export Excel</button></div>
   <div class="sync-bar">
     <button class="sync-btn" id="sync-pull-btn" onclick="syncPull()" title="Télécharger depuis le cloud">⬇ Cloud</button>
     <button class="sync-btn" id="sync-push-btn" onclick="syncPush()" title="Sauvegarder vers le cloud">⬆ Sauv.</button>
@@ -1208,7 +1115,7 @@
   <div class="sync-status" id="sync-status"></div>
   <div class="cm-sync-bar">
     <div class="cm-ext-indicator" id="cm-ext-indicator" title="Statut extension CM">⬤ <span id="cm-ext-label">Vérification…</span></div>
-    <button class="btn-cm-sync" id="btn-cm-sync" onclick="startCmSync()">🔄 Sync prix CardMarket</button>
+    <button class="btn-cm-sync" id="btn-cm-sync" onclick="startCmSync(event)" title="Sync uniquement les cartes dont les prix ont plus de 7 jours — Shift+clic pour tout resync">🔄 Sync prix CardMarket</button>
     <div class="cm-sync-progress-wrap" id="cm-sync-progress-wrap">
       <div class="cm-sync-progress-bg">
         <div class="cm-sync-progress-fill" id="cm-sync-progress-fill"></div>
@@ -1258,9 +1165,6 @@
   </button>
 </nav>
 
-<!-- ══ FLOATING HAMBURGER (mobile only) — always visible above bottom-nav ══ -->
-<button class="floating-hamburger" onclick="openNavMenu()" title="Menu" aria-label="Menu">&#9776;</button>
-
 <!-- ══ NAV OVERLAY MENU ══ -->
 <div class="nav-overlay hidden" id="nav-overlay" onclick="handleNavOverlayClick(event)">
   <div class="nav-overlay-panel" id="nav-overlay-panel">
@@ -1285,9 +1189,6 @@
     <div style="display:flex;gap:6px;padding:6px 12px 4px;">
       <button class="scan-sidebar-btn" style="flex:1;justify-content:center;" onclick="closeNavMenu();startScan(true)">📷 Scanner</button>
       <button class="scan-sidebar-btn" style="flex:1;justify-content:center;" onclick="closeNavMenu();startScan(false)">🖼 Importer</button>
-    </div>
-    <div style="padding:4px 12px 2px;">
-      <button id="btn-export-xlsx-mobile" class="scan-sidebar-btn" style="width:100%;justify-content:center;" onclick="closeNavMenu();exportCollectionWishlist()">📊 Export Excel</button>
     </div>
     <div class="sync-bar" style="padding:4px 12px 2px;">
       <button class="sync-btn" onclick="syncPull()" title="Télécharger depuis le cloud">⬇ Cloud</button>
@@ -1533,30 +1434,27 @@ const CM_EXTRACT_CONFIG = {
   locationPrefix:'Item location: ',
   langAttr:      'aria-label',
   langMap: {
-    'Japanese':'jp','Korean':'kr','Chinese':'cn','S-Chinese':'cn','T-Chinese':'cn','English':'gb',
+    'Japanese':'jp','Korean':'kr','Chinese':'cn','English':'gb',
     'French':'fr','German':'de','Spanish':'es','Italian':'it',
     'Portuguese':'pt','Dutch':'nl','Polish':'pl','Russian':'ru',
   },
-  rowSearchDepth: 999,        // monté de 12 -> 999 : on parcourt TOUTE la table
-  // ─── Nouveau contrat avec l'extension (v6) ────────────────────────────
-  // Si l'extension supporte ce flag, elle doit renvoyer TOUTES les lignes
-  // brutes du tableau CM sans pré-agréger, sous la forme :
-  //   data = { rows: [{ price: 1.50, country: 'FR', lang: 'jp' }, ...] }
-  // L'agrégation min(price) par (lang, country) est faite côté client dans
-  // applyPriceFromSync(). Si l'extension ignore ce flag et renvoie l'ancien
-  // format v5/v4, ça reste compatible.
-  rawMode: true,
-  ignorePlaceholderPrice: 1.00, // hint extension : 1.00 € est un placeholder à ignorer si possible
-  cardDelayMs: 5000,            // délai entre chaque carte (anti rate-limit) — l'extension doit lire ce flag
+  rowSearchDepth: 12,
 };
 
 function buildOnePriceRow(key, country, lang) {
   // Price key: {cardKey}__cm_{lang}_{country}
   var slot = key + '__cm_' + lang + '_' + country.code;
   var stored = prices[slot];
+  var dateStored = prices[slot + '__date'];
   var price = stored ? stored.split('|')[0] : '';
+  var dateHtml = '';
+  if (dateStored) {
+    var d = new Date(dateStored);
+    dateHtml = '<span class="pcr-date" title="' + d.toLocaleString('fr-FR') + '">' +
+      d.toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit'}) + '</span>';
+  }
   var priceHtml = price
-    ? '<span class="pcr-price">' + fmtPrice(price) + '</span>'
+    ? '<span class="pcr-price">' + price + ' €</span>'
     : '<span class="pcr-price empty">—</span>';
   return '<div class="price-country-row"' +
     ' data-price-key="' + key + '"' +
@@ -1565,35 +1463,7 @@ function buildOnePriceRow(key, country, lang) {
     '<img class="pcr-flag" src="https://flagcdn.com/w40/' + country.flag + '.png" alt="' + country.code + '">' +
     '<span class="pcr-code">' + country.label + '</span>' +
     priceHtml +
-  '</div>';
-}
-
-// Returns the most recent timestamp across all stored price dates for this card,
-// or null if no price has ever been recorded.
-function getLatestPriceDate(key) {
-  var latest = null;
-  CM_CARD_LANGS.forEach(function(lang) {
-    CM_COUNTRIES.forEach(function(c) {
-      var ts = prices[key + '__cm_' + lang.code + '_' + c.code + '__date'];
-      if (ts) {
-        var t = new Date(ts).getTime();
-        if (!isNaN(t) && (latest === null || t > latest)) latest = t;
-      }
-    });
-  });
-  return latest;
-}
-
-// HTML for the "last updated" label shown right above the price table.
-// Returns empty string if no prices have been synced yet.
-function buildPricesUpdatedLabel(key) {
-  var latest = getLatestPriceDate(key);
-  if (!latest) return '';
-  var d = new Date(latest);
-  var dateStr = d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' });
-  var timeStr = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-  return '<div class="card-prices-updated" title="' + d.toLocaleString('fr-FR') + '">' +
-    '⟳ Mis à jour le ' + dateStr + ' à ' + timeStr +
+    dateHtml +
   '</div>';
 }
 
@@ -1628,60 +1498,61 @@ function buildLangPicker(key) {
     '</div>';
 }
 
-// Formate un prix de façon compacte pour tenir dans les petites cellules.
-// < 1000 : 2 décimales (ex: "12.34 €"). >= 1000 : arrondi sans décimales (ex: "1234 €").
-// Retourne "—" si l'entrée n'est pas un nombre valide (ne renvoie JAMAIS "")
-// pour éviter de faire disparaître silencieusement les cellules.
-function fmtPrice(p) {
-  if (p === null || p === undefined || p === '') return '—';
-  var n = (typeof p === 'number') ? p : parseFloat(String(p).split('|')[0]);
-  if (isNaN(n)) return '—';
-  if (n >= 1000) return Math.round(n) + ' €';
-  return n.toFixed(2) + ' €';
-}
-
-// Returns {price, country} of the best CM price across 4 countries FOR THE CHOSEN LANGUAGE ONLY.
-// If no price exists in the chosen language, returns null (no fallback to other languages).
+// Returns {price, country} of the best CM price across 4 countries.
 // If the lowest price is exactly 1.00 € (CardMarket placeholder), use the second-lowest instead.
 function getBestCmPrice(key, langOverride) {
   var lang = langOverride || cardLangs[key] || 'jp';
-  var candidates = [];
-  CM_COUNTRIES.forEach(function(c) {
-    var raw = prices[key + '__cm_' + lang + '_' + c.code];
-    if (!raw) return;
-    var p = parseFloat(raw.split('|')[0]);
-    if (!isNaN(p)) candidates.push({ price: p, country: c.code, lang: lang });
+
+  function bestForLang(l) {
+    var candidates = [];
+    CM_COUNTRIES.forEach(function(c) {
+      var raw = prices[key + '__cm_' + l + '_' + c.code];
+      if (!raw) return;
+      var p = parseFloat(raw.split('|')[0]);
+      if (!isNaN(p)) candidates.push({ price: p, country: c.code, lang: l });
+    });
+    if (!candidates.length) return null;
+    candidates.sort(function(a, b) { return a.price - b.price; });
+    var best = candidates[0];
+    if (best.price === 1.00 && candidates.length > 1) best = candidates[1];
+    return best;
+  }
+
+  // 1. Try selected lang
+  var result = bestForLang(lang);
+  if (result) return result;
+
+  // 2. Fallback: best across all other langs
+  var fallback = null;
+  CM_CARD_LANGS.forEach(function(l) {
+    if (l.code === lang) return;
+    var r = bestForLang(l.code);
+    if (r && (fallback === null || r.price < fallback.price)) fallback = r;
   });
-  if (!candidates.length) return { price: null, country: null, lang: null };
-  candidates.sort(function(a, b) { return a.price - b.price; });
-  var best = candidates[0];
-  if (best.price === 1.00 && candidates.length > 1) best = candidates[1];
-  return best;
+  return fallback || { price: null, country: null, lang: null };
 }
 
 function buildOwnedInfo(key, card) {
   var buyVal  = buyPrices[key] !== undefined ? parseFloat(buyPrices[key]) : null;
   var lang    = cardLangs[key] || 'jp';
   var _best   = getBestCmPrice(key, lang);
-  var bestPrice   = _best.price;
-  var bestCountry = _best.country;
-  var bestLang    = _best.lang;
-  var isFallbackLang = bestLang && bestLang !== lang;
+  var bestPrice = _best.price; var bestCountry = _best.country; var bestLang = _best.lang;
+  var isFallbackLang = bestLang && bestLang !== lang; // prix vient d'une autre langue
 
   var deltaHtml = '<span class="owned-info-val neu">—</span>';
   if (buyVal !== null && bestPrice !== null) {
     var delta = bestPrice - buyVal;
     var sign  = delta >= 0 ? '+' : '';
     var cls   = delta > 0.01 ? 'pos' : delta < -0.01 ? 'neg' : 'neu';
-    var deltaStr = (Math.abs(delta) >= 1000) ? Math.round(delta) + ' €' : delta.toFixed(2) + ' €';
-    deltaHtml = '<span class="owned-info-val ' + cls + '">' + sign + deltaStr + '</span>';
+    deltaHtml = '<span class="owned-info-val ' + cls + '">' + sign + delta.toFixed(2) + ' €</span>';
   }
 
   // Lang picker généré depuis CM_CARD_LANGS
   var langPicker = '<div class="delta-source-toggle">';
   CM_CARD_LANGS.forEach(function(l) {
     langPicker += '<button class="card-lang-btn' + (lang === l.code ? ' active' : '') + '" data-lang-key="' + key + '" data-lang-val="' + l.code + '">' +
-      '<img src="https://flagcdn.com/w20/' + l.flag + '.png" alt="' + l.label + '"> ' + l.label + '</button>';
+      '<img src="https://flagcdn.com/w20/' + l.flag + '.png" alt="' + l.label + '"> ' + l.label +
+    '</button>';
   });
   langPicker += '</div>';
 
@@ -1720,10 +1591,10 @@ function buildOwnedInfo(key, card) {
       '<span class="owned-info-label">Meilleur CM</span>' +
       '<span class="owned-info-val cm-fr-val" data-fr-key="' + key + '">' +
         (bestPrice !== null
-          ? fmtPrice(bestPrice) +
+          ? bestPrice.toFixed(2) + ' €' +
             (bestCountry ? ' <span style="opacity:0.5;font-size:8px">' + bestCountry + '</span>' : '') +
             (isFallbackLang ? ' <span style="opacity:0.45;font-size:8px;color:var(--accent2)">(' + bestLang.toUpperCase() + ')</span>' : '')
-          : '<span style="color:var(--muted);font-style:italic;font-size:11px">No data</span>') +
+          : '—') +
       '</span>' +
     '</div>' +
     '<div class="owned-info-row">' +
@@ -1737,16 +1608,16 @@ function updateOwnedInfoDelta(key) {
   var buyVal  = buyPrices[key] !== undefined ? parseFloat(buyPrices[key]) : null;
   var lang    = cardLangs[key] || 'jp';
   var _best   = getBestCmPrice(key, lang);
-  var bestPrice = _best.price; var bestCountry = _best.country; var bestLang2 = _best.lang;
-  var isFallback = bestLang2 && bestLang2 !== lang;
+  var bestPrice = _best.price; var bestCountry = _best.country; var bestLang = _best.lang;
+  var isFallback = bestLang && bestLang !== lang;
 
   // Update best price display
   document.querySelectorAll('.cm-fr-val[data-fr-key="' + key + '"]').forEach(function(el) {
     el.innerHTML = bestPrice !== null
-      ? fmtPrice(bestPrice) +
+      ? bestPrice.toFixed(2) + ' €' +
         (bestCountry ? ' <span style="opacity:0.5;font-size:8px">' + bestCountry + '</span>' : '') +
-        (isFallback ? ' <span style="opacity:0.45;font-size:8px;color:var(--accent2)">(' + bestLang2.toUpperCase() + ')</span>' : '')
-      : '<span style="color:var(--muted);font-style:italic;font-size:11px">No data</span>';
+        (isFallback   ? ' <span style="opacity:0.45;font-size:8px;color:var(--accent2)">(' + bestLang.toUpperCase() + ')</span>' : '')
+      : '—';
   });
 
   // Update delta display
@@ -1755,8 +1626,7 @@ function updateOwnedInfoDelta(key) {
     var delta = bestPrice - buyVal;
     var sign  = delta >= 0 ? '+' : '';
     var cls   = delta > 0.01 ? 'pos' : delta < -0.01 ? 'neg' : 'neu';
-    var deltaStr = (Math.abs(delta) >= 1000) ? Math.round(delta) + ' €' : delta.toFixed(2) + ' €';
-    deltaHtml = '<span class="owned-info-val ' + cls + '">' + sign + deltaStr + '</span>';
+    deltaHtml = '<span class="owned-info-val ' + cls + '">' + sign + delta.toFixed(2) + ' €</span>';
   }
   document.querySelectorAll('.owned-info-delta[data-delta-key="' + key + '"]').forEach(function(el) {
     el.innerHTML = deltaHtml;
@@ -1784,20 +1654,19 @@ function renderCard(set, card, showSetBadge) {
       '</div>' +
       ((!card.noCmJP || !card.noCn || card.cmUrlFr) ? '<div class="card-cm-links">' +
         '<span class="lbl">Ouvrir sur CM</span>' +
-        (!card.noCmJP ? '<a class="btn-cm-card" href="' + cmCardUrl(set, card) + '#cmkey=' + key + '" target="_blank">' + EXT_SVG + ' JP &amp; KR</a>' : '') +
+        (!card.noCmJP ? '<a class="btn-cm-card" href="' + cmCardUrl(set, card) + '" target="_blank">' + EXT_SVG + ' JP &amp; KR</a>' : '') +
         (function() {
           if (card.noCn) return '';
-          if (card.cmUrlCn) return '<a class="btn-cm-cn btn-cm-card" href="' + card.cmUrlCn + '#cmkey=' + key + '__cn" target="_blank">' + EXT_SVG + ' CN</a>';
+          if (card.cmUrlCn) return '<a class="btn-cm-cn btn-cm-card" href="' + card.cmUrlCn + '" target="_blank">' + EXT_SVG + ' CN</a>';
           var q = encodeURIComponent(card.nameEn || card.name);
           return '<a class="btn-cm-cn btn-cm-card auto" href="https://www.cardmarket.com/en/Pokemon/Products/Singles?searchString=' + q + '&language=3" target="_blank" title="Recherche auto CN">' + EXT_SVG + ' CN?</a>';
         })() +
-        (card.cmUrlFr ? '<a class="btn-cm-fr btn-cm-card" href="' + card.cmUrlFr + '#cmkey=' + key + '__fr" target="_blank">' + EXT_SVG + ' FR</a>' : '') +
+        (card.cmUrlFr ? '<a class="btn-cm-fr btn-cm-card" href="' + card.cmUrlFr + '" target="_blank">' + EXT_SVG + ' FR</a>' : '') +
       '</div>' : '') +
       (!card.noCmJP || card.cmUrlCn || card.cmUrlFr ? '<div class="card-actions">' +
         '<button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\',event)" style="width:100%">⟳ Sync prix CM</button>' +
       '</div>' : '') +
       '<div class="card-prices" style="display:' + hidePrices + '">' +
-        buildPricesUpdatedLabel(key) +
         '<div class="prices-by-country">' +
           buildCountryPriceFields(key, card) +
         '</div>' +
@@ -1830,9 +1699,9 @@ function buildDiscoverCardEl(dset, c, opts) {
 
   // CM links — boutons "ouvrir sur CM" (restent ouverts)
   var cmLinksHtml = '';
-  if (c.cmUrl)   cmLinksHtml += '<a class="btn-cm-card" href="' + c.cmUrl + '#cmkey=' + key + '" target="_blank">' + EXT_SVG + ' JP &amp; KR</a>';
-  if (c.cmUrlCn) cmLinksHtml += '<a class="btn-cm-cn btn-cm-card" href="' + c.cmUrlCn + '#cmkey=' + key + '__cn" target="_blank">' + EXT_SVG + ' CN</a>';
-  if (c.cmUrlFr) cmLinksHtml += '<a class="btn-cm-fr btn-cm-card" href="' + c.cmUrlFr + '#cmkey=' + key + '__fr" target="_blank">' + EXT_SVG + ' FR</a>';
+  if (c.cmUrl)   cmLinksHtml += '<a class="btn-cm-card" href="' + c.cmUrl + '" target="_blank">' + EXT_SVG + ' JP &amp; KR</a>';
+  if (c.cmUrlCn) cmLinksHtml += '<a class="btn-cm-cn btn-cm-card" href="' + c.cmUrlCn + '" target="_blank">' + EXT_SVG + ' CN</a>';
+  if (c.cmUrlFr) cmLinksHtml += '<a class="btn-cm-fr btn-cm-card" href="' + c.cmUrlFr + '" target="_blank">' + EXT_SVG + ' FR</a>';
 
   // Price table — adapt card object for buildCountryPriceFields
   var fakeCard = { noCn: !c.cmUrlCn, cmUrlCn: c.cmUrlCn || null };
@@ -1856,7 +1725,7 @@ function buildDiscoverCardEl(dset, c, opts) {
   // Remove button (for wishlist view)
   var removeHtml = '';
   if (opts.removeWlId) {
-    removeHtml = '<div class="card-actions" style="margin-top:2px;grid-column:1/-1;padding:0 12px">' +
+    removeHtml = '<div class="card-actions" style="margin-top:2px">' +
       '<button class="btn-enc-remove" data-key="' + key + '" data-wl="' + opts.removeWlId + '" style="font-size:10px;padding:6px 10px;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:6px;color:var(--red);cursor:pointer;position:relative;z-index:2;width:100%;text-align:center">✕ Retirer de cette liste</button>' +
     '</div>';
   }
@@ -1872,28 +1741,20 @@ function buildDiscoverCardEl(dset, c, opts) {
       '</div>' +
       listsHtml +
       (opts.readOnly ? '' : '<div class="card-actions" style="align-items:center">') +
-        (st !== 'owned' && st !== 'shipping' && !opts.removeWlId ? '<button class="btn-status' + (st==='wanted'?' wanted':'') + '" data-key="' + key + '" data-status="wanted">♡ Souhaitée</button>' : '') +
+        (st !== 'owned' && st !== 'shipping' ? '<button class="btn-status' + (st==='wanted'?' wanted':'') + '" data-key="' + key + '" data-status="wanted">♡ Souhaitée</button>' : '') +
         (st !== 'owned' ? '<button class="btn-status' + (st==='shipping'?' shipping':'') + '" data-key="' + key + '" data-status="shipping">📦 En livraison</button>' : '') +
         '<button class="btn-status' + (st==='owned'?' owned':'') + '" data-key="' + key + '" data-status="owned">✓ Possédée</button>' +
-        (opts.removeWlId ? '<button class="btn-enc-list" data-key="' + key + '" title="Gérer les listes" style="flex-shrink:0">📋</button>' : '') +
-        (st && !opts.removeWlId ? '<span class="card-comment-icon' + (comments[key] ? ' has-comment' : '') + '" data-comment-key="' + key + '" title="Commenter">?' +
+        (st ? '<span class="card-comment-icon' + (comments[key] ? ' has-comment' : '') + '" data-comment-key="' + key + '" title="Commenter">?' +
           (comments[key] ? '<span class="card-comment-tooltip">' + comments[key].replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>' : '') +
         '</span>' : '') +
       (opts.readOnly ? '' : '</div>') +
       (st && comments[key] !== undefined ? '' : '') +
-    '</div>' +
-      (opts.removeWlId ? (function(){
-        var ct = comments[key] || '';
-        var safe = ct.replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        var titleAttr = ct ? safe.replace(/"/g,'&quot;') + ' — Cliquer pour modifier' : 'Ajouter un commentaire';
-        return '<div class="card-comment-display' + (ct ? '' : ' empty') + '" style="grid-column:1/-1;margin:6px 12px 0" data-comment-key="' + key + '" title="' + titleAttr + '">' + (ct ? safe : '+ Ajouter un commentaire') + '</div>';
-      })() : '') +
-      (cmLinksHtml ? '<div class="card-cm-links" style="grid-column:1/-1;padding:0 12px"><span class="lbl">Ouvrir sur CM</span>' + cmLinksHtml + '</div>' : '') +
+      (cmLinksHtml && st !== 'owned' ? '<div class="card-cm-links"><span class="lbl">Ouvrir sur CM</span>' + cmLinksHtml + '</div>' : '') +
       ((c.cmUrl || c.cmUrlFr) && (st === 'owned' || st === 'wanted' || (wishlistCards[key] && wishlistCards[key].length) || opts.removeWlId || opts.showLists) ?
-        '<div class="card-actions" style="margin-top:2px;grid-column:1/-1;padding:0 12px"><button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\',event)" style="width:100%;justify-content:center">⟳ Sync prix CM</button></div>' : '') +
+        '<div class="card-actions" style="margin-top:2px"><button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\',event)" style="width:100%;justify-content:center">⟳ Sync prix CM</button></div>' : '') +
       removeHtml +
+    '</div>' +
     '<div class="card-prices" style="display:' + (st === 'owned' ? 'none' : 'block') + ';grid-column:1/-1">' +
-      buildPricesUpdatedLabel(key) +
       '<div class="prices-by-country">' + priceHtml + '</div>' +
     '</div>' +
     '<div class="card-owned-info-wrap" style="display:' + (st === 'owned' ? 'block' : 'none') + '">' +
@@ -1912,23 +1773,6 @@ function bindDiscoverCardEvents(div, opts) {
       e.stopPropagation();
       var k = btn.dataset.key;
       var next = btn.dataset.status;
-
-      // ── Wishlist context: re-clicking "Souhaitée" on a wanted card just clears the state ──
-      // The wishlistCards[k] memberships are PRESERVED — the lists "remember" the card.
-      // The card disappears from all wishlist views (state-filtered) but stays checked in the
-      // encyclopedia popup, so the user can re-mark it as wanted later via that popup or button.
-      if (opts.removeWlId && next === 'wanted' && state[k] === 'wanted') {
-        delete state[k];
-        delete ownedDates[k];
-        localStorage.setItem('pkmn-ar-owneddates', JSON.stringify(ownedDates));
-        saveState();
-        div.style.transition = 'opacity 0.3s, transform 0.3s';
-        div.style.opacity = '0';
-        div.style.transform = 'scale(0.95)';
-        setTimeout(function() { div.remove(); if (opts.onAfterUpdate) opts.onAfterUpdate(); }, 300);
-        return;
-      }
-
       state[k] = state[k] === next ? undefined : next;
       if (!state[k]) delete state[k];
       saveState();
@@ -2074,48 +1918,6 @@ function bindDiscoverCardEvents(div, opts) {
     });
   }
 
-  // ── Comment display (wishlist view): click to edit inline ──
-  var commentDisplay = div.querySelector('.card-comment-display');
-  if (commentDisplay) {
-    commentDisplay.addEventListener('click', function(e) {
-      e.stopPropagation();
-      var k = this.dataset.commentKey;
-      var displayEl = this;
-      if (displayEl.parentNode.querySelector('.card-comment-input')) return;
-      var input = document.createElement('textarea');
-      input.className = 'card-comment-input';
-      input.style.gridColumn = '1/-1';
-      input.style.margin = '6px 12px 0';
-      input.value = comments[k] || '';
-      input.placeholder = 'Ajouter un commentaire\u2026';
-      displayEl.style.display = 'none';
-      displayEl.insertAdjacentElement('afterend', input);
-      input.focus();
-      function saveCommentInline() {
-        var val = input.value.trim();
-        if (val) {
-          comments[k] = val;
-          displayEl.classList.remove('empty');
-          displayEl.textContent = val;
-          displayEl.title = val + ' \u2014 Cliquer pour modifier';
-        } else {
-          delete comments[k];
-          displayEl.classList.add('empty');
-          displayEl.textContent = '+ Ajouter un commentaire';
-          displayEl.title = 'Ajouter un commentaire';
-        }
-        localStorage.setItem('pkmn-ar-comments', JSON.stringify(comments));
-        syncAutoPush();
-        input.remove();
-        displayEl.style.display = '';
-      }
-      input.addEventListener('blur', saveCommentInline);
-      input.addEventListener('keydown', function(ev) {
-        if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); saveCommentInline(); }
-      });
-    });
-  }
-
   var removeBtn = div.querySelector('.btn-enc-remove');
   if (removeBtn) {
     removeBtn.addEventListener('click', function(e) {
@@ -2130,176 +1932,6 @@ function bindDiscoverCardEvents(div, opts) {
       setTimeout(function() { div.remove(); if (opts.onAfterUpdate) opts.onAfterUpdate(); }, 300);
     });
   }
-
-  // ── List picker button (📋) — shows popup with checkboxes for each wishlist ──
-  var listBtn = div.querySelector('.btn-enc-list');
-  if (listBtn) {
-    bindListPickerButton(listBtn, div, listBtn.dataset.key, {
-      currentWlId: opts.removeWlId,  // if user unchecks the current list, fade out the card
-      onAfterUpdate: opts.onAfterUpdate,
-    });
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// LIST PICKER POPUP (shared by encyclopedia + wishlist cards)
-// Opens a popup of checkboxes, one per wishlist, plus "Create new list".
-// opts.currentWlId   — if set, unchecking that list also fades out parentDiv
-// opts.onAfterUpdate — callback invoked after every check/uncheck (e.g. counter refresh)
-// opts.afterStateChange — callback to update sibling UI (e.g. the encyclopedia want button)
-// ═══════════════════════════════════════════════════════════════════════════
-
-// Sync every rendered wishlist grid in the DOM to match wishlistCards[k]:
-//   - card present in wishlistCards[k] but not in grid X → add it (with fade-in)
-//   - card not in wishlistCards[k] but present in grid X → remove it (with fade-out)
-// Skips grids that haven't been populated yet (lazy-load handles them on first open).
-// Also rebuilds the collapsed-view miniature strip for every wishlist so users
-// see the change immediately even on closed sections.
-function syncAllWishlistViewsForCard(k) {
-  if (!k) return;
-  // Parse cardKey "SETID-NUM" — split on last '-' so set IDs with hyphens still work
-  var dashIdx = k.lastIndexOf('-');
-  if (dashIdx <= 0) return;
-  var setId = k.substring(0, dashIdx);
-  var num   = k.substring(dashIdx + 1);
-  var dset  = DISCOVER_DB.find(function(s) { return s.id === setId; });
-  var card  = dset && dset.cards.find(function(c) { return c.num === num; });
-
-  document.querySelectorAll('.wl-card-grid').forEach(function(grid) {
-    var wlId = grid.dataset.wlId;
-    if (!wlId) return;
-    // Skip grids whose lazy-load hasn't run yet — first open will pick up the correct state
-    if (!grid.dataset.rendered) return;
-
-    var shouldBeInList = isCardInWishlist(k, wlId);
-    var ref = grid.querySelector('[data-key="' + k + '"]');
-    var existingCard = ref ? ref.closest('.card') : null;
-
-    if (shouldBeInList && !existingCard && dset && card) {
-      // ── Add card (match _populateWlGrid: showLists + removeWlId for proper rendering) ──
-      var div = buildDiscoverCardEl(dset, card, { showLists: true, removeWlId: wlId });
-      bindDiscoverCardEvents(div, { fadeOnStatuses: ['shipping', 'owned'], onAfterUpdate: refreshWishlistCounters });
-      div.style.opacity = '0';
-      grid.appendChild(div);
-      requestAnimationFrame(function() {
-        div.style.transition = 'opacity 0.3s';
-        div.style.opacity = '1';
-      });
-    } else if (!shouldBeInList && existingCard) {
-      // ── Remove card with fade-out ──
-      existingCard.style.transition = 'opacity 0.3s, transform 0.3s';
-      existingCard.style.opacity = '0';
-      existingCard.style.transform = 'scale(0.95)';
-      setTimeout(function() { existingCard.remove(); }, 300);
-    }
-  });
-
-  // Rebuild every collapsed-view miniature strip — cheap and keeps everything in sync,
-  // including counters of lists currently shown collapsed.
-  if (typeof wishlists !== 'undefined' && wishlists.forEach) {
-    wishlists.forEach(function(wl) { _rebuildWlMiniatures(wl.id); });
-  }
-  if (typeof refreshWishlistCounters === 'function') refreshWishlistCounters();
-}
-
-// Rebuilds the thumbnail strip + empty-state placeholder of one wishlist's collapsed body.
-// No-op if the wishlist isn't currently displayed in the DOM.
-function _rebuildWlMiniatures(wlId) {
-  var bodyEl = document.querySelector('[data-wl-body="' + wlId + '"]');
-  if (!bodyEl) return;
-
-  var allItems = (typeof getWishlistCards === 'function') ? getWishlistCards() : [];
-  var listCards = allItems.filter(function(i) {
-    var k = i.fromDiscover ? (i.set.id + '-' + i.card.numShort) : stateKey(i.set.id, i.card.numShort, i.card.name);
-    return isCardInWishlist(k, wlId);
-  });
-
-  // Same rarity ordering as renderWishlist (SAR > AR, etc.)
-  var RO = ['C','UC','R','RH','RP','RS','RR','RRR','CHR','CSR','BWR','AMZ','PR','K','S','SSR','LGD','PROMO','MA','MUR','TR','AR','SAR','SR','UR','HR'];
-  function rank(r) { var i = RO.indexOf(r); return i === -1 ? -1 : i; }
-  listCards.sort(function(a, b) {
-    var d = rank(b.card.rarity) - rank(a.card.rarity);
-    if (d !== 0) return d;
-    if (a.set.id !== b.set.id) return a.set.id < b.set.id ? -1 : 1;
-    return (a.card.numShort || a.card.num || '').localeCompare(b.card.numShort || b.card.num || '');
-  });
-
-  var MAX_THUMBS = 12;
-  var thumbsHtml = '';
-  listCards.slice(0, MAX_THUMBS).forEach(function(item) {
-    var cls = item.status === 'owned' ? ' thumb-owned' : item.status === 'shipping' ? ' thumb-shipping' : ' thumb-wanted';
-    if (item.card.img) {
-      thumbsHtml += '<div class="dash-thumb' + cls + '"><img src="' + item.card.img + '" onload="this.style.opacity=1" style="opacity:0;transition:opacity 0.3s"></div>';
-    } else {
-      thumbsHtml += '<div class="dash-thumb' + cls + '"><span class="thumb-placeholder">?</span></div>';
-    }
-  });
-  if (listCards.length > MAX_THUMBS) {
-    thumbsHtml += '<div class="dash-thumb-more">+' + (listCards.length - MAX_THUMBS) + '</div>';
-  }
-
-  bodyEl.innerHTML = listCards.length
-    ? '<div class="wl-thumb-strip">' + thumbsHtml + '</div>'
-    : '<div style="font-size:11px;color:var(--muted);font-style:italic;padding:6px 2px 10px">Aucune carte &#8212; ajoutez-en depuis l&#39;Encyclop&#233;die</div>';
-}
-
-function bindListPickerButton(btn, parentDiv, k, opts) {
-  opts = opts || {};
-  btn.addEventListener('click', function(e) {
-    e.stopPropagation();
-    document.querySelectorAll('.enc-list-popup').forEach(function(p) { p.remove(); });
-    var popup = document.createElement('div');
-    popup.className = 'enc-list-popup';
-    if (!wishlists.length) {
-      popup.innerHTML = '<div class="enc-list-popup-create">＋ Créer une liste</div>';
-    } else {
-      var html = '';
-      wishlists.forEach(function(wl) {
-        var checked = isCardInWishlist(k, wl.id) ? ' checked' : '';
-        html += '<label class="enc-list-popup-item"><input type="checkbox" data-wl="' + wl.id + '"' + checked + '> ' + wl.name + '</label>';
-      });
-      html += '<div class="enc-list-popup-create">＋ Nouvelle liste</div>';
-      popup.innerHTML = html;
-    }
-    btn.parentNode.style.position = 'relative';
-    btn.parentNode.appendChild(popup);
-
-    popup.querySelectorAll('input[type=checkbox]').forEach(function(cb) {
-      cb.addEventListener('change', function() {
-        if (cb.checked) { addCardToWishlist(k, cb.dataset.wl); }
-        else { removeCardFromWishlist(k, cb.dataset.wl); }
-        if (opts.afterStateChange) opts.afterStateChange();
-        if (opts.onAfterUpdate) opts.onAfterUpdate();
-        // Sync every rendered wishlist grid to match the new memberships.
-        // If the card was just removed from the list it's currently displayed in,
-        // its DOM node is faded + removed, which also disposes of the open popup.
-        syncAllWishlistViewsForCard(k);
-      });
-    });
-
-    var createBtn = popup.querySelector('.enc-list-popup-create');
-    if (createBtn) {
-      createBtn.addEventListener('click', function() {
-        var name = prompt('Nom de la nouvelle liste :');
-        if (name && name.trim()) {
-          var newId = createWishlist(name.trim());
-          addCardToWishlist(k, newId);
-          popup.remove();
-          if (opts.afterStateChange) opts.afterStateChange();
-          if (opts.onAfterUpdate) opts.onAfterUpdate();
-        }
-      });
-    }
-
-    setTimeout(function() {
-      document.addEventListener('click', function closePopup(ev) {
-        if (!popup.contains(ev.target) && ev.target !== btn) {
-          popup.remove();
-          document.removeEventListener('click', closePopup);
-        }
-      });
-    }, 10);
-  });
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2690,13 +2322,6 @@ function refreshEncGrid() {
       div.classList.toggle('is-wanted', newSt === 'wanted');
       this.textContent = newSt === 'wanted' ? '♡ Souhaitée' : '☆ Souhaiter';
       this.classList.toggle('active-want', newSt === 'wanted');
-      // ── Live-update any open enc-list-popup so its checkboxes reflect the new wishlistCards state ──
-      var openPopup = div.querySelector('.enc-list-popup');
-      if (openPopup) {
-        openPopup.querySelectorAll('input[type=checkbox][data-wl]').forEach(function(cb) {
-          cb.checked = isCardInWishlist(k, cb.dataset.wl);
-        });
-      }
       updateSetStatsByKey(k);
       if (encStatus !== 'all') { div.style.opacity = '0.35'; setTimeout(function(){ div.remove(); }, 400); }
     });
@@ -2744,23 +2369,70 @@ function refreshEncGrid() {
     }
     var listBtn = div.querySelector('.btn-enc-list');
     if (listBtn) {
-      bindListPickerButton(listBtn, div, listBtn.dataset.key, {
-        afterStateChange: function() {
-          var k2 = listBtn.dataset.key;
-          var wantBtn = div.querySelector('.btn-enc-want');
-          var curSt = state[k2] || '';
-          // Sync the encyclopedia card visual (orange "wanted" highlight) with current state
-          div.classList.toggle('is-wanted', curSt === 'wanted');
-          if (wantBtn) {
+      listBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var k = this.dataset.key;
+        var btn = this;
+        // Close any other open popups
+        document.querySelectorAll('.enc-list-popup').forEach(function(p) { p.remove(); });
+        // Build popup
+        var popup = document.createElement('div');
+        popup.className = 'enc-list-popup';
+        if (!wishlists.length) {
+          popup.innerHTML = '<div class="enc-list-popup-create" id="enc-popup-create">＋ Créer une liste</div>';
+        } else {
+          var html = '';
+          wishlists.forEach(function(wl) {
+            var checked = isCardInWishlist(k, wl.id) ? ' checked' : '';
+            html += '<label class="enc-list-popup-item"><input type="checkbox" data-wl="' + wl.id + '"' + checked + '> ' + wl.name + '</label>';
+          });
+          html += '<div class="enc-list-popup-create" id="enc-popup-create">＋ Nouvelle liste</div>';
+          popup.innerHTML = html;
+        }
+        btn.parentNode.style.position = 'relative';
+        btn.parentNode.appendChild(popup);
+        // Checkbox changes
+        popup.querySelectorAll('input[type=checkbox]').forEach(function(cb) {
+          cb.addEventListener('change', function() {
+            if (cb.checked) { addCardToWishlist(k, cb.dataset.wl); }
+            else { removeCardFromWishlist(k, cb.dataset.wl); }
+            // Update want button if card just became wanted
+            var wantBtn = div.querySelector('.btn-enc-want');
+            var curSt = state[k] || '';
             if (curSt === 'wanted') {
-              wantBtn.textContent = '♡ Souhaitée';
-              wantBtn.classList.add('active-want');
-            } else if (curSt === '') {
-              wantBtn.textContent = '☆ Souhaiter';
-              wantBtn.classList.remove('active-want', 'active-ship');
+              div.classList.add('is-wanted');
+              if (wantBtn) { wantBtn.textContent = '♡ Souhaitée'; wantBtn.classList.add('active-want'); }
             }
-          }
-        },
+          });
+        });
+        // Create new list from popup
+        var createBtn = popup.querySelector('#enc-popup-create');
+        if (createBtn) {
+          createBtn.addEventListener('click', function() {
+            var name = prompt('Nom de la nouvelle liste :');
+            if (name && name.trim()) {
+              var newId = createWishlist(name.trim());
+              addCardToWishlist(k, newId);
+              popup.remove();
+              // Update want button
+              var wantBtn = div.querySelector('.btn-enc-want');
+              var curSt = state[k] || '';
+              if (curSt === 'wanted') {
+                div.classList.add('is-wanted');
+                if (wantBtn) { wantBtn.textContent = '♡ Souhaitée'; wantBtn.classList.add('active-want'); }
+              }
+            }
+          });
+        }
+        // Close popup on outside click
+        setTimeout(function() {
+          document.addEventListener('click', function closePopup(ev) {
+            if (!popup.contains(ev.target) && ev.target !== btn) {
+              popup.remove();
+              document.removeEventListener('click', closePopup);
+            }
+          });
+        }, 10);
       });
     }
     grid.appendChild(div);
@@ -3263,15 +2935,6 @@ function removeCardFromWishlist(cardKey, wlId) {
   if (!wishlistCards[cardKey]) return;
   wishlistCards[cardKey] = wishlistCards[cardKey].filter(function(id) { return id !== wlId; });
   if (!wishlistCards[cardKey].length) delete wishlistCards[cardKey];
-  // If the card no longer belongs to ANY wishlist and was 'wanted', clear state too.
-  // Preserves 'shipping'/'owned' which are independent of list memberships.
-  if ((!wishlistCards[cardKey] || !wishlistCards[cardKey].length) && state[cardKey] === 'wanted') {
-    delete state[cardKey];
-    delete ownedDates[cardKey];
-    localStorage.setItem('pkmn-ar-owneddates', JSON.stringify(ownedDates));
-    saveState();
-    return; // saveState already persists wishlistCards + triggers syncAutoPush
-  }
   saveWishlists();
 }
 function isCardInWishlist(cardKey, wlId) {
@@ -3287,7 +2950,6 @@ function getWishlistCardCount(wlId) {
 
 let wishlistFilter = 'all'; // 'all' | 'wanted' | 'shipping'
 var wlOpenState = {}; // wlId -> bool
-var wlSearchQuery = ''; // search filter for wishlists (matches list name or card name)
 let wishlistListFilter = null; // null = all, or wlId string
 let wishlistSearch = '';
 
@@ -3325,58 +2987,15 @@ function renderWishlist() {
     return item.fromDiscover ? (item.set.id + '-' + item.card.num) : stateKey(item.set.id, item.card.numShort, item.card.name);
   }
 
-  // Rarity ordering — high rarity first (SAR before AR, UR before SR, etc.)
-  // Same RARITY_ORDER as encyclopedia: higher index = rarer.
-  var WL_RARITY_ORDER = ['C','UC','R','RH','RP','RS','RR','RRR','CHR','CSR','BWR','AMZ','PR','K','S','SSR','LGD','PROMO','MA','MUR','TR','AR','SAR','SR','UR','HR'];
-  function wlRarityRank(r) {
-    var i = WL_RARITY_ORDER.indexOf(r);
-    return i === -1 ? -1 : i;
-  }
-
   var listData = wishlists.map(function(wl) {
     var cards = allItems.filter(function(i) { return isCardInWishlist(wlKey(i), wl.id); });
-    cards.sort(function(a, b) {
-      var rDiff = wlRarityRank(b.card.rarity) - wlRarityRank(a.card.rarity);
-      if (rDiff !== 0) return rDiff;
-      // Tiebreaker: by set id then card num for stable ordering
-      if (a.set.id !== b.set.id) return a.set.id < b.set.id ? -1 : 1;
-      return (a.card.numShort || a.card.num || '').localeCompare(b.card.numShort || b.card.num || '');
-    });
     return { wl: wl, cards: cards };
   });
 
-  // ── Apply search filter ──────────────────────────────────────────
-  // q matches a wishlist if either its name matches, OR at least one of its cards matches.
-  // When the wishlist NAME matches → all its cards are kept (user wants to see the whole list).
-  // When ONLY cards match → only those cards are shown.
-  var q = (wlSearchQuery || '').trim().toLowerCase();
-  if (q) {
-    listData = listData.map(function(ld) {
-      var listNameMatches = ld.wl.name.toLowerCase().includes(q);
-      if (listNameMatches) return ld; // keep all cards
-      var filtered = ld.cards.filter(function(item) {
-        var fr = (item.card.name   || '').toLowerCase();
-        var en = (item.card.nameEn || '').toLowerCase();
-        return fr.includes(q) || en.includes(q);
-      });
-      return { wl: ld.wl, cards: filtered, _filtered: true };
-    }).filter(function(ld) {
-      // Drop wishlists where the name didn't match AND no card matched
-      return ld.cards.length > 0 || ld.wl.name.toLowerCase().includes(q);
-    });
-  }
-
   // Default: first list open, rest closed (preserve session state)
-  // When a search is active, force-open every visible list so cards are immediately visible.
   listData.forEach(function(ld, idx) {
-    if (q && ld._filtered) wlOpenState[ld.wl.id] = true;
-    else if (wlOpenState[ld.wl.id] === undefined) wlOpenState[ld.wl.id] = (idx === 0);
+    if (wlOpenState[ld.wl.id] === undefined) wlOpenState[ld.wl.id] = (idx === 0);
   });
-
-  var hasResults = listData.length > 0;
-  var noResultsHtml = (q && !hasResults)
-    ? '<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px;font-style:italic">Aucune liste ni carte ne correspond &#224; &laquo; ' + q.replace(/</g,'&lt;').replace(/>/g,'&gt;') + ' &raquo;</div>'
-    : '';
 
   var html =
     '<div class="dashboard">' +
@@ -3387,14 +3006,9 @@ function renderWishlist() {
       '<span style="color:var(--blue)"><strong id="wl-count-shipping">' + shippingCount + '</strong> en livraison</span>' +
       '<span><strong>' + wishlists.length + '</strong> liste' + (wishlists.length > 1 ? 's' : '') + '</span>' +
     '</div>' +
-    '<div class="wl-search-wrap">' +
-      '<input type="search" id="wl-search-input" class="wl-search-input" placeholder="Rechercher un Pok&#233;mon ou une liste&#8230;" value="' + q.replace(/"/g,'&quot;') + '" autocomplete="off">' +
-      (q ? '<button class="wl-search-clear" id="wl-search-clear" title="Effacer">&#10005;</button>' : '') +
-    '</div>' +
     '<div style="margin-bottom:16px">' +
       '<button class="wl-chip wl-chip-add" id="wl-add-list" style="font-size:12px;padding:8px 16px">+ Nouvelle liste</button>' +
-    '</div>' +
-    noResultsHtml;
+    '</div>';
 
   listData.forEach(function(ld) {
     var wl = ld.wl;
@@ -3433,7 +3047,6 @@ function renderWishlist() {
             (wShip   ? '<span style="color:var(--blue)" data-wl-stat-ship="' + wl.id + '">&#128230; ' + wShip + '</span>'  : '<span data-wl-stat-ship="' + wl.id + '" style="display:none"></span>') +
             '<span style="color:var(--muted)" data-wl-stat-total="' + wl.id + '">' + cards.length + ' carte' + (cards.length > 1 ? 's' : '') + '</span>' +
           '</div>' +
-          '<button class="wl-action-btn wl-sync-cm" data-wl-id="' + wl.id + '" title="Sync prix CM de cette liste" style="margin-left:4px">&#10227;</button>' +
           '<button class="wl-action-btn wl-rename" data-wl-id="' + wl.id + '" title="Renommer" style="margin-left:4px">&#10000;</button>' +
           (wl.id !== DEFAULT_WL_ID ? '<button class="wl-action-btn danger wl-delete" data-wl-id="' + wl.id + '" title="Supprimer">&#10005;</button>' : '') +
           '<span class="wl-chevron">&#9654;</span>' +
@@ -3480,41 +3093,13 @@ function renderWishlist() {
       if (expandedBody)  expandedBody.style.display  = isNowOpen ? '' : 'none';
       if (isNowOpen) {
         var grid = expandedBody && expandedBody.querySelector('.wl-card-grid');
-        if (grid && !grid.dataset.rendered) {
+        if (grid && !grid.children.length) {
           var ld = listData.find(function(l) { return l.wl.id === wlId; });
           if (ld) _populateWlGrid(main, ld);
         }
       }
     });
   });
-
-  // Search input — debounced re-render on type, immediate clear button
-  var searchInput = document.getElementById('wl-search-input');
-  if (searchInput) {
-    var _wlSearchTimer = null;
-    searchInput.addEventListener('input', function() {
-      clearTimeout(_wlSearchTimer);
-      var v = this.value;
-      _wlSearchTimer = setTimeout(function() {
-        wlSearchQuery = v;
-        renderWishlist();
-        // Restore focus + caret position after re-render
-        var newInput = document.getElementById('wl-search-input');
-        if (newInput) {
-          newInput.focus();
-          var len = newInput.value.length;
-          try { newInput.setSelectionRange(len, len); } catch(_) {}
-        }
-      }, 180);
-    });
-  }
-  var clearBtn = document.getElementById('wl-search-clear');
-  if (clearBtn) {
-    clearBtn.addEventListener('click', function() {
-      wlSearchQuery = '';
-      renderWishlist();
-    });
-  }
 
   // Add list button
   var addBtn = document.getElementById('wl-add-list');
@@ -3533,14 +3118,6 @@ function renderWishlist() {
       if (!wl) return;
       var newName = prompt('Renommer la liste :', wl.name);
       if (newName && newName.trim()) { renameWishlist(wlId, newName.trim()); renderWishlist(); }
-    });
-  });
-
-  main.querySelectorAll('.wl-sync-cm').forEach(function(btn) {
-    btn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      var wlId = btn.dataset.wlId;
-      startCmSyncForWishlist(wlId);
     });
   });
 
@@ -3570,7 +3147,6 @@ function _populateWlGrid(main, ld) {
     bindDiscoverCardEvents(div, { fadeOnStatuses: ['shipping', 'owned'], onAfterUpdate: refreshWishlistCounters });
     grid.appendChild(div);
   });
-  grid.dataset.rendered = '1';
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -3659,14 +3235,6 @@ function renderUserCollection(username) {
     });
   });
 
-  // Rarity ordering — high rarity first (SAR before AR, UR before SR, etc.)
-  // Same RARITY_ORDER as encyclopedia + own wishlist for consistency.
-  var UWL_RARITY_ORDER = ['C','UC','R','RH','RP','RS','RR','RRR','CHR','CSR','BWR','AMZ','PR','K','S','SSR','LGD','PROMO','MA','MUR','TR','AR','SAR','SR','UR','HR'];
-  function uwlRarityRank(r) {
-    var i = UWL_RARITY_ORDER.indexOf(r);
-    return i === -1 ? -1 : i;
-  }
-
   // Build wishlist data
   var wlData = uWishlists.map(function(wl) {
     var cards = [];
@@ -3677,12 +3245,6 @@ function renderUserCollection(username) {
           cards.push({ card: card, set: dset, status: uState[key] || '', key: key });
         }
       });
-    });
-    cards.sort(function(a, b) {
-      var rDiff = uwlRarityRank(b.card.rarity) - uwlRarityRank(a.card.rarity);
-      if (rDiff !== 0) return rDiff;
-      if (a.set.id !== b.set.id) return a.set.id < b.set.id ? -1 : 1;
-      return (a.card.num || '').localeCompare(b.card.num || '');
     });
     return { wl: wl, cards: cards };
   });
@@ -4325,8 +3887,8 @@ function mobileSyncTap() {
 }
 
 // ── Config modal ──────────────────────────────────────────────
-var ALLOWED_USERS = ['xanthin', 'julien', 'remi', 'louise'];
-var USER_DISPLAY = { 'xanthin': 'Xanthin', 'julien': 'Julien', 'remi': 'Rémi', 'louise': 'Louise' };
+var ALLOWED_USERS = ['xanthin', 'julien', 'remi'];
+var USER_DISPLAY = { 'xanthin': 'Xanthin', 'julien': 'Julien', 'remi': 'Rémi' };
 
 function userDisplayName(username) {
   return USER_DISPLAY[username] || username;
@@ -5249,9 +4811,8 @@ window.addEventListener('message', function(event) {
     }
     if (msg.type === 'PRICE_UPDATED') {
       console.log('[Bridge] PRICE_UPDATED pour', msg.key, msg.data);
-      var forceLang = msg.key.endsWith('__cn') ? 'cn' : msg.key.endsWith('__fr') ? 'fr' : null;
       var priceKey = msg.key.replace(/__cn$/, '').replace(/__fr$/, '');
-      applyPriceFromSync(priceKey, msg.data, forceLang);
+      applyPriceFromSync(priceKey, msg.data);
       var h = window.__singleSyncHandlers && (window.__singleSyncHandlers[msg.key] || window.__singleSyncHandlers[priceKey]);
       if (h) { h(msg); }
     }
@@ -5275,6 +4836,21 @@ window.addEventListener('message', function(event) {
     }
     if (msg.type === 'CAPTCHA_NEEDED') {
       setCmSyncStatus('⚠️ CAPTCHA — résous-le dans l\'onglet CM', 'busy');
+    }
+    if (msg.type === 'SYNC_PAUSE') {
+      // Pause humaine intercalée par l'extension — on prévient juste l'utilisateur
+      var sec = Math.round((msg.durationMs || 0) / 1000);
+      setCmSyncStatus('🛌 Pause anti-ban (' + sec + 's) — reprise auto', 'busy');
+    }
+    if (msg.type === 'SYNC_RATE_LIMITED') {
+      cmSyncActive = false;
+      updateCmSyncButton(false);
+      var done = msg.processed || 0;
+      var tot  = msg.total || 0;
+      setCmSyncStatus('🚫 ' + (msg.message || 'Cloudflare 1015 — IP bloquée') +
+        ' (' + done + '/' + tot + ' faits)', 'err');
+      // Sauve ce qu'on a déjà récupéré
+      syncAutoPush();
     }
   }
 });
@@ -5360,17 +4936,51 @@ function pingExtension(callback) {
 
 function isCmExtensionInstalled() { return _cmBridgeReady; }
 
-function buildCardsForSync() {
+// Nombre de jours en-dessous duquel un prix est considéré "frais" et la carte est skippée
+// Modifiable depuis la console via window.SYNC_STALE_DAYS = N
+var SYNC_STALE_DAYS = 7;
+
+// Vérifie si une carte a au moins un slot de prix avec une date de sync plus vieille
+// que le seuil (ou aucune date du tout = jamais synchronisée).
+// Retourne true si la carte doit être (re)synchronisée.
+function cardNeedsSync(key, links) {
+  var staleMs = SYNC_STALE_DAYS * 24 * 3600 * 1000;
+  var now = Date.now();
+  // Pour chaque link, on regarde s'il existe AU MOINS un slot de prix daté pour
+  // cette langue (jp pour suffix '', cn pour __cn, fr pour __fr) et si toutes
+  // les dates sont fraîches. Si un link n'a aucune date → carte à syncer.
+  for (var i = 0; i < links.length; i++) {
+    var lang = links[i].suffix === '__cn' ? 'cn' : (links[i].suffix === '__fr' ? 'fr' : 'jp');
+    var datePrefix = key + '__cm_' + lang + '_';
+    var hasAnyDate = false;
+    var allFresh = true;
+    for (var k in prices) {
+      if (!prices.hasOwnProperty(k)) continue;
+      if (k.indexOf(datePrefix) !== 0) continue;
+      if (k.slice(-6) !== '__date') continue;
+      hasAnyDate = true;
+      var ts = new Date(prices[k]).getTime();
+      if (isNaN(ts) || (now - ts) >= staleMs) { allFresh = false; break; }
+    }
+    if (!hasAnyDate || !allFresh) return true;
+  }
+  return false;
+}
+
+function buildCardsForSync(forceAll) {
   var groups = [];
+  var skipped = 0;
   DISCOVER_DB.forEach(function(dset) {
     dset.cards.forEach(function(card) {
       var key   = dset.id + '-' + card.num;
       var name  = (card.en || card.fr) + ' (' + dset.id + ')';
       var links = [];
-      if (card.cmUrl)   links.push({ url: card.cmUrl,   suffix: '',     isCn: false });
-      if (card.cmUrlCn) links.push({ url: card.cmUrlCn, suffix: '__cn', isCn: true  });
-      if (card.cmUrlFr) links.push({ url: card.cmUrlFr, suffix: '__fr', isCn: false });
-      if (links.length) groups.push({ key: key, name: name, links: links });
+      if (card.cmUrl)   links.push({ url: card.cmUrl,   suffix: '',      isCn: false });
+      if (card.cmUrlCn) links.push({ url: card.cmUrlCn, suffix: '__cn',  isCn: true  });
+      if (card.cmUrlFr) links.push({ url: card.cmUrlFr, suffix: '__fr',  isCn: false });
+      if (!links.length) return;
+      if (!forceAll && !cardNeedsSync(key, links)) { skipped++; return; }
+      groups.push({ key: key, name: name, links: links });
     });
   });
   SETS.forEach(function(set) {
@@ -5381,12 +4991,16 @@ function buildCardsForSync() {
       if (groups.some(function(g) { return g.key === key; })) return;
       var name  = (card.nameEn || card.name) + ' (' + set.id + ')';
       var links = [];
-      if (!card.noCmJP)               links.push({ url: cmCardUrl(set, card), suffix: '',     isCn: false });
-      if (!card.noCn && card.cmUrlCn) links.push({ url: cmCnUrl(card),        suffix: '__cn', isCn: true  });
-      if (card.cmUrlFr)               links.push({ url: card.cmUrlFr,          suffix: '__fr', isCn: false });
-      if (links.length) groups.push({ key: key, name: name, links: links });
+      if (!card.noCmJP)               links.push({ url: cmCardUrl(set, card), suffix: '',      isCn: false });
+      if (!card.noCn && card.cmUrlCn) links.push({ url: cmCnUrl(card),        suffix: '__cn',  isCn: true  });
+      if (card.cmUrlFr)               links.push({ url: card.cmUrlFr,          suffix: '__fr',  isCn: false });
+      if (!links.length) return;
+      if (!forceAll && !cardNeedsSync(key, links)) { skipped++; return; }
+      groups.push({ key: key, name: name, links: links });
     });
   });
+  // Expose le compteur de skip pour l'affichage statut
+  window.__lastSyncSkipped = skipped;
   return groups;
 }
 
@@ -5412,9 +5026,9 @@ function _doSyncSingleCard(btn, key) {
     if (links.length || !set.cmSlug) return;
     set.cards.forEach(function(card) {
       if (stateKey(set.id, card.numShort, card.name) !== key) return;
-      if (!card.noCmJP)               links.push({ url: cmCardUrl(set, card), suffix: '',     isCn: false });
-      if (!card.noCn && card.cmUrlCn) links.push({ url: cmCnUrl(card),        suffix: '__cn', isCn: true  });
-      if (card.cmUrlFr)               links.push({ url: card.cmUrlFr,          suffix: '__fr', isCn: false });
+      if (!card.noCmJP)               links.push({ url: cmCardUrl(set, card), suffix: '',      isCn: false });
+      if (!card.noCn && card.cmUrlCn) links.push({ url: cmCnUrl(card),        suffix: '__cn',  isCn: true  });
+      if (card.cmUrlFr)               links.push({ url: card.cmUrlFr,          suffix: '__fr',  isCn: false });
     });
   });
   if (!links.length) {
@@ -5422,9 +5036,9 @@ function _doSyncSingleCard(btn, key) {
       if (links.length) return;
       dset.cards.forEach(function(card) {
         if (dset.id + '-' + card.num !== key) return;
-        if (card.cmUrl)   links.push({ url: card.cmUrl,   suffix: '',     isCn: false });
-        if (card.cmUrlCn) links.push({ url: card.cmUrlCn, suffix: '__cn', isCn: true  });
-        if (card.cmUrlFr) links.push({ url: card.cmUrlFr, suffix: '__fr', isCn: false });
+        if (card.cmUrl)   links.push({ url: card.cmUrl,   suffix: '',      isCn: false });
+        if (card.cmUrlCn) links.push({ url: card.cmUrlCn, suffix: '__cn',  isCn: true  });
+        if (card.cmUrlFr) links.push({ url: card.cmUrlFr, suffix: '__fr',  isCn: false });
       });
     });
   }
@@ -5447,9 +5061,8 @@ function _doSyncSingleCard(btn, key) {
     if (msg.type !== 'PRICE_UPDATED' && msg.type !== 'PRICE_NOT_FOUND') return;
     received++;
     if (msg.type === 'PRICE_UPDATED') {
-      var forceLang = msg.key.endsWith('__cn') ? 'cn' : msg.key.endsWith('__fr') ? 'fr' : null;
       var priceKey = msg.key.replace(/__cn$/, '').replace(/__fr$/, '');
-      applyPriceFromSync(priceKey, msg.data, forceLang);
+      applyPriceFromSync(priceKey, msg.data);
     }
     if (received >= expectedKeys.length && !done) {
       done = true;
@@ -5489,132 +5102,30 @@ function _doSyncSingleCard(btn, key) {
   });
 }
 
-
-function startCmSync() {
+function startCmSync(ev) {
+  var forceAll = !!(ev && ev.shiftKey);
   pingExtension(function(ok) {
     if (!ok) {
       setCmSyncStatus('❌ Extension non détectée — vérifie qu\'elle est active dans chrome://extensions', 'err');
       return;
     }
     if (cmSyncActive) { cancelCmSync(); return; }
-    var cards = buildCardsForSync();
-    if (cards.length === 0) { setCmSyncStatus('Aucune carte à syncer', 'err'); return; }
-    cmSyncActive  = true;
-    cmSyncTotal   = cards.length;
-    cmSyncCurrent = 0;
-    setCmSyncStatus('Démarrage — ' + cards.length + ' cartes…', 'busy');
-    updateCmSyncButton(true);
-    updateCmSyncProgressBar(0, cards.length);
-    cmSend({ type: 'START_SYNC', cards: cards, extractConfig: CM_EXTRACT_CONFIG }).then(function(r) {
-      if (!r.ok) {
-        setCmSyncStatus('Erreur extension — réessaie', 'err');
-        cmSyncActive = false;
-        updateCmSyncButton(false);
-      }
-    });
-  });
-}
-
-// ─────────────────────────────────────────────────────────────────────────
-// SYNC PAR WISHLIST
-// Construit la liste de cartes à sync DIRECTEMENT à partir des clés présentes
-// dans wishlistCards pour cette wishlist (source of truth), puis cherche
-// les liens CM pour chacune. Ne dépend pas du filtrage de buildCardsForSync()
-// qui pourrait dédupliquer DISCOVER_DB/SETS sur des clés divergentes et louper
-// des cartes.
-// ─────────────────────────────────────────────────────────────────────────
-function buildCardsForWishlist(wlId) {
-  // 1. Toutes les clés (= cartes) appartenant à cette wishlist
-  var wlKeys = Object.keys(wishlistCards).filter(function(k) {
-    return wishlistCards[k] && wishlistCards[k].includes(wlId);
-  });
-
-  var groups = [];
-  var skipped = [];
-
-  wlKeys.forEach(function(key) {
-    // 2a. Cherche d'abord dans DISCOVER_DB (key = "setId-num")
-    var found = false;
-    for (var i = 0; i < DISCOVER_DB.length && !found; i++) {
-      var dset = DISCOVER_DB[i];
-      if (key.indexOf(dset.id + '-') !== 0) continue;
-      var num = key.substring(dset.id.length + 1);
-      var card = dset.cards.find(function(c) { return c.num === num; });
-      if (!card) continue;
-      var name  = (card.en || card.fr) + ' (' + dset.id + ')';
-      var links = [];
-      if (card.cmUrl)   links.push({ url: card.cmUrl,   suffix: '',     isCn: false });
-      if (card.cmUrlCn) links.push({ url: card.cmUrlCn, suffix: '__cn', isCn: true  });
-      if (card.cmUrlFr) links.push({ url: card.cmUrlFr, suffix: '__fr', isCn: false });
-      if (links.length) {
-        groups.push({ key: key, name: name, links: links });
-      } else {
-        skipped.push({ key: key, name: name, reason: 'no cmUrl' });
-      }
-      found = true;
-    }
-
-    // 2b. Fallback: SETS (cartes plus anciennes sans entrée DISCOVER_DB)
-    if (!found) {
-      for (var j = 0; j < SETS.length && !found; j++) {
-        var set = SETS[j];
-        if (!set.cmSlug) continue;
-        var match = set.cards.find(function(c) {
-          return stateKey(set.id, c.numShort, c.name) === key;
-        });
-        if (!match) continue;
-        if (match.noCmJP && !match.cmUrlCn && !match.cmUrlFr) {
-          skipped.push({ key: key, name: match.name + ' (' + set.id + ')', reason: 'no cmUrl' });
-          found = true;
-          break;
-        }
-        var name  = (match.nameEn || match.name) + ' (' + set.id + ')';
-        var links = [];
-        if (!match.noCmJP)               links.push({ url: cmCardUrl(set, match), suffix: '',     isCn: false });
-        if (!match.noCn && match.cmUrlCn) links.push({ url: cmCnUrl(match),       suffix: '__cn', isCn: true  });
-        if (match.cmUrlFr)               links.push({ url: match.cmUrlFr,         suffix: '__fr', isCn: false });
-        if (links.length) groups.push({ key: key, name: name, links: links });
-        else              skipped.push({ key: key, name: name, reason: 'no valid cmUrl' });
-        found = true;
-      }
-    }
-
-    if (!found) skipped.push({ key: key, reason: 'card not in DB' });
-  });
-
-  console.log('[wlSync] wishlist=' + wlId + ' total=' + wlKeys.length + ' syncable=' + groups.length + ' skipped=' + skipped.length, { groups: groups, skipped: skipped });
-  return { groups: groups, skipped: skipped, total: wlKeys.length };
-}
-
-function startCmSyncForWishlist(wlId) {
-  pingExtension(function(ok) {
-    if (!ok) {
-      setCmSyncStatus('❌ Extension non détectée — vérifie qu\'elle est active dans chrome://extensions', 'err');
-      return;
-    }
-    if (cmSyncActive) {
-      setCmSyncStatus('⚠ Un sync est déjà en cours — annule-le d\'abord', 'err');
-      return;
-    }
-    var data = buildCardsForWishlist(wlId);
-    var cards = data.groups;
+    var cards = buildCardsForSync(forceAll);
+    var skipped = window.__lastSyncSkipped || 0;
     if (cards.length === 0) {
-      var emptyMsg = data.total === 0
-        ? 'Aucune carte dans cette liste'
-        : 'Aucune carte syncable dans cette liste (' + data.total + ' carte' + (data.total>1?'s':'') + ' sans lien CM)';
-      setCmSyncStatus('❌ ' + emptyMsg, 'err');
+      if (skipped > 0) {
+        setCmSyncStatus('Tout est à jour (' + skipped + ' cartes < ' + SYNC_STALE_DAYS + 'j) — Shift+clic pour forcer', 'ok');
+      } else {
+        setCmSyncStatus('Aucune carte à syncer', 'err');
+      }
       return;
     }
-    var wl = wishlists.find(function(w) { return w.id === wlId; });
-    var listName = wl ? wl.name : 'liste';
-    var skippedCount = data.skipped.length;
-    var statusMsg = 'Sync « ' + listName + ' » — ' + cards.length + ' carte' + (cards.length>1?'s':'');
-    if (skippedCount) statusMsg += ' (' + skippedCount + ' sans lien CM)';
-    statusMsg += '…';
     cmSyncActive  = true;
     cmSyncTotal   = cards.length;
     cmSyncCurrent = 0;
-    setCmSyncStatus(statusMsg, 'busy');
+    var prefix = forceAll ? 'Sync complet — ' : 'Démarrage — ';
+    var suffix = (!forceAll && skipped > 0) ? ' (' + skipped + ' fraîches skippées)' : '';
+    setCmSyncStatus(prefix + cards.length + ' cartes' + suffix + '…', 'busy');
     updateCmSyncButton(true);
     updateCmSyncProgressBar(0, cards.length);
     cmSend({ type: 'START_SYNC', cards: cards, extractConfig: CM_EXTRACT_CONFIG }).then(function(r) {
@@ -5636,70 +5147,10 @@ function cancelCmSync() {
 }
 
 // Applique les prix reçus du sync extension
-// Nouveau format v6: data = { rows: [{ price: 1.50, country: 'FR', lang: 'jp' }, ...] }
-//                    ─> on agrège ici par min(price) pour chaque (lang, country),
-//                       en ignorant 1.00 € (placeholder CM) si on a mieux.
-// Format v5:        data = { jp: { FR: 2.80, DE: 2.59 }, kr: { FR: 1.50 }, cn: { FR: 3.00 } }
-// Ancien format v4: data = { FR: { price: 2.80, lang: 'jp' }, ... }
-function applyPriceFromSync(key, data, forceLang) {
+// Nouveau format v5: data = { jp: { FR: 2.80, DE: 2.59 }, kr: { FR: 1.50 }, cn: { FR: 3.00 } }
+// Ancien format v4:  data = { FR: { price: 2.80, lang: 'jp' }, ... }
+function applyPriceFromSync(key, data) {
   var anyUpdate = false;
-
-  // ─── v6 RAW FORMAT ─────────────────────────────────────────────────────
-  // Si l'extension a renvoyé un dump brut de toutes les lignes du tableau CM,
-  // on agrège ici. Avantage : on est SÛR d'avoir le prix le plus bas par
-  // (lang, country) sans dépendre du comportement de l'extension.
-  if (data && Array.isArray(data.rows)) {
-    if (data.rows.length === 0) {
-      // Rien reçu — on ne touche RIEN aux prix existants
-      console.warn('[applyPriceFromSync] v6 raw — 0 lignes reçues pour', key, '— prix existants conservés');
-      return;
-    }
-    // 1) Reconstruire le "tableau" en mémoire : aggMap[lang][country] = [prix, prix, ...]
-    //    On NE filtre PAS par CM_CARD_LANGS / CM_COUNTRIES : on stocke ce
-    //    qui arrive, l'affichage filtrera lui-même. Ça évite de tout jeter
-    //    silencieusement si la détection de langue dans l'extension renvoie
-    //    'unknown' ou un code qu'on n'a pas dans nos listes.
-    var aggMap = {};
-    data.rows.forEach(function(r) {
-      if (!r || r.price == null) return;
-      var p = parseFloat(r.price);
-      if (isNaN(p) || p <= 0) return;
-      var rawLang = forceLang || r.lang;
-      var ctry = r.country;
-      if (!rawLang || !ctry) return;
-      if (!aggMap[rawLang]) aggMap[rawLang] = {};
-      if (!aggMap[rawLang][ctry]) aggMap[rawLang][ctry] = [];
-      aggMap[rawLang][ctry].push(p);
-    });
-    // 2) Trash les excédents : on garde min(), en évitant 1.00 € si on a mieux
-    var slotsWritten = 0;
-    Object.keys(aggMap).forEach(function(lang) {
-      Object.keys(aggMap[lang]).forEach(function(ctry) {
-        var arr = aggMap[lang][ctry].sort(function(a, b) { return a - b; });
-        var pick = arr[0];
-        if (pick === 1.00 && arr.length > 1) pick = arr[1]; // skip placeholder
-        var slot = key + '__cm_' + lang + '_' + ctry;
-        prices[slot] = String(pick.toFixed(2));
-        prices[slot + '__date'] = new Date().toISOString();
-        slotsWritten++;
-        anyUpdate = true;
-        var row = document.querySelector(
-          '.price-country-row[data-price-key="' + key + '"][data-price-country="' + ctry + '"][data-price-lang="' + lang + '"]'
-        );
-        if (row) {
-          var priceEl = row.querySelector('.pcr-price');
-          if (priceEl) { priceEl.textContent = fmtPrice(pick); priceEl.classList.remove('empty'); }
-          row.classList.add('synced');
-          setTimeout(function() { row.classList.remove('synced'); }, 2000);
-        }
-      });
-    });
-    console.log('[applyPriceFromSync] v6 raw — agrégé', data.rows.length, 'lignes →',
-      slotsWritten, 'slots écrits',
-      slotsWritten === 0 ? '⚠️ aucun slot écrit, vérifie la détection de langue côté extension' : '');
-    if (anyUpdate) { savePrices(); updateOwnedInfoDelta(key); }
-    return;
-  }
 
   // Detect format: new = keys are lang codes, old = keys are country codes
   var firstKey = Object.keys(data)[0] || '';
@@ -5710,27 +5161,8 @@ function applyPriceFromSync(key, data, forceLang) {
 
   if (isNewFormat) {
     // v5 format: { lang: { country: price, ... }, ... }
-    // Si forceLang est défini (ex: __fr, __cn), on regroupe tous les prix sous cette langue
-    // car CM peut retourner 'gb' ou autre pour une page de cartes FR/CN
-    var effectiveData = data;
-    if (forceLang) {
-      var merged = {};
-      Object.keys(data).forEach(function(lang) {
-        var countries = data[lang];
-        if (!countries || typeof countries !== 'object') return;
-        if (!merged[forceLang]) merged[forceLang] = {};
-        Object.keys(countries).forEach(function(country) {
-          var p = countries[country];
-          if (p === null || p === undefined) return;
-          if (merged[forceLang][country] === undefined || p < merged[forceLang][country]) {
-            merged[forceLang][country] = p;
-          }
-        });
-      });
-      effectiveData = merged;
-    }
-    Object.keys(effectiveData).forEach(function(lang) {
-      var countries = effectiveData[lang];
+    Object.keys(data).forEach(function(lang) {
+      var countries = data[lang];
       if (!countries || typeof countries !== 'object') return;
       CM_COUNTRIES.forEach(function(c) {
         var price = countries[c.code];
@@ -5745,7 +5177,7 @@ function applyPriceFromSync(key, data, forceLang) {
         );
         if (row) {
           var priceEl = row.querySelector('.pcr-price');
-          if (priceEl) { priceEl.textContent = fmtPrice(price); priceEl.classList.remove('empty'); }
+          if (priceEl) { priceEl.textContent = parseFloat(price).toFixed(2) + ' €'; priceEl.classList.remove('empty'); }
           row.classList.add('synced');
           setTimeout(function() { row.classList.remove('synced'); }, 2000);
         }
@@ -5766,7 +5198,7 @@ function applyPriceFromSync(key, data, forceLang) {
       );
       if (row) {
         var priceEl = row.querySelector('.pcr-price');
-        if (priceEl) { priceEl.textContent = fmtPrice(entry.price); priceEl.classList.remove('empty'); }
+        if (priceEl) { priceEl.textContent = entry.price.toFixed(2) + ' €'; priceEl.classList.remove('empty'); }
         row.classList.add('synced');
         setTimeout(function() { row.classList.remove('synced'); }, 2000);
       }
@@ -5876,151 +5308,6 @@ function triggerInstall() {
   if (!deferredPrompt) return;
   deferredPrompt.prompt();
   deferredPrompt.userChoice.then(function() { deferredPrompt = null; });
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// EXPORT COLLECTION & WISHLIST → EXCEL (.xlsx)
-// ═══════════════════════════════════════════════════════════════════════════
-// SheetJS chargée à la demande (pas de poids au chargement initial).
-// Format: 1 fichier, 2 feuilles (Collection + Wishlist).
-// ═══════════════════════════════════════════════════════════════════════════
-var _xlsxLoadPromise = null;
-function _loadXlsx() {
-  if (window.XLSX) return Promise.resolve(window.XLSX);
-  if (_xlsxLoadPromise) return _xlsxLoadPromise;
-  _xlsxLoadPromise = new Promise(function(resolve, reject) {
-    var s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-    s.onload  = function() { resolve(window.XLSX); };
-    s.onerror = function() { _xlsxLoadPromise = null; reject(new Error('Échec chargement SheetJS (vérifie ta connexion)')); };
-    document.head.appendChild(s);
-  });
-  return _xlsxLoadPromise;
-}
-
-function _setExportBtnState(txt, disabled) {
-  ['btn-export-xlsx','btn-export-xlsx-mobile'].forEach(function(id) {
-    var b = document.getElementById(id);
-    if (b) { b.textContent = txt; b.disabled = !!disabled; }
-  });
-}
-
-function exportCollectionWishlist() {
-  _setExportBtnState('⏳ Chargement…', true);
-  _loadXlsx().then(function(XLSX) {
-    var wlNamesById = {};
-    wishlists.forEach(function(w) { wlNamesById[w.id] = w.name; });
-
-    var collRows = [];
-    var wlRows   = [];
-
-    DISCOVER_DB.forEach(function(dset) {
-      dset.cards.forEach(function(card) {
-        var key = dset.id + '-' + card.num;
-        var st  = state[key];
-        if (!st || (st !== 'owned' && st !== 'wanted' && st !== 'shipping')) return;
-
-        var bestAny = getBestCmPrice(key); // langue utilisateur ou fallback
-        var best    = bestAny || { price: null, country: null, lang: null };
-
-        // ── COLLECTION (owned + shipping) ──
-        if (st === 'owned' || st === 'shipping') {
-          var lang   = cardLangs[key] || 'jp';
-          var buyVal = buyPrices[key] !== undefined && buyPrices[key] !== '' ? parseFloat(buyPrices[key]) : null;
-          var delta  = (buyVal !== null && best.price !== null && !isNaN(buyVal)) ? (best.price - buyVal) : null;
-          collRows.push({
-            'Set':              dset.id,
-            'Set Name':         dset.name || '',
-            'N°':               card.num,
-            'Nom FR':           card.fr || '',
-            'Nom EN':           card.en || '',
-            'Rareté':           card.rarity || '',
-            'Statut':           st === 'owned' ? 'Possédée' : 'En livraison',
-            'Langue carte':     lang.toUpperCase(),
-            'État':             cardConditions[key] || '',
-            'Prix achat (€)':   (buyVal !== null && !isNaN(buyVal)) ? buyVal : '',
-            'Meilleur CM (€)':  best.price !== null ? best.price : '',
-            'Pays CM':          best.country || '',
-            'Langue CM':        best.lang ? best.lang.toUpperCase() : '',
-            'Plus-value (€)':   delta !== null ? Number(delta.toFixed(2)) : '',
-            'Date acquisition': ownedDates[key] || '',
-            'Commentaire':      comments[key] || '',
-          });
-        }
-
-        // ── WISHLIST (wanted + shipping) ──
-        if (st === 'wanted' || st === 'shipping') {
-          var wlIds = wishlistCards[key] || [];
-          var wlList = wlIds.map(function(id) { return wlNamesById[id] || id; }).join(', ');
-          wlRows.push({
-            'Set':              dset.id,
-            'Set Name':         dset.name || '',
-            'N°':               card.num,
-            'Nom FR':           card.fr || '',
-            'Nom EN':           card.en || '',
-            'Rareté':           card.rarity || '',
-            'Statut':           st === 'wanted' ? 'Souhaitée' : 'En livraison',
-            'Listes':           wlList,
-            'Meilleur CM (€)':  best.price !== null ? best.price : '',
-            'Pays CM':          best.country || '',
-            'Langue CM':        best.lang ? best.lang.toUpperCase() : '',
-            'Commentaire':      comments[key] || '',
-          });
-        }
-      });
-    });
-
-    if (!collRows.length && !wlRows.length) {
-      alert('Aucune carte à exporter (collection + wishlist vides).');
-      _setExportBtnState('📊 Export Excel', false);
-      return;
-    }
-
-    var wb = XLSX.utils.book_new();
-
-    function addSheet(name, rows, emptyHeaders) {
-      var ws;
-      if (!rows.length) {
-        ws = XLSX.utils.aoa_to_sheet([emptyHeaders, ['(aucune carte)']]);
-      } else {
-        ws = XLSX.utils.json_to_sheet(rows);
-        var headers = Object.keys(rows[0]);
-        ws['!cols'] = headers.map(function(h) {
-          var maxLen = h.length;
-          rows.forEach(function(r) {
-            var v = r[h];
-            if (v == null) return;
-            var s = String(v);
-            if (s.length > maxLen) maxLen = s.length;
-          });
-          return { wch: Math.min(Math.max(maxLen + 2, 8), 45) };
-        });
-        ws['!freeze'] = { xSplit: 0, ySplit: 1 };
-      }
-      XLSX.utils.book_append_sheet(wb, ws, name);
-    }
-
-    addSheet('Collection', collRows, [
-      'Set','Set Name','N°','Nom FR','Nom EN','Rareté','Statut','Langue carte',
-      'État','Prix achat (€)','Meilleur CM (€)','Pays CM','Langue CM',
-      'Plus-value (€)','Date acquisition','Commentaire'
-    ]);
-    addSheet('Wishlist', wlRows, [
-      'Set','Set Name','N°','Nom FR','Nom EN','Rareté','Statut','Listes',
-      'Meilleur CM (€)','Pays CM','Langue CM','Commentaire'
-    ]);
-
-    var user  = currentUser || 'tracker';
-    var stamp = new Date().toISOString().slice(0, 10);
-    var fname = 'Collection_' + user + '_' + stamp + '.xlsx';
-    XLSX.writeFile(wb, fname);
-
-    _setExportBtnState('✓ Exporté', false);
-    setTimeout(function() { _setExportBtnState('📊 Export Excel', false); }, 2000);
-  }).catch(function(err) {
-    alert('Erreur export Excel : ' + (err && err.message ? err.message : err));
-    _setExportBtnState('📊 Export Excel', false);
-  });
 }
 </script>
 
@@ -6141,7 +5428,6 @@ function exportCollectionWishlist() {
       <button class="sync-profile-btn" data-user="xanthin" onclick="selectSyncUser(this)" style="flex:1;padding:10px;border-radius:6px;border:2px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;transition:all 0.2s;">👤 Xanthin</button>
       <button class="sync-profile-btn" data-user="julien" onclick="selectSyncUser(this)" style="flex:1;padding:10px;border-radius:6px;border:2px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;transition:all 0.2s;">👤 Julien</button>
       <button class="sync-profile-btn" data-user="remi" onclick="selectSyncUser(this)" style="flex:1;padding:10px;border-radius:6px;border:2px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;transition:all 0.2s;">👤 Rémi</button>
-      <button class="sync-profile-btn" data-user="louise" onclick="selectSyncUser(this)" style="flex:1;padding:10px;border-radius:6px;border:2px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;transition:all 0.2s;">👤 Louise</button>
     </div>
     <input id="sync-user-input" type="hidden" value="">
     <label style="font-size:9px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;">GitHub Token (ghp_…)</label>
