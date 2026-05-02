@@ -1017,6 +1017,28 @@
   .wl-action-btn:hover { color:var(--text); border-color:var(--text); }
   .wl-action-btn.danger:hover { color:var(--red); border-color:var(--red); }
   .wl-action-btn.wl-sync-cm:hover { color:var(--yellow); border-color:rgba(250,204,21,0.6); background:rgba(250,204,21,0.08); }
+  /* ── Wishlist search bar ── */
+  .wl-search-wrap {
+    position:relative; margin: 8px 0 14px; max-width: 480px;
+  }
+  .wl-search-input {
+    width:100%; box-sizing:border-box;
+    padding:9px 36px 9px 14px;
+    background:var(--surface); border:1px solid var(--border); border-radius:8px;
+    color:var(--text); font-family:'DM Sans', sans-serif; font-size:13px;
+    outline:none; transition:border-color 0.15s, background 0.15s;
+  }
+  .wl-search-input:focus { border-color:var(--accent); background:var(--surface2); }
+  .wl-search-input::placeholder { color:var(--muted); }
+  .wl-search-input::-webkit-search-cancel-button { display:none; }
+  .wl-search-clear {
+    position:absolute; right:8px; top:50%; transform:translateY(-50%);
+    width:22px; height:22px; padding:0;
+    background:transparent; border:none; cursor:pointer;
+    color:var(--muted); font-size:14px; line-height:1;
+    border-radius:4px; transition:background 0.15s, color 0.15s;
+  }
+  .wl-search-clear:hover { background:var(--surface2); color:var(--text); }
   /* ── Wishlist collapsible ── */
   .wl-section-header {
     display:flex; align-items:center; gap:8px; padding:10px 14px;
@@ -3264,6 +3286,7 @@ function getWishlistCardCount(wlId) {
 
 let wishlistFilter = 'all'; // 'all' | 'wanted' | 'shipping'
 var wlOpenState = {}; // wlId -> bool
+var wlSearchQuery = ''; // search filter for wishlists (matches list name or card name)
 let wishlistListFilter = null; // null = all, or wlId string
 let wishlistSearch = '';
 
@@ -3321,10 +3344,38 @@ function renderWishlist() {
     return { wl: wl, cards: cards };
   });
 
+  // ── Apply search filter ──────────────────────────────────────────
+  // q matches a wishlist if either its name matches, OR at least one of its cards matches.
+  // When the wishlist NAME matches → all its cards are kept (user wants to see the whole list).
+  // When ONLY cards match → only those cards are shown.
+  var q = (wlSearchQuery || '').trim().toLowerCase();
+  if (q) {
+    listData = listData.map(function(ld) {
+      var listNameMatches = ld.wl.name.toLowerCase().includes(q);
+      if (listNameMatches) return ld; // keep all cards
+      var filtered = ld.cards.filter(function(item) {
+        var fr = (item.card.name   || '').toLowerCase();
+        var en = (item.card.nameEn || '').toLowerCase();
+        return fr.includes(q) || en.includes(q);
+      });
+      return { wl: ld.wl, cards: filtered, _filtered: true };
+    }).filter(function(ld) {
+      // Drop wishlists where the name didn't match AND no card matched
+      return ld.cards.length > 0 || ld.wl.name.toLowerCase().includes(q);
+    });
+  }
+
   // Default: first list open, rest closed (preserve session state)
+  // When a search is active, force-open every visible list so cards are immediately visible.
   listData.forEach(function(ld, idx) {
-    if (wlOpenState[ld.wl.id] === undefined) wlOpenState[ld.wl.id] = (idx === 0);
+    if (q && ld._filtered) wlOpenState[ld.wl.id] = true;
+    else if (wlOpenState[ld.wl.id] === undefined) wlOpenState[ld.wl.id] = (idx === 0);
   });
+
+  var hasResults = listData.length > 0;
+  var noResultsHtml = (q && !hasResults)
+    ? '<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px;font-style:italic">Aucune liste ni carte ne correspond &#224; &laquo; ' + q.replace(/</g,'&lt;').replace(/>/g,'&gt;') + ' &raquo;</div>'
+    : '';
 
   var html =
     '<div class="dashboard">' +
@@ -3335,9 +3386,14 @@ function renderWishlist() {
       '<span style="color:var(--blue)"><strong id="wl-count-shipping">' + shippingCount + '</strong> en livraison</span>' +
       '<span><strong>' + wishlists.length + '</strong> liste' + (wishlists.length > 1 ? 's' : '') + '</span>' +
     '</div>' +
+    '<div class="wl-search-wrap">' +
+      '<input type="search" id="wl-search-input" class="wl-search-input" placeholder="Rechercher un Pok&#233;mon ou une liste&#8230;" value="' + q.replace(/"/g,'&quot;') + '" autocomplete="off">' +
+      (q ? '<button class="wl-search-clear" id="wl-search-clear" title="Effacer">&#10005;</button>' : '') +
+    '</div>' +
     '<div style="margin-bottom:16px">' +
       '<button class="wl-chip wl-chip-add" id="wl-add-list" style="font-size:12px;padding:8px 16px">+ Nouvelle liste</button>' +
-    '</div>';
+    '</div>' +
+    noResultsHtml;
 
   listData.forEach(function(ld) {
     var wl = ld.wl;
@@ -3430,6 +3486,34 @@ function renderWishlist() {
       }
     });
   });
+
+  // Search input — debounced re-render on type, immediate clear button
+  var searchInput = document.getElementById('wl-search-input');
+  if (searchInput) {
+    var _wlSearchTimer = null;
+    searchInput.addEventListener('input', function() {
+      clearTimeout(_wlSearchTimer);
+      var v = this.value;
+      _wlSearchTimer = setTimeout(function() {
+        wlSearchQuery = v;
+        renderWishlist();
+        // Restore focus + caret position after re-render
+        var newInput = document.getElementById('wl-search-input');
+        if (newInput) {
+          newInput.focus();
+          var len = newInput.value.length;
+          try { newInput.setSelectionRange(len, len); } catch(_) {}
+        }
+      }, 180);
+    });
+  }
+  var clearBtn = document.getElementById('wl-search-clear');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function() {
+      wlSearchQuery = '';
+      renderWishlist();
+    });
+  }
 
   // Add list button
   var addBtn = document.getElementById('wl-add-list');
