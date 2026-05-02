@@ -1208,7 +1208,7 @@
   <div class="sync-status" id="sync-status"></div>
   <div class="cm-sync-bar">
     <div class="cm-ext-indicator" id="cm-ext-indicator" title="Statut extension CM">⬤ <span id="cm-ext-label">Vérification…</span></div>
-    <button class="btn-cm-sync" id="btn-cm-sync" onclick="startCmSync(event)" title="Sync uniquement les cartes dont les prix ont plus de 7 jours — Shift+clic pour tout resync">🔄 Sync prix CardMarket</button>
+    <button class="btn-cm-sync" id="btn-cm-sync" onclick="startCmSync(event)" title="Mode lazy : ouvre les onglets CM en arrière-plan, clique dessus pour récupérer les prix. Sync uniquement les cartes > 7j — Shift+clic pour tout resync">🔄 Sync prix CardMarket</button>
     <div class="cm-sync-progress-wrap" id="cm-sync-progress-wrap">
       <div class="cm-sync-progress-bg">
         <div class="cm-sync-progress-fill" id="cm-sync-progress-fill"></div>
@@ -5244,8 +5244,15 @@ window.addEventListener('message', function(event) {
 
     if (msg.type === 'SYNC_PROGRESS') {
       cmSyncCurrent = msg.current;
-      setCmSyncStatus('🔄 ' + msg.current + ' / ' + msg.total, 'busy');
+      setCmSyncStatus('🔄 ' + msg.current + ' / ' + msg.total + ' prix récupérés', 'busy');
       updateCmSyncProgressBar(msg.current, msg.total);
+    }
+    // v6 : mode lazy — feedback pendant l'ouverture des onglets
+    if (msg.type === 'TAB_OPENED') {
+      setCmSyncStatus('📂 Onglets ouverts : ' + msg.opened + ' / ' + msg.total, 'busy');
+    }
+    if (msg.type === 'TABS_ALL_OPENED') {
+      setCmSyncStatus('👆 ' + msg.total + ' onglets ouverts — clique dessus pour récupérer les prix', 'busy');
     }
     if (msg.type === 'PRICE_UPDATED') {
       console.log('[Bridge] PRICE_UPDATED pour', msg.key, msg.data);
@@ -5282,14 +5289,11 @@ window.addEventListener('message', function(event) {
       setCmSyncStatus('🛌 Pause anti-ban (' + sec + 's) — reprise auto', 'busy');
     }
     if (msg.type === 'SYNC_RATE_LIMITED') {
-      cmSyncActive = false;
-      updateCmSyncButton(false);
+      // v6 : en mode lazy on ne tue PAS le sync — l'utilisateur peut continuer
+      // sur les autres onglets (le 1015 ne touche que celui qui a déclenché)
       var done = msg.processed || 0;
       var tot  = msg.total || 0;
-      setCmSyncStatus('🚫 ' + (msg.message || 'Cloudflare 1015 — IP bloquée') +
-        ' (' + done + '/' + tot + ' faits)', 'err');
-      // Sauve ce qu'on a déjà récupéré
-      if (typeof syncAutoPush === 'function') syncAutoPush();
+      setCmSyncStatus('⚠️ Cloudflare 1015 sur un onglet — ferme-le et continue (' + done + '/' + tot + ')', 'err');
     }
   }
 });
@@ -5564,9 +5568,9 @@ function startCmSync(ev) {
     cmSyncActive  = true;
     cmSyncTotal   = cards.length;
     cmSyncCurrent = 0;
-    var prefix = forceAll ? 'Sync complet — ' : 'Démarrage — ';
+    var prefix = forceAll ? 'Sync complet — ' : 'Préparation — ';
     var suffix = (!forceAll && skipped > 0) ? ' (' + skipped + ' fraîches skippées)' : '';
-    setCmSyncStatus(prefix + cards.length + ' cartes' + suffix + '…', 'busy');
+    setCmSyncStatus(prefix + cards.length + ' cartes — ouverture des onglets…' + suffix, 'busy');
     updateCmSyncButton(true);
     updateCmSyncProgressBar(0, cards.length);
     cmSend({ type: 'START_SYNC', cards: cards, extractConfig: CM_EXTRACT_CONFIG }).then(function(r) {
