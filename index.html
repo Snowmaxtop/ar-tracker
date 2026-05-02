@@ -1547,6 +1547,7 @@ const CM_EXTRACT_CONFIG = {
   // format v5/v4, ça reste compatible.
   rawMode: true,
   ignorePlaceholderPrice: 1.00, // hint extension : 1.00 € est un placeholder à ignorer si possible
+  cardDelayMs: 5000,            // délai entre chaque carte (anti rate-limit) — l'extension doit lire ce flag
 };
 
 function buildOnePriceRow(key, country, lang) {
