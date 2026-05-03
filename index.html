@@ -1434,28 +1434,29 @@ function saveWishlists() {
 function savePrices() { localStorage.setItem('pkmn-ar-prices', JSON.stringify(prices)); if (!cmSyncActive) syncAutoPush(); }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// v6.2 : REPORTS — cartes avec lien CardMarket cassé
-// Stockage partagé via reports.json sur le Gist (comme prices.json).
-// Format : { "M3-084": { reportedAt: ISO date, reportedBy: username, reason: "auto"|"manual" } }
-// ═══════════════════════════════════════════════════════════════════════════
-// ═══════════════════════════════════════════════════════════════════════════
-// v6.2 : REPORTS — cartes avec lien CardMarket cassé
-// Stockage partagé via reports.json sur le Gist (comme prices.json).
-// Format : { "M3-084": { reportedAt: ISO date, reportedBy: username, reason: "auto"|"manual" } }
-// v6.2.4 : timestamp de modif locale + flush au beforeunload + priority push au boot
-//          → garantit que les reports/notes ne se perdent jamais
+// v6.3 : REPORTS — cartes avec lien CardMarket cassé
+// Sauvegardés dans user_*.json comme comments/state/wishlists.
+// Format : { "M3-084": { reportedAt: ISO date, reportedBy: username, reason, note } }
+// Per-user. Affichés dans le menu Reports en mergeant les reports de tous les users.
 // ═══════════════════════════════════════════════════════════════════════════
 function saveReports() {
+  // v6.3 : suit exactement le pattern saveState — localStorage + push debouncé.
   localStorage.setItem('pkmn-ar-reports', JSON.stringify(reports));
-  // v6.2.4 : timestamp de la dernière modif locale → permet de détecter
-  // au pull si on a une version plus récente que le cloud
-  localStorage.setItem('pkmn-ar-reports-savedAt', new Date().toISOString());
   if (!cmSyncActive) syncAutoPush();
 }
 function isReported(key) {
   // v6.2.3 : null/undefined ou non-objet = pas vraiment reporté (entrée corrompue)
   var r = reports && reports[key];
-  return !!(r && typeof r === 'object');
+  if (r && typeof r === 'object') return true;
+  // v6.3 : la carte est aussi considérée reportée si un autre user l'a reportée
+  if (typeof otherUsers === 'object' && otherUsers) {
+    for (var u in otherUsers) {
+      if (!otherUsers.hasOwnProperty(u)) continue;
+      var or = otherUsers[u] && otherUsers[u].reports && otherUsers[u].reports[key];
+      if (or && typeof or === 'object') return true;
+    }
+  }
+  return false;
 }
 function reportCard(key, reason) {
   reason = reason || 'manual';
@@ -1479,21 +1480,41 @@ function unreportCard(key) {
   return true;
 }
 function toggleReport(key) {
-  if (isReported(key)) {
+  // v6.3 : agit uniquement sur MES reports. L'état visuel global est calculé
+  // ensuite via isReported() qui prend en compte les reports des autres users.
+  if (reports[key] && typeof reports[key] === 'object') {
     unreportCard(key);
-    return false;
   } else {
     reportCard(key, 'manual');
-    return true;
   }
+  return isReported(key);
 }
 
-// v6.2.1 : édite la note d'un report (partagée entre tous les users via reports.json)
-// Retourne true si une modif a été persistée, false sinon.
+// v6.3 : édite la note d'un report
+// Si la carte est dans MES reports → édite directement.
+// Si elle a été reportée par qqun d'autre → on copie dans MES reports pour
+// permettre l'édition (chaque user ajoute sa note dans son propre user_*.json).
 function setReportNote(key, noteText) {
-  if (!reports[key]) return false;
   var clean = (noteText || '').trim();
-  if (clean === (reports[key].note || '')) return false;  // pas de changement réel
+  if (!reports[key]) {
+    // Cherche l'origine du report dans les autres users
+    var origin = null;
+    if (typeof otherUsers === 'object' && otherUsers) {
+      for (var u in otherUsers) {
+        if (!otherUsers.hasOwnProperty(u)) continue;
+        var or = otherUsers[u] && otherUsers[u].reports && otherUsers[u].reports[key];
+        if (or && typeof or === 'object') { origin = or; break; }
+      }
+    }
+    if (!origin) return false;  // pas de report nulle part
+    reports[key] = {
+      reportedAt: origin.reportedAt || new Date().toISOString(),
+      reportedBy: origin.reportedBy || '?',
+      reason:     origin.reason || 'manual',
+      note:       '',
+    };
+  }
+  if (clean === (reports[key].note || '')) return false;
   reports[key].note = clean;
   reports[key].noteEditedAt = new Date().toISOString();
   reports[key].noteEditedBy = currentUser || '?';
@@ -2707,15 +2728,43 @@ function renderReportsView() {
   });
   if (dirty) saveReports();
 
+  // v6.3 : merge les reports de TOUS les users (le mien + ceux des autres)
+  // En cas de conflit (même clé reportée par 2 users), la version la plus récente gagne.
+  // L'auteur d'origine et la note sont préservés via reportedBy/noteEditedBy.
+  var merged = {};
+  Object.keys(reports || {}).forEach(function(k) {
+    if (reports[k] && typeof reports[k] === 'object') {
+      merged[k] = reports[k];
+    }
+  });
+  Object.keys(otherUsers || {}).forEach(function(uname) {
+    var theirReports = (otherUsers[uname] && otherUsers[uname].reports) || {};
+    Object.keys(theirReports).forEach(function(k) {
+      var r = theirReports[k];
+      if (!r || typeof r !== 'object') return;
+      // Ne pas écraser un report local plus récent
+      var existing = merged[k];
+      if (!existing || (r.reportedAt || '') > (existing.reportedAt || '')) {
+        merged[k] = r;
+      }
+    });
+  });
+
   // Construit la liste triée par date de report (plus récent d'abord)
-  var entries = Object.keys(reports).map(function(key) {
-    var r = reports[key] || {};
+  var entries = Object.keys(merged).map(function(key) {
+    var r = merged[key] || {};
     var match = findCardByKey(key);
+    // v6.3 : un report m'appartient si je le possède dans MES reports (=> je peux l'éditer)
+    var mine = !!(reports[key] && typeof reports[key] === 'object');
     return {
       key: key,
       reportedAt: r.reportedAt || '',
       reportedBy: r.reportedBy || '?',
       reason:     r.reason || 'manual',
+      note:       r.note || '',
+      noteEditedAt: r.noteEditedAt || '',
+      noteEditedBy: r.noteEditedBy || '',
+      mine:       mine,
       set:        match ? match.set : null,
       card:       match ? match.card : null,
     };
@@ -4417,20 +4466,13 @@ function syncUserPayload() {
     cardLangs:     cardLangs,
     ownedDates:    ownedDates,
     cardConditions: cardConditions,
+    reports:       reports,  // v6.3 : reports per-user dans le user_*.json
   });
 }
 function syncPricesPayload() {
   return JSON.stringify({
     savedAt: new Date().toISOString(),
     prices:  prices,
-  });
-}
-
-// v6.2 : payload pour reports.json (partagé entre tous les users)
-function syncReportsPayload() {
-  return JSON.stringify({
-    savedAt: new Date().toISOString(),
-    reports: reports,
   });
 }
 
@@ -4448,7 +4490,6 @@ async function syncPush() {
     var userFile = 'user_' + cfg.user + '.json';
     body.files[userFile] = { content: syncUserPayload() };
     body.files['prices.json'] = { content: syncPricesPayload() };
-    body.files['reports.json'] = { content: syncReportsPayload() };  // v6.2
     var url, method;
     if (cfg.gistId) {
       url    = 'https://api.github.com/gists/' + cfg.gistId;
@@ -4529,32 +4570,6 @@ async function syncPull(silent) {
       } catch(ep) {}
     }
 
-    // ── v6.2 : Load shared reports ──
-    if (files['reports.json']) {
-      try {
-        // v6.2.4 : compare timestamps — si la version locale est plus récente
-        // que celle du cloud (ex: user a cliqué ⚠ puis fermé l'onglet avant
-        // que le push debouncé ne parte), on n'écrase PAS, on garde la locale.
-        var cloudReportsPayload = JSON.parse(files['reports.json'].content);
-        var cloudSavedAt = cloudReportsPayload.savedAt || '';
-        var localSavedAt = localStorage.getItem('pkmn-ar-reports-savedAt') || '';
-        var localIsNewer = localSavedAt && cloudSavedAt && localSavedAt > cloudSavedAt;
-
-        if (silent && _pushScheduled) {
-          console.log('[sync] reports.json: skip overwrite local (push pending)');
-        } else if (silent && localIsNewer) {
-          console.log('[sync] reports.json: skip overwrite — version locale plus récente (' + localSavedAt + ' > ' + cloudSavedAt + '), push immédiat');
-          // v6.2.4 : on déclenche un push pour pousser la version locale
-          syncAutoPush();
-        } else {
-          reports = cloudReportsPayload.reports || {};
-          localStorage.setItem('pkmn-ar-reports', JSON.stringify(reports));
-          // Sync le timestamp local sur celui du cloud (on est aligné)
-          if (cloudSavedAt) localStorage.setItem('pkmn-ar-reports-savedAt', cloudSavedAt);
-        }
-      } catch(er) {}
-    }
-
     // ── Load own user file ──
     var userFile = 'user_' + cfg.user + '.json';
     var myFile = files[userFile];
@@ -4589,6 +4604,7 @@ async function syncPull(silent) {
           cardLangs = payload.cardLangs || {};
           ownedDates = payload.ownedDates || {};
           cardConditions = payload.cardConditions || {};
+          reports = payload.reports || {};  // v6.3 : reports per-user
           // Migration: load prices from old format
           if (payload.prices && !files['prices.json']) {
             prices = payload.prices;
@@ -4604,6 +4620,7 @@ async function syncPull(silent) {
           localStorage.setItem('pkmn-ar-cardlangs', JSON.stringify(cardLangs));
           localStorage.setItem('pkmn-ar-owneddates', JSON.stringify(ownedDates));
           localStorage.setItem('pkmn-ar-conditions', JSON.stringify(cardConditions));
+          localStorage.setItem('pkmn-ar-reports', JSON.stringify(reports));  // v6.3
           localStorage.setItem('sync_last_pull', cloudDate.toISOString());
           localStorage.setItem('sync_last_push', cloudDate.toISOString());
         }
@@ -4626,6 +4643,7 @@ async function syncPull(silent) {
             cardLangs: uData.cardLangs || {},
             ownedDates: uData.ownedDates || {},
             cardConditions: uData.cardConditions || {},
+            reports: uData.reports || {},  // v6.3 : reports des autres users (read-only pour nous)
             savedAt: uData.savedAt || '',
           };
         } catch(eu) {}
@@ -4699,44 +4717,9 @@ window.addEventListener('online', function() {
   }
 });
 
-// v6.2.4 : Flush avant fermeture — garantit que reports/notes ne se perdent pas
-// si l'user ferme l'onglet pendant le debounce 3s.
-// Utilise fetch keepalive qui survit à la fermeture de la page.
-window.addEventListener('beforeunload', function() {
-  if (!_pushScheduled) return;
-  var cfg = getSyncCfg();
-  if (!cfg.token || !cfg.gistId || !cfg.user) return;
-  try {
-    var body = { files: {} };
-    body.files['user_' + cfg.user + '.json'] = { content: syncUserPayload() };
-    body.files['prices.json']  = { content: syncPricesPayload() };
-    body.files['reports.json'] = { content: syncReportsPayload() };
-    fetch('https://api.github.com/gists/' + cfg.gistId, {
-      method:    'PATCH',
-      headers:   { Authorization: 'token ' + cfg.token, 'Content-Type': 'application/json' },
-      body:      JSON.stringify(body),
-      keepalive: true,  // ← clé : survit à la fermeture
-    });
-    console.log('[sync] beforeunload flush envoyé (keepalive)');
-  } catch (e) { /* best effort */ }
-});
-
 // ── Pull silencieux au démarrage ──────────────────────────────
 window.addEventListener('load', function() {
-  // v6.2.4 : si on a une modif locale non-syncée (ex: l'user a fermé l'onglet
-  // pendant un debounce sans que le beforeunload n'ait pu flusher), on déclenche
-  // un push au boot pour s'assurer que rien ne se perd.
-  setTimeout(function() {
-    var localSavedAt = localStorage.getItem('pkmn-ar-reports-savedAt') || '';
-    var lastPush     = localStorage.getItem('sync_last_push') || '';
-    if (localSavedAt && (!lastPush || localSavedAt > lastPush)) {
-      console.log('[sync] Boot : modif reports locale non-syncée détectée → push priority');
-      _pushScheduled = true;  // empêche un éventuel pull dans la foulée d'écraser
-      setTimeout(function() { _pushScheduled = false; syncPush(); }, 100);
-    } else {
-      syncPull(true);
-    }
-  }, 2000);
+  setTimeout(function() { syncPull(true); }, 2000);
   setTimeout(precacheTrackedImages, 3000);
   // Détection auto de l'extension au chargement
   setTimeout(function() {
