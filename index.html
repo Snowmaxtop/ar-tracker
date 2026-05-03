@@ -292,6 +292,24 @@
   .btn-sync-card.syncing { border-color: var(--yellow); color: var(--yellow); animation: syncpulse 0.8s infinite alternate; }
   .btn-sync-card.done { border-color: rgba(74,222,128,0.5); color: #4ade80; background: rgba(74,222,128,0.08); animation: none; }
 
+  /* v6.2 : bouton report (signaler lien CM cassé) */
+  .btn-report-card {
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace; font-size: 12px; padding: 5px 9px;
+    border-radius: 2px; cursor: pointer; transition: all 0.15s;
+    border: 1px solid rgba(239,68,68,0.3); background: rgba(239,68,68,0.06);
+    color: rgba(239,68,68,0.75); flex: 0 0 auto;
+  }
+  .btn-report-card:hover { background: rgba(239,68,68,0.18); border-color: rgba(239,68,68,0.7); color: #f87171; }
+  .btn-report-card.reported {
+    background: rgba(239,68,68,0.22); border-color: #ef4444; color: #fca5a5;
+    animation: reportpulse 1.6s ease-in-out infinite;
+  }
+  @keyframes reportpulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+    50%     { box-shadow: 0 0 0 4px rgba(239,68,68,0); }
+  }
+
   /* ── PRICE / LANG FIELDS ── */
   .card-prices { display: flex; gap: 6px; margin-top: 6px; align-items: flex-end; grid-column: 1 / -1; padding: 0 12px 4px; }
   /* ── Bloc infos possession ── */
@@ -1179,6 +1197,7 @@
     <button class="nav-btn" id="nav-collection" onclick="showCollection()"><span class="nav-icon">✦</span> Ma Collection</button>
     <button class="nav-btn" id="nav-wishlist" onclick="showWishlist()"><span class="nav-icon">♡</span> Wishlist</button>
     <button class="nav-btn" id="nav-encyclopedia" onclick="showEncyclopedia()"><span class="nav-icon">📖</span> Encyclopédie</button>
+    <button class="nav-btn" id="nav-reports" onclick="showReports()"><span class="nav-icon">🚩</span> Reports</button>
   </div>
   <div class="sidebar-nav" id="community-nav" style="border-bottom:1px solid var(--border);padding:4px 10px 6px;">
     <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:0.12em;padding:4px 8px 2px;">👥 COMMUNAUTÉ</div>
@@ -1339,6 +1358,9 @@ let buyPrices = {}; // { "M3-084": 2.50 }  — per user
 let cardLangs = {}; // { "M3-084": "jp" }  — per user (jp|kr|cn)
 let ownedDates = {}; // { "M3-084": "2026-03-19" } — per user
 let cardConditions = {}; // { "M3-084": "NM" } — per user
+// v6.2 : reports partagés. { "M3-084": { reportedAt, reportedBy, reason } }
+//   reason: "auto" (PRICE_NOT_FOUND lors d'un scrape) | "manual" (clic utilisateur)
+let reports = {};
 let currentUser = '';          // username for multi-user sync
 let otherUsers  = {};          // { "alice": { state, wishlists, wishlistCards }, ... }
 
@@ -1366,6 +1388,8 @@ function loadState() {
   try { cardLangs     = JSON.parse(localStorage.getItem('pkmn-ar-cardlangs')   || '{}'); } catch(e) { cardLangs = {}; }
   try { ownedDates    = JSON.parse(localStorage.getItem('pkmn-ar-owneddates')  || '{}'); } catch(e) { ownedDates = {}; }
   try { cardConditions = JSON.parse(localStorage.getItem('pkmn-ar-conditions')  || '{}'); } catch(e) { cardConditions = {}; }
+  // v6.2 : reports partagés (cartes avec un lien CM cassé)
+  try { reports = JSON.parse(localStorage.getItem('pkmn-ar-reports') || '{}'); } catch(e) { reports = {}; }
   ensureDefaultWishlist();
   assignOrphanCardsToDefault();
   var userLabel = document.getElementById('sidebar-username');
@@ -1408,6 +1432,61 @@ function saveWishlists() {
   syncAutoPush();
 }
 function savePrices() { localStorage.setItem('pkmn-ar-prices', JSON.stringify(prices)); if (!cmSyncActive) syncAutoPush(); }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// v6.2 : REPORTS — cartes avec lien CardMarket cassé
+// Stockage partagé via reports.json sur le Gist (comme prices.json).
+// Format : { "M3-084": { reportedAt: ISO date, reportedBy: username, reason: "auto"|"manual" } }
+// ═══════════════════════════════════════════════════════════════════════════
+function saveReports() {
+  localStorage.setItem('pkmn-ar-reports', JSON.stringify(reports));
+  if (!cmSyncActive) syncAutoPush();
+}
+function isReported(key) {
+  return !!(reports && reports[key]);
+}
+function reportCard(key, reason) {
+  reason = reason || 'manual';
+  // Ne pas écraser un report manuel par un auto plus tard
+  if (reports[key] && reports[key].reason === 'manual' && reason === 'auto') return false;
+  reports[key] = {
+    reportedAt: new Date().toISOString(),
+    reportedBy: currentUser || '?',
+    reason: reason,
+  };
+  saveReports();
+  return true;
+}
+function unreportCard(key) {
+  if (!reports[key]) return false;
+  delete reports[key];
+  saveReports();
+  return true;
+}
+function toggleReport(key) {
+  if (isReported(key)) {
+    unreportCard(key);
+    return false;
+  } else {
+    reportCard(key, 'manual');
+    return true;
+  }
+}
+
+// v6.2 : handler du bouton ⚠ — toggle + refresh visuel des boutons concernés
+function onReportClick(key, ev) {
+  if (ev) { ev.stopPropagation(); ev.preventDefault(); }
+  var nowReported = toggleReport(key);
+  // Met à jour tous les boutons report pour cette clé (y a peut-être plusieurs vues)
+  document.querySelectorAll('.btn-report-card[data-report-key="' + key + '"]').forEach(function(btn) {
+    btn.classList.toggle('reported', nowReported);
+    btn.title = nowReported ? 'Retirer le report' : 'Signaler un lien CM cassé';
+  });
+  // Si on est sur la vue reports, re-render pour faire disparaître/réapparaître la carte
+  if (typeof activeView !== 'undefined' && activeView === 'reports') {
+    if (typeof renderReportsView === 'function') renderReportsView();
+  }
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // IMAGE & CARDMARKET HELPERS
@@ -1793,8 +1872,9 @@ function renderCard(set, card, showSetBadge) {
         })() +
         (card.cmUrlFr ? '<a class="btn-cm-fr btn-cm-card" href="' + card.cmUrlFr + '#cmkey=' + key + '__fr" target="_blank">' + EXT_SVG + ' FR</a>' : '') +
       '</div>' : '') +
-      (!card.noCmJP || card.cmUrlCn || card.cmUrlFr ? '<div class="card-actions">' +
-        '<button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\',event)" style="width:100%">⟳ Sync prix CM</button>' +
+      (!card.noCmJP || card.cmUrlCn || card.cmUrlFr ? '<div class="card-actions" style="display:flex;gap:6px">' +
+        '<button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\',event)" style="flex:1">⟳ Sync prix CM</button>' +
+        '<button class="btn-report-card' + (isReported(key) ? ' reported' : '') + '" data-report-key="' + key + '" onclick="onReportClick(\'' + key + '\',event)" title="' + (isReported(key) ? 'Retirer le report' : 'Signaler un lien CM cassé') + '">⚠</button>' +
       '</div>' : '') +
       '<div class="card-prices" style="display:' + hidePrices + '">' +
         buildPricesUpdatedLabel(key) +
@@ -1890,7 +1970,10 @@ function buildDiscoverCardEl(dset, c, opts) {
       })() : '') +
       (cmLinksHtml ? '<div class="card-cm-links" style="grid-column:1/-1;padding:0 12px"><span class="lbl">Ouvrir sur CM</span>' + cmLinksHtml + '</div>' : '') +
       ((c.cmUrl || c.cmUrlFr) && (st === 'owned' || st === 'wanted' || (wishlistCards[key] && wishlistCards[key].length) || opts.removeWlId || opts.showLists) ?
-        '<div class="card-actions" style="margin-top:2px;grid-column:1/-1;padding:0 12px"><button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\',event)" style="width:100%;justify-content:center">⟳ Sync prix CM</button></div>' : '') +
+        '<div class="card-actions" style="margin-top:2px;grid-column:1/-1;padding:0 12px;display:flex;gap:6px">' +
+          '<button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\',event)" style="flex:1;justify-content:center">⟳ Sync prix CM</button>' +
+          '<button class="btn-report-card' + (isReported(key) ? ' reported' : '') + '" data-report-key="' + key + '" onclick="onReportClick(\'' + key + '\',event)" title="' + (isReported(key) ? 'Retirer le report' : 'Signaler un lien CM cassé') + '">⚠</button>' +
+        '</div>' : '') +
       removeHtml +
     '<div class="card-prices" style="display:' + (st === 'owned' ? 'none' : 'block') + ';grid-column:1/-1">' +
       buildPricesUpdatedLabel(key) +
@@ -2545,8 +2628,126 @@ function showEncyclopedia() {
   renderEncyclopedia();
 }
 
+// v6.2 : Vue Reports — liste des cartes signalées (lien CM cassé)
+function showReports() {
+  activeView  = 'reports';
+  activeSetId = null;
+  closeNavMenu();
+  setNavActive('nav-reports');
+  renderReportsView();
+}
+
+// v6.2 : Index card pour retrouver un objet card depuis sa clé "setId-num"
+function findCardByKey(key) {
+  for (var i = 0; i < DISCOVER_DB.length; i++) {
+    var s = DISCOVER_DB[i];
+    for (var j = 0; j < s.cards.length; j++) {
+      if (s.id + '-' + s.cards[j].num === key) return { set: s, card: s.cards[j] };
+    }
+  }
+  return null;
+}
+
+function renderReportsView() {
+  var main = document.getElementById('main');
+  if (!main) return;
+
+  // Construit la liste triée par date de report (plus récent d'abord)
+  var entries = Object.keys(reports).map(function(key) {
+    var r = reports[key];
+    var match = findCardByKey(key);
+    return {
+      key: key,
+      reportedAt: r.reportedAt || '',
+      reportedBy: r.reportedBy || '?',
+      reason:     r.reason || 'manual',
+      set:        match ? match.set : null,
+      card:       match ? match.card : null,
+    };
+  });
+  entries.sort(function(a, b) {
+    return (b.reportedAt || '').localeCompare(a.reportedAt || '');
+  });
+
+  var nAuto   = entries.filter(function(e) { return e.reason === 'auto'; }).length;
+  var nManual = entries.filter(function(e) { return e.reason === 'manual'; }).length;
+  var total   = entries.length;
+
+  var html =
+    '<div class="crossset-header">' +
+      '<div class="mobile-topbar"><button class="mobile-hamburger" onclick="openNavMenu()">&#9776;</button><span class="mobile-topbar-title">Reports</span></div>' +
+      '<div class="page-title">🚩 Cartes signalées</div>' +
+      '<div style="font-size:12px;color:var(--muted);margin-bottom:14px;display:flex;gap:14px;flex-wrap:wrap;">' +
+        '<span><strong style="color:var(--text)">' + total + '</strong> cartes signalées</span>' +
+        '<span><strong style="color:#fca5a5">' + nManual + '</strong> manuelles</span>' +
+        '<span><strong style="color:#fbbf24">' + nAuto + '</strong> auto-détectées</span>' +
+      '</div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.5">' +
+        'Les cartes apparaissent ici quand un lien CardMarket ne renvoie aucune offre (auto-détection lors d\'un sync) ' +
+        'ou quand un utilisateur clique sur le bouton ⚠ d\'une carte. ' +
+        'Cliquer sur ⚠ Retirer permet de retirer le report (ex. après mise à jour du lien).' +
+      '</div>' +
+    '</div>';
+
+  if (total === 0) {
+    html += '<div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px">' +
+              '<div style="font-size:36px;margin-bottom:10px">✓</div>' +
+              'Aucune carte signalée pour le moment.' +
+            '</div>';
+    main.innerHTML = html;
+    return;
+  }
+
+  html += '<div class="reports-list" style="display:flex;flex-direction:column;gap:8px">';
+
+  entries.forEach(function(e) {
+    var displayName, displayNum, imgUrl, jpUrl, cnUrl, frUrl;
+    if (e.card && e.set) {
+      displayName = e.card.fr || e.card.en || e.card.name || e.key;
+      displayNum  = '#' + e.card.num;
+      imgUrl      = e.card.img || '';
+      jpUrl       = !e.card.noCmJP ? cmCardUrl(e.set, e.card) : '';
+      cnUrl       = e.card.cmUrlCn || '';
+      frUrl       = e.card.cmUrlFr || '';
+    } else {
+      displayName = '(carte introuvable)';
+      displayNum  = e.key;
+      imgUrl = jpUrl = cnUrl = frUrl = '';
+    }
+
+    var dateStr = e.reportedAt ? new Date(e.reportedAt).toLocaleString('fr-FR') : '?';
+    var by = userDisplayName(e.reportedBy);
+    var reasonLabel = e.reason === 'auto' ? 'Auto-détecté' : 'Signalé';
+    var reasonColor = e.reason === 'auto' ? '#fbbf24' : '#fca5a5';
+
+    html +=
+      '<div class="report-row" style="display:flex;gap:12px;align-items:center;padding:10px 12px;background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.18);border-radius:4px">' +
+        (imgUrl ? '<img src="' + imgUrl + '" alt="" style="width:50px;height:70px;object-fit:cover;border-radius:3px;flex:0 0 auto" loading="lazy">' :
+                  '<div style="width:50px;height:70px;background:rgba(255,255,255,0.04);border-radius:3px;flex:0 0 auto"></div>') +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px">' + displayName + ' <span style="color:var(--muted);font-weight:400">' + displayNum + '</span></div>' +
+          '<div style="font-size:10px;color:var(--muted);margin-bottom:4px">' + (e.set ? e.set.name + ' · ' : '') + e.key + '</div>' +
+          '<div style="font-size:10px;display:flex;gap:10px;flex-wrap:wrap">' +
+            '<span style="color:' + reasonColor + '">●</span>' +
+            '<span style="color:var(--muted)">' + reasonLabel + ' par <strong style="color:var(--text)">' + by + '</strong></span>' +
+            '<span style="color:var(--muted)">' + dateStr + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:4px;flex-wrap:wrap;flex:0 0 auto">' +
+          (jpUrl ? '<a class="btn-cm-card" href="' + jpUrl + '#cmkey=' + e.key + '" target="_blank" style="font-size:9px;padding:4px 6px">JP</a>' : '') +
+          (cnUrl ? '<a class="btn-cm-cn btn-cm-card" href="' + cnUrl + '#cmkey=' + e.key + '__cn" target="_blank" style="font-size:9px;padding:4px 6px">CN</a>' : '') +
+          (frUrl ? '<a class="btn-cm-fr btn-cm-card" href="' + frUrl + '#cmkey=' + e.key + '__fr" target="_blank" style="font-size:9px;padding:4px 6px">FR</a>' : '') +
+          '<button onclick="onReportClick(\'' + e.key + '\',event)" title="Retirer le report" style="font-size:10px;padding:4px 8px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.4);color:#86efac;border-radius:2px;cursor:pointer;font-family:DM Mono,monospace">✓ Résolu</button>' +
+        '</div>' +
+      '</div>';
+  });
+
+  html += '</div>';
+  main.innerHTML = html;
+}
+
 function setNavActive(id) {
-  ['nav-dashboard','nav-collection','nav-wishlist','nav-encyclopedia'].forEach(function(nid) {
+  ['nav-dashboard','nav-collection','nav-wishlist','nav-encyclopedia','nav-reports'].forEach(function(nid) {
     var el = document.getElementById(nid);
     if (el) el.classList.toggle('active', nid === id);
   });
@@ -2876,7 +3077,7 @@ function renderEncyclopedia() {
 }
 
 function setNavActive(id) {
-  ['nav-dashboard','nav-collection','nav-wishlist','nav-encyclopedia'].forEach(function(nid) {
+  ['nav-dashboard','nav-collection','nav-wishlist','nav-encyclopedia','nav-reports'].forEach(function(nid) {
     var el = document.getElementById(nid);
     if (el) el.classList.toggle('active', nid === id);
   });
@@ -3894,6 +4095,7 @@ function renderCurrentView() {
   else if (activeView === 'wishlist')     renderWishlist();
   else if (activeView === 'dash-set')      renderDashSetDetail(activeSetId);
   else if (activeView === 'encyclopedia') renderEncyclopedia();
+  else if (activeView === 'reports')      renderReportsView();
   else if (activeView === 'user-collection') renderUserCollection(activeUserView);
   else if (activeView === 'set')          renderSetView(activeSetId);
   else                                    renderDashboard();
@@ -4093,6 +4295,14 @@ function syncPricesPayload() {
   });
 }
 
+// v6.2 : payload pour reports.json (partagé entre tous les users)
+function syncReportsPayload() {
+  return JSON.stringify({
+    savedAt: new Date().toISOString(),
+    reports: reports,
+  });
+}
+
 // ── Push (sauvegarde → Gist) ──────────────────────────────────
 async function syncPush() {
   if (_syncBusy) { _syncPending = true; return; }
@@ -4107,6 +4317,7 @@ async function syncPush() {
     var userFile = 'user_' + cfg.user + '.json';
     body.files[userFile] = { content: syncUserPayload() };
     body.files['prices.json'] = { content: syncPricesPayload() };
+    body.files['reports.json'] = { content: syncReportsPayload() };  // v6.2
     var url, method;
     if (cfg.gistId) {
       url    = 'https://api.github.com/gists/' + cfg.gistId;
@@ -4185,6 +4396,19 @@ async function syncPull(silent) {
           localStorage.setItem('pkmn-ar-prices', JSON.stringify(prices));
         }
       } catch(ep) {}
+    }
+
+    // ── v6.2 : Load shared reports ──
+    if (files['reports.json']) {
+      try {
+        if (silent && _pushScheduled) {
+          console.log('[sync] reports.json: skip overwrite local (push pending)');
+        } else {
+          var reportsPayload = JSON.parse(files['reports.json'].content);
+          reports = reportsPayload.reports || {};
+          localStorage.setItem('pkmn-ar-reports', JSON.stringify(reports));
+        }
+      } catch(er) {}
     }
 
     // ── Load own user file ──
@@ -5285,10 +5509,21 @@ window.addEventListener('message', function(event) {
       var forceLang = msg.key.endsWith('__cn') ? 'cn' : msg.key.endsWith('__fr') ? 'fr' : null;
       var priceKey = msg.key.replace(/__cn$/, '').replace(/__fr$/, '');
       applyPriceFromSync(priceKey, msg.data, forceLang);
+      // v6.2 : si la carte était auto-reportée et qu'on récupère enfin un prix → unreport
+      // (mais pas si reportée manuellement — l'utilisateur garde le contrôle)
+      if (reports[priceKey] && reports[priceKey].reason === 'auto') {
+        console.log('[Bridge] auto-unreport', priceKey, '(prix retrouvé)');
+        unreportCard(priceKey);
+      }
       var h = window.__singleSyncHandlers && (window.__singleSyncHandlers[msg.key] || window.__singleSyncHandlers[priceKey]);
       if (h) { h(msg); }
     }
     if (msg.type === 'PRICE_NOT_FOUND') {
+      // v6.2 : auto-report — page CM ouverte mais aucune offre trouvée → lien probablement cassé
+      // priceKey strippé du suffix de langue : on report la carte, pas la langue
+      var pkNotFound = msg.key.replace(/__cn$/, '').replace(/__fr$/, '');
+      console.log('[Bridge] PRICE_NOT_FOUND pour', msg.key, '→ auto-report', pkNotFound);
+      reportCard(pkNotFound, 'auto');
       var h2 = window.__singleSyncHandlers && window.__singleSyncHandlers[msg.key];
       if (h2) { h2(msg); delete window.__singleSyncHandlers[msg.key]; }
     }
