@@ -1443,7 +1443,9 @@ function saveReports() {
   if (!cmSyncActive) syncAutoPush();
 }
 function isReported(key) {
-  return !!(reports && reports[key]);
+  // v6.2.3 : null/undefined ou non-objet = pas vraiment reporté (entrée corrompue)
+  var r = reports && reports[key];
+  return !!(r && typeof r === 'object');
 }
 function reportCard(key, reason) {
   reason = reason || 'manual';
@@ -2646,11 +2648,25 @@ function showEncyclopedia() {
 
 // v6.2 : Vue Reports — liste des cartes signalées (lien CM cassé)
 function showReports() {
-  activeView  = 'reports';
-  activeSetId = null;
-  closeNavMenu();
-  setNavActive('nav-reports');
-  renderReportsView();
+  try {
+    activeView  = 'reports';
+    activeSetId = null;
+    closeNavMenu();
+    setNavActive('nav-reports');
+    renderReportsView();
+  } catch (err) {
+    console.error('[showReports] erreur:', err);
+    var main = document.getElementById('main');
+    if (main) {
+      main.innerHTML = '<div style="padding:30px;color:#fca5a5;font-size:13px">' +
+        '<div style="font-size:24px;margin-bottom:10px">⚠</div>' +
+        'Erreur lors de l\'ouverture de la page Reports.<br>' +
+        'Détail dans la console (F12) :<br>' +
+        '<pre style="background:rgba(255,255,255,0.05);padding:10px;border-radius:4px;font-size:11px;margin-top:10px;overflow:auto">' +
+          (err && err.message ? err.message : String(err)) +
+        '</pre></div>';
+    }
+  }
 }
 
 // v6.2 : Index card pour retrouver un objet card depuis sa clé "setId-num"
@@ -2668,9 +2684,22 @@ function renderReportsView() {
   var main = document.getElementById('main');
   if (!main) return;
 
+  // v6.2.3 : nettoyage défensif — supprime les entrées corrompues (null/undefined ou non-objet)
+  // Cela peut arriver suite à un sync foireux ou une vieille structure migrée.
+  var dirty = false;
+  Object.keys(reports).forEach(function(k) {
+    var r = reports[k];
+    if (r === null || r === undefined || typeof r !== 'object') {
+      console.warn('[Reports] entrée corrompue supprimée:', k, r);
+      delete reports[k];
+      dirty = true;
+    }
+  });
+  if (dirty) saveReports();
+
   // Construit la liste triée par date de report (plus récent d'abord)
   var entries = Object.keys(reports).map(function(key) {
-    var r = reports[key];
+    var r = reports[key] || {};
     var match = findCardByKey(key);
     return {
       key: key,
