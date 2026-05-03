@@ -1449,10 +1449,13 @@ function reportCard(key, reason) {
   reason = reason || 'manual';
   // Ne pas écraser un report manuel par un auto plus tard
   if (reports[key] && reports[key].reason === 'manual' && reason === 'auto') return false;
+  // v6.2.1 : préserver la note existante si la carte est re-reportée
+  var existingNote = (reports[key] && reports[key].note) || '';
   reports[key] = {
     reportedAt: new Date().toISOString(),
     reportedBy: currentUser || '?',
     reason: reason,
+    note: existingNote,
   };
   saveReports();
   return true;
@@ -1471,6 +1474,19 @@ function toggleReport(key) {
     reportCard(key, 'manual');
     return true;
   }
+}
+
+// v6.2.1 : édite la note d'un report (partagée entre tous les users via reports.json)
+// Retourne true si une modif a été persistée, false sinon.
+function setReportNote(key, noteText) {
+  if (!reports[key]) return false;
+  var clean = (noteText || '').trim();
+  if (clean === (reports[key].note || '')) return false;  // pas de changement réel
+  reports[key].note = clean;
+  reports[key].noteEditedAt = new Date().toISOString();
+  reports[key].noteEditedBy = currentUser || '?';
+  saveReports();
+  return true;
 }
 
 // v6.2 : handler du bouton ⚠ — toggle + refresh visuel des boutons concernés
@@ -2720,30 +2736,106 @@ function renderReportsView() {
     var reasonLabel = e.reason === 'auto' ? 'Auto-détecté' : 'Signalé';
     var reasonColor = e.reason === 'auto' ? '#fbbf24' : '#fca5a5';
 
+    // v6.2.1 : note partagée + métadonnées d'édition
+    var noteText  = (reports[e.key] && reports[e.key].note) || '';
+    var noteSafe  = noteText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    var editedBy  = reports[e.key] && reports[e.key].noteEditedBy ? userDisplayName(reports[e.key].noteEditedBy) : null;
+    var editedAt  = reports[e.key] && reports[e.key].noteEditedAt ? new Date(reports[e.key].noteEditedAt).toLocaleString('fr-FR') : null;
+    var noteMeta  = (editedBy && noteText) ? ('par ' + editedBy + ' · ' + editedAt) : '';
+
     html +=
-      '<div class="report-row" style="display:flex;gap:12px;align-items:center;padding:10px 12px;background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.18);border-radius:4px">' +
-        (imgUrl ? '<img src="' + imgUrl + '" alt="" style="width:50px;height:70px;object-fit:cover;border-radius:3px;flex:0 0 auto" loading="lazy">' :
-                  '<div style="width:50px;height:70px;background:rgba(255,255,255,0.04);border-radius:3px;flex:0 0 auto"></div>') +
-        '<div style="flex:1;min-width:0">' +
-          '<div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px">' + displayName + ' <span style="color:var(--muted);font-weight:400">' + displayNum + '</span></div>' +
-          '<div style="font-size:10px;color:var(--muted);margin-bottom:4px">' + (e.set ? e.set.name + ' · ' : '') + e.key + '</div>' +
-          '<div style="font-size:10px;display:flex;gap:10px;flex-wrap:wrap">' +
-            '<span style="color:' + reasonColor + '">●</span>' +
-            '<span style="color:var(--muted)">' + reasonLabel + ' par <strong style="color:var(--text)">' + by + '</strong></span>' +
-            '<span style="color:var(--muted)">' + dateStr + '</span>' +
+      '<div class="report-row" style="display:flex;flex-direction:column;gap:8px;padding:10px 12px;background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.18);border-radius:4px">' +
+        '<div style="display:flex;gap:12px;align-items:center">' +
+          (imgUrl ? '<img src="' + imgUrl + '" alt="" style="width:50px;height:70px;object-fit:cover;border-radius:3px;flex:0 0 auto" loading="lazy">' :
+                    '<div style="width:50px;height:70px;background:rgba(255,255,255,0.04);border-radius:3px;flex:0 0 auto"></div>') +
+          '<div style="flex:1;min-width:0">' +
+            '<div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px">' + displayName + ' <span style="color:var(--muted);font-weight:400">' + displayNum + '</span></div>' +
+            '<div style="font-size:10px;color:var(--muted);margin-bottom:4px">' + (e.set ? e.set.name + ' · ' : '') + e.key + '</div>' +
+            '<div style="font-size:10px;display:flex;gap:10px;flex-wrap:wrap">' +
+              '<span style="color:' + reasonColor + '">●</span>' +
+              '<span style="color:var(--muted)">' + reasonLabel + ' par <strong style="color:var(--text)">' + by + '</strong></span>' +
+              '<span style="color:var(--muted)">' + dateStr + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div style="display:flex;gap:4px;flex-wrap:wrap;flex:0 0 auto">' +
+            (jpUrl ? '<a class="btn-cm-card" href="' + jpUrl + '#cmkey=' + e.key + '" target="_blank" style="font-size:9px;padding:4px 6px">JP</a>' : '') +
+            (cnUrl ? '<a class="btn-cm-cn btn-cm-card" href="' + cnUrl + '#cmkey=' + e.key + '__cn" target="_blank" style="font-size:9px;padding:4px 6px">CN</a>' : '') +
+            (frUrl ? '<a class="btn-cm-fr btn-cm-card" href="' + frUrl + '#cmkey=' + e.key + '__fr" target="_blank" style="font-size:9px;padding:4px 6px">FR</a>' : '') +
+            '<button onclick="onReportClick(\'' + e.key + '\',event)" title="Retirer le report" style="font-size:10px;padding:4px 8px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.4);color:#86efac;border-radius:2px;cursor:pointer;font-family:DM Mono,monospace">✓ Résolu</button>' +
           '</div>' +
         '</div>' +
-        '<div style="display:flex;gap:4px;flex-wrap:wrap;flex:0 0 auto">' +
-          (jpUrl ? '<a class="btn-cm-card" href="' + jpUrl + '#cmkey=' + e.key + '" target="_blank" style="font-size:9px;padding:4px 6px">JP</a>' : '') +
-          (cnUrl ? '<a class="btn-cm-cn btn-cm-card" href="' + cnUrl + '#cmkey=' + e.key + '__cn" target="_blank" style="font-size:9px;padding:4px 6px">CN</a>' : '') +
-          (frUrl ? '<a class="btn-cm-fr btn-cm-card" href="' + frUrl + '#cmkey=' + e.key + '__fr" target="_blank" style="font-size:9px;padding:4px 6px">FR</a>' : '') +
-          '<button onclick="onReportClick(\'' + e.key + '\',event)" title="Retirer le report" style="font-size:10px;padding:4px 8px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.4);color:#86efac;border-radius:2px;cursor:pointer;font-family:DM Mono,monospace">✓ Résolu</button>' +
+        // v6.2.1 : zone commentaire partagé sous chaque report
+        '<div class="report-note-zone" data-report-note-key="' + e.key + '" style="margin-left:62px">' +
+          (noteText
+            ? '<div class="report-note-display" data-note-display-key="' + e.key + '" style="font-size:11px;color:var(--text);background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:3px;padding:6px 9px;cursor:text;line-height:1.4;white-space:pre-wrap;word-break:break-word" title="Cliquer pour éditer">' +
+                noteSafe +
+                (noteMeta ? '<div style="font-size:9px;color:var(--muted);margin-top:4px;font-style:italic">' + noteMeta + '</div>' : '') +
+              '</div>'
+            : '<div class="report-note-display empty" data-note-display-key="' + e.key + '" style="font-size:10px;color:var(--muted);font-style:italic;cursor:text;padding:4px 0" title="Cliquer pour ajouter un commentaire">+ Ajouter un commentaire partagé</div>'
+          ) +
         '</div>' +
       '</div>';
   });
 
   html += '</div>';
   main.innerHTML = html;
+
+  // v6.2.1 : attache les handlers d'édition de note (event delegation, post-render)
+  attachReportNoteHandlers();
+}
+
+// v6.2.1 : click-to-edit sur les notes des reports
+// Pattern : div display → click → textarea → blur ou Enter (Ctrl) = save, Esc = cancel
+function attachReportNoteHandlers() {
+  document.querySelectorAll('.report-note-display').forEach(function(disp) {
+    if (disp.__reportNoteBound) return;
+    disp.__reportNoteBound = true;
+    disp.addEventListener('click', function() {
+      var key = disp.getAttribute('data-note-display-key');
+      if (!key) return;
+      var zone = disp.parentNode;
+      if (!zone || zone.querySelector('textarea')) return;  // déjà en édition
+      var existing = (reports[key] && reports[key].note) || '';
+
+      var ta = document.createElement('textarea');
+      ta.value = existing;
+      ta.placeholder = 'Note partagée pour cette carte (lien CM à corriger, V1 vs V2…)';
+      ta.style.cssText = 'width:100%;min-height:60px;font-size:11px;font-family:inherit;' +
+        'background:rgba(0,0,0,0.3);border:1px solid var(--accent);border-radius:3px;' +
+        'padding:6px 9px;color:var(--text);resize:vertical;line-height:1.4;outline:none';
+
+      var hint = document.createElement('div');
+      hint.style.cssText = 'font-size:9px;color:var(--muted);margin-top:3px;font-style:italic';
+      hint.textContent = 'Ctrl+Entrée pour enregistrer · Échap pour annuler';
+
+      // Replace display by editor
+      disp.style.display = 'none';
+      zone.appendChild(ta);
+      zone.appendChild(hint);
+      ta.focus();
+      ta.setSelectionRange(ta.value.length, ta.value.length);
+
+      var saved = false;
+      var commit = function() {
+        if (saved) return;
+        saved = true;
+        setReportNote(key, ta.value);
+        renderReportsView();  // re-render proprement
+      };
+      var cancel = function() {
+        if (saved) return;
+        saved = true;
+        ta.remove();
+        hint.remove();
+        disp.style.display = '';
+      };
+      ta.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+        else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); commit(); }
+      });
+      ta.addEventListener('blur', commit);
+    });
+  });
 }
 
 function setNavActive(id) {
