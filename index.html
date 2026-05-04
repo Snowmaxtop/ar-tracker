@@ -1762,10 +1762,18 @@ function buildLangPicker(key) {
 // pour éviter de faire disparaître silencieusement les cellules.
 function fmtPrice(p) {
   if (p === null || p === undefined || p === '') return '—';
+  // v6.3 : extrait condition optionnelle après '|' (ex: "12.50|MT" → 12.50, "MT")
+  var cond = '';
+  if (typeof p === 'string' && p.indexOf('|') >= 0) {
+    var parts = p.split('|');
+    cond = parts[1] ? parts[1].trim() : '';
+  }
   var n = (typeof p === 'number') ? p : parseFloat(String(p).split('|')[0]);
   if (isNaN(n)) return '—';
-  if (n >= 1000) return Math.round(n) + ' €';
-  return n.toFixed(2) + ' €';
+  var priceStr = (n >= 1000) ? (Math.round(n) + ' €') : (n.toFixed(2) + ' €');
+  // Affiche le tag de condition uniquement si présent (donc ≠ NM, défaut implicite)
+  if (cond && cond !== 'NM') priceStr += ' ' + cond;
+  return priceStr;
 }
 
 // Returns {price, country} of the best CM price across 4 countries FOR THE CHOSEN LANGUAGE ONLY.
@@ -6224,10 +6232,23 @@ function applyPriceFromSync(key, data, forceLang) {
       var countries = effectiveData[lang];
       if (!countries || typeof countries !== 'object') return;
       CM_COUNTRIES.forEach(function(c) {
-        var price = countries[c.code];
-        if (price === null || price === undefined) return;
+        var entry = countries[c.code];
+        if (entry === null || entry === undefined) return;
+        // v6.3 : entry peut être un nombre (legacy) ou {price, cond} (nouveau format)
+        var priceVal, condVal;
+        if (typeof entry === 'object' && entry !== null) {
+          priceVal = entry.price;
+          condVal  = entry.cond || '';
+        } else {
+          priceVal = entry;
+          condVal  = '';
+        }
+        if (priceVal === null || priceVal === undefined) return;
         var slot = key + '__cm_' + lang + '_' + c.code;
-        prices[slot] = String(parseFloat(price).toFixed(2));
+        // v6.3 : stockage avec suffixe "|COND" si la condition n'est pas NM
+        // (NM = défaut implicite, on n'encombre pas le store)
+        var priceStr = String(parseFloat(priceVal).toFixed(2));
+        prices[slot] = (condVal && condVal !== 'NM') ? (priceStr + '|' + condVal) : priceStr;
         prices[slot + '__date'] = new Date().toISOString();
         anyUpdate = true;
         // DOM update
@@ -6236,7 +6257,7 @@ function applyPriceFromSync(key, data, forceLang) {
         );
         if (row) {
           var priceEl = row.querySelector('.pcr-price');
-          if (priceEl) { priceEl.textContent = fmtPrice(price); priceEl.classList.remove('empty'); }
+          if (priceEl) { priceEl.textContent = fmtPrice(prices[slot]); priceEl.classList.remove('empty'); }
           row.classList.add('synced');
           setTimeout(function() { row.classList.remove('synced'); }, 2000);
         }
