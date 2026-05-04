@@ -409,6 +409,7 @@
     padding: 0 3px; border-radius: 2px;
   }
   /* Couleurs cohérentes avec les badges CardMarket */
+  .price-country-row .pcr-cond-nm { color: #38bdf8; background: rgba(56,189,248,0.12); }
   .price-country-row .pcr-cond-mt { color: #4ade80; background: rgba(74,222,128,0.12); }
   .price-country-row .pcr-cond-ex { color: #fbbf24; background: rgba(251,191,36,0.12); }
   .price-country-row .pcr-cond-gd { color: #f97316; background: rgba(249,115,22,0.14); }
@@ -1789,12 +1790,13 @@ function extractCond(p) {
   return (parts[1] || '').trim();
 }
 
-// v6.3 : rend le prix en HTML avec la condition affichée EN DESSOUS (petite, atténuée)
-// Si la condition est NM (ou absente), on n'affiche que le prix, pas de seconde ligne.
+// v6.3 : rend le prix en HTML avec la condition affichée EN DESSOUS
+// v6.3.1 : on affiche TOUJOURS l'étiquette, NM inclus (défaut implicite quand
+//          le prix est stocké sans suffixe |COND, comme les anciens prix).
 function fmtPriceHtml(p) {
   var priceText = fmtPrice(p);
-  var cond = extractCond(p);
-  if (!cond || cond === 'NM') return priceText;
+  if (priceText === '—') return priceText;  // pas de prix → pas de tag
+  var cond = extractCond(p) || 'NM';  // pas de cond stocké = NM par défaut
   return priceText +
     '<span class="pcr-cond pcr-cond-' + cond.toLowerCase() + '">' + cond + '</span>';
 }
