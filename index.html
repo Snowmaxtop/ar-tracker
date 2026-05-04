@@ -1455,6 +1455,7 @@ function savePrices() { localStorage.setItem('pkmn-ar-prices', JSON.stringify(pr
 function saveReports() {
   // v6.3 : suit exactement le pattern saveState — localStorage + push debouncé.
   localStorage.setItem('pkmn-ar-reports', JSON.stringify(reports));
+  console.log('[Reports] saveReports — ' + Object.keys(reports).length + ' reports en local');
   if (!cmSyncActive) syncAutoPush();
 }
 function isReported(key) {
@@ -4028,12 +4029,13 @@ async function deleteUserProfile(username) {
     delete otherUsers[username];
     localStorage.setItem('pkmn-ar-other-users', JSON.stringify(otherUsers));
     if (username === currentUser) {
-      state = {}; wishlists = []; wishlistCards = {}; comments = {}; buyPrices = {}; cardLangs = {}; ownedDates = {}; cardConditions = {};
+      state = {}; wishlists = []; wishlistCards = {}; comments = {}; buyPrices = {}; cardLangs = {}; ownedDates = {}; cardConditions = {}; reports = {};
       ensureDefaultWishlist(); currentUser = '';
       localStorage.removeItem('sync_user');
       localStorage.setItem('pkmn-ar-state', '{}');
       localStorage.setItem('pkmn-ar-wishlists', JSON.stringify(wishlists));
       localStorage.setItem('pkmn-ar-wl-cards', '{}');
+      localStorage.setItem('pkmn-ar-reports', '{}');  // v6.3.1
       var userLabel = document.getElementById('sidebar-username');
       if (userLabel) userLabel.textContent = '';
     }
@@ -4825,6 +4827,7 @@ function saveSyncConfig() {
       cardLangs: cardLangs,
       ownedDates: ownedDates,
       cardConditions: cardConditions,
+      reports: reports,  // v6.3.1 : reports per-user
     };
     localStorage.setItem('pkmn-ar-other-users', JSON.stringify(otherUsers));
   }
@@ -4848,11 +4851,13 @@ function saveSyncConfig() {
       cardLangs     = newData.cardLangs     || {};
       ownedDates    = newData.ownedDates    || {};
       cardConditions = newData.cardConditions || {};
+      reports       = newData.reports       || {};  // v6.3.1 : reports per-user
     } else {
       // Profil inconnu → reset propre
       state = {}; wishlists = []; wishlistCards = {};
       comments = {}; buyPrices = {}; cardLangs = {};
       ownedDates = {}; cardConditions = {};
+      reports = {};  // v6.3.1
     }
     ensureDefaultWishlist();
     assignOrphanCardsToDefault();
@@ -4865,6 +4870,7 @@ function saveSyncConfig() {
     localStorage.setItem('pkmn-ar-cardlangs',   JSON.stringify(cardLangs));
     localStorage.setItem('pkmn-ar-owneddates',  JSON.stringify(ownedDates));
     localStorage.setItem('pkmn-ar-conditions',  JSON.stringify(cardConditions));
+    localStorage.setItem('pkmn-ar-reports',     JSON.stringify(reports));  // v6.3.1
     // Réinitialise l'état ouvert des wishlists
     wlOpenState = {};
   }
