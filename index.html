@@ -401,8 +401,20 @@
   .price-country-row.synced { background: rgba(74,222,128,0.13); }
   .price-country-row .pcr-flag { width: 13px; height: 9px; object-fit: cover; border-radius: 1px; flex-shrink: 0; }
   .price-country-row .pcr-code { color: var(--muted); font-size: 9px; letter-spacing: 0.06em; flex-shrink: 0; width: 16px; }
-  .price-country-row .pcr-price { color: var(--text); flex: 1; text-align: right; font-size: 10px; white-space: nowrap; }
+  .price-country-row .pcr-price { color: var(--text); flex: 1; text-align: right; font-size: 10px; white-space: nowrap; display: flex; flex-direction: column; align-items: flex-end; line-height: 1.1; }
   .price-country-row .pcr-price.empty { color: var(--muted); opacity: 0.35; }
+  .price-country-row .pcr-cond {
+    font-size: 8px; letter-spacing: 0.05em; opacity: 0.85;
+    margin-top: 1px; font-family: 'DM Mono', monospace;
+    padding: 0 3px; border-radius: 2px;
+  }
+  /* Couleurs cohérentes avec les badges CardMarket */
+  .price-country-row .pcr-cond-mt { color: #4ade80; background: rgba(74,222,128,0.12); }
+  .price-country-row .pcr-cond-ex { color: #fbbf24; background: rgba(251,191,36,0.12); }
+  .price-country-row .pcr-cond-gd { color: #f97316; background: rgba(249,115,22,0.14); }
+  .price-country-row .pcr-cond-lp { color: #f87171; background: rgba(248,113,113,0.14); }
+  .price-country-row .pcr-cond-pl { color: #ef4444; background: rgba(239,68,68,0.16); }
+  .price-country-row .pcr-cond-po { color: #b91c1c; background: rgba(185,28,28,0.18); }
   .price-country-row .pcr-sep { color: var(--muted); opacity: 0.3; font-size: 8px; }
   .price-country-row .pcr-lang { width: 13px; height: 9px; object-fit: cover; border-radius: 1px; flex-shrink: 0; opacity: 0.75; }
 
@@ -1682,9 +1694,10 @@ function buildOnePriceRow(key, country, lang) {
   // Price key: {cardKey}__cm_{lang}_{country}
   var slot = key + '__cm_' + lang + '_' + country.code;
   var stored = prices[slot];
-  var price = stored ? stored.split('|')[0] : '';
-  var priceHtml = price
-    ? '<span class="pcr-price">' + fmtPrice(price) + '</span>'
+  // v6.3 : on passe la valeur complète (avec '|COND' éventuel) à fmtPriceHtml
+  var hasPrice = !!stored && !!parseFloat(String(stored).split('|')[0]);
+  var priceHtml = hasPrice
+    ? '<span class="pcr-price">' + fmtPriceHtml(stored) + '</span>'
     : '<span class="pcr-price empty">—</span>';
   return '<div class="price-country-row"' +
     ' data-price-key="' + key + '"' +
@@ -1762,18 +1775,28 @@ function buildLangPicker(key) {
 // pour éviter de faire disparaître silencieusement les cellules.
 function fmtPrice(p) {
   if (p === null || p === undefined || p === '') return '—';
-  // v6.3 : extrait condition optionnelle après '|' (ex: "12.50|MT" → 12.50, "MT")
-  var cond = '';
-  if (typeof p === 'string' && p.indexOf('|') >= 0) {
-    var parts = p.split('|');
-    cond = parts[1] ? parts[1].trim() : '';
-  }
   var n = (typeof p === 'number') ? p : parseFloat(String(p).split('|')[0]);
   if (isNaN(n)) return '—';
-  var priceStr = (n >= 1000) ? (Math.round(n) + ' €') : (n.toFixed(2) + ' €');
-  // Affiche le tag de condition uniquement si présent (donc ≠ NM, défaut implicite)
-  if (cond && cond !== 'NM') priceStr += ' ' + cond;
-  return priceStr;
+  if (n >= 1000) return Math.round(n) + ' €';
+  return n.toFixed(2) + ' €';
+}
+
+// v6.3 : extrait le label de condition stocké après '|' (ex: "12.50|MT" → "MT")
+// Retourne '' s'il n'y a pas de condition (= NM par défaut, on n'affiche rien)
+function extractCond(p) {
+  if (typeof p !== 'string' || p.indexOf('|') < 0) return '';
+  var parts = p.split('|');
+  return (parts[1] || '').trim();
+}
+
+// v6.3 : rend le prix en HTML avec la condition affichée EN DESSOUS (petite, atténuée)
+// Si la condition est NM (ou absente), on n'affiche que le prix, pas de seconde ligne.
+function fmtPriceHtml(p) {
+  var priceText = fmtPrice(p);
+  var cond = extractCond(p);
+  if (!cond || cond === 'NM') return priceText;
+  return priceText +
+    '<span class="pcr-cond pcr-cond-' + cond.toLowerCase() + '">' + cond + '</span>';
 }
 
 // Returns {price, country} of the best CM price across 4 countries FOR THE CHOSEN LANGUAGE ONLY.
@@ -6187,7 +6210,7 @@ function applyPriceFromSync(key, data, forceLang) {
         );
         if (row) {
           var priceEl = row.querySelector('.pcr-price');
-          if (priceEl) { priceEl.textContent = fmtPrice(pick); priceEl.classList.remove('empty'); }
+          if (priceEl) { priceEl.innerHTML = fmtPriceHtml(pick); priceEl.classList.remove('empty'); }
           row.classList.add('synced');
           setTimeout(function() { row.classList.remove('synced'); }, 2000);
         }
@@ -6257,7 +6280,7 @@ function applyPriceFromSync(key, data, forceLang) {
         );
         if (row) {
           var priceEl = row.querySelector('.pcr-price');
-          if (priceEl) { priceEl.textContent = fmtPrice(prices[slot]); priceEl.classList.remove('empty'); }
+          if (priceEl) { priceEl.innerHTML = fmtPriceHtml(prices[slot]); priceEl.classList.remove('empty'); }
           row.classList.add('synced');
           setTimeout(function() { row.classList.remove('synced'); }, 2000);
         }
@@ -6278,7 +6301,7 @@ function applyPriceFromSync(key, data, forceLang) {
       );
       if (row) {
         var priceEl = row.querySelector('.pcr-price');
-        if (priceEl) { priceEl.textContent = fmtPrice(entry.price); priceEl.classList.remove('empty'); }
+        if (priceEl) { priceEl.innerHTML = fmtPriceHtml(entry.price); priceEl.classList.remove('empty'); }
         row.classList.add('synced');
         setTimeout(function() { row.classList.remove('synced'); }, 2000);
       }
