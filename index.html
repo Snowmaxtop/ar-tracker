@@ -1447,108 +1447,75 @@ function saveWishlists() {
 function savePrices() { localStorage.setItem('pkmn-ar-prices', JSON.stringify(prices)); if (!cmSyncActive) syncAutoPush(); }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// v6.3 : REPORTS — cartes avec lien CardMarket cassé
-// Sauvegardés dans user_*.json comme comments/state/wishlists.
-// Format : { "M3-084": { reportedAt: ISO date, reportedBy: username, reason, note } }
-// Per-user. Affichés dans le menu Reports en mergeant les reports de tous les users.
+// REPORTS — cartes avec lien CardMarket cassé (v7 - réécrit propre)
+// Architecture : copie EXACTE du pattern `comments` qui marche depuis le début
+// Format : { "M3-084": { user, date, note } }
+// Stocké dans user_*.json (per-user, partagé via Gist)
+// Affiché dans la vue Reports en mergeant les reports de TOUS les users.
 // ═══════════════════════════════════════════════════════════════════════════
+
+// Sauvegarde reports dans localStorage + déclenche push debouncé (comme saveState)
 function saveReports() {
-  // v6.3 : suit exactement le pattern saveState — localStorage + push debouncé.
   localStorage.setItem('pkmn-ar-reports', JSON.stringify(reports));
-  console.log('[Reports] saveReports — ' + Object.keys(reports).length + ' reports en local');
-  if (!cmSyncActive) syncAutoPush();
+  console.log('[Reports] save —', Object.keys(reports).length, 'reports en local. Sample:', Object.keys(reports).slice(0,3));
+  syncAutoPush();
 }
+
+// Vérifie si une carte est reportée (par moi OU par un autre user partagé)
 function isReported(key) {
-  // v6.2.3 : null/undefined ou non-objet = pas vraiment reporté (entrée corrompue)
-  var r = reports && reports[key];
-  if (r && typeof r === 'object') return true;
-  // v6.3 : la carte est aussi considérée reportée si un autre user l'a reportée
-  if (typeof otherUsers === 'object' && otherUsers) {
-    for (var u in otherUsers) {
-      if (!otherUsers.hasOwnProperty(u)) continue;
-      var or = otherUsers[u] && otherUsers[u].reports && otherUsers[u].reports[key];
-      if (or && typeof or === 'object') return true;
-    }
+  if (reports[key]) return true;
+  for (var u in otherUsers) {
+    if (otherUsers[u] && otherUsers[u].reports && otherUsers[u].reports[key]) return true;
   }
   return false;
 }
-function reportCard(key, reason) {
-  reason = reason || 'manual';
-  // Ne pas écraser un report manuel par un auto plus tard
-  if (reports[key] && reports[key].reason === 'manual' && reason === 'auto') return false;
-  // v6.2.1 : préserver la note existante si la carte est re-reportée
-  var existingNote = (reports[key] && reports[key].note) || '';
-  reports[key] = {
-    reportedAt: new Date().toISOString(),
-    reportedBy: currentUser || '?',
-    reason: reason,
-    note: existingNote,
-  };
-  saveReports();
-  return true;
-}
-function unreportCard(key) {
-  if (!reports[key]) return false;
-  delete reports[key];
-  saveReports();
-  return true;
-}
+
+// Toggle report ON/OFF — appelé par le bouton ⚠ sur chaque carte
 function toggleReport(key) {
-  // v6.3 : agit uniquement sur MES reports. L'état visuel global est calculé
-  // ensuite via isReported() qui prend en compte les reports des autres users.
-  if (reports[key] && typeof reports[key] === 'object') {
-    unreportCard(key);
+  if (reports[key]) {
+    delete reports[key];
+    console.log('[Reports] retiré', key);
   } else {
-    reportCard(key, 'manual');
+    reports[key] = {
+      user: currentUser || '?',
+      date: new Date().toISOString(),
+      note: '',
+    };
+    console.log('[Reports] ajouté', key, 'par', currentUser);
   }
-  return isReported(key);
+  saveReports();
+  // Re-render des boutons + vue reports si active
+  document.querySelectorAll('.btn-report-card[data-report-key="' + key + '"]').forEach(function(btn) {
+    btn.classList.toggle('reported', isReported(key));
+  });
+  if (activeView === 'reports') renderReportsView();
 }
 
-// v6.3 : édite la note d'un report
-// Si la carte est dans MES reports → édite directement.
-// Si elle a été reportée par qqun d'autre → on copie dans MES reports pour
-// permettre l'édition (chaque user ajoute sa note dans son propre user_*.json).
+// Met à jour le commentaire d'une carte reportée
+// Si la carte est reportée par qqun d'autre, on copie le report chez moi pour pouvoir y attacher MA note
 function setReportNote(key, noteText) {
   var clean = (noteText || '').trim();
+  // Si je n'ai pas le report localement, je le copie depuis un autre user pour pouvoir l'éditer
   if (!reports[key]) {
-    // Cherche l'origine du report dans les autres users
     var origin = null;
-    if (typeof otherUsers === 'object' && otherUsers) {
-      for (var u in otherUsers) {
-        if (!otherUsers.hasOwnProperty(u)) continue;
-        var or = otherUsers[u] && otherUsers[u].reports && otherUsers[u].reports[key];
-        if (or && typeof or === 'object') { origin = or; break; }
-      }
+    for (var u in otherUsers) {
+      var or = otherUsers[u] && otherUsers[u].reports && otherUsers[u].reports[key];
+      if (or) { origin = or; break; }
     }
-    if (!origin) return false;  // pas de report nulle part
+    if (!origin) return false;
     reports[key] = {
-      reportedAt: origin.reportedAt || new Date().toISOString(),
-      reportedBy: origin.reportedBy || '?',
-      reason:     origin.reason || 'manual',
-      note:       '',
+      user: origin.user || '?',
+      date: origin.date || new Date().toISOString(),
+      note: '',
     };
   }
-  if (clean === (reports[key].note || '')) return false;
+  if (reports[key].note === clean) return false;  // pas de changement
   reports[key].note = clean;
-  reports[key].noteEditedAt = new Date().toISOString();
-  reports[key].noteEditedBy = currentUser || '?';
+  reports[key].noteUser = currentUser || '?';
+  reports[key].noteDate = new Date().toISOString();
+  console.log('[Reports] note màj', key, '→', clean.slice(0,40));
   saveReports();
   return true;
-}
-
-// v6.2 : handler du bouton ⚠ — toggle + refresh visuel des boutons concernés
-function onReportClick(key, ev) {
-  if (ev) { ev.stopPropagation(); ev.preventDefault(); }
-  var nowReported = toggleReport(key);
-  // Met à jour tous les boutons report pour cette clé (y a peut-être plusieurs vues)
-  document.querySelectorAll('.btn-report-card[data-report-key="' + key + '"]').forEach(function(btn) {
-    btn.classList.toggle('reported', nowReported);
-    btn.title = nowReported ? 'Retirer le report' : 'Signaler un lien CM cassé';
-  });
-  // Si on est sur la vue reports, re-render pour faire disparaître/réapparaître la carte
-  if (typeof activeView !== 'undefined' && activeView === 'reports') {
-    if (typeof renderReportsView === 'function') renderReportsView();
-  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1956,8 +1923,8 @@ function renderCard(set, card, showSetBadge) {
         (card.cmUrlFr ? '<a class="btn-cm-fr btn-cm-card" href="' + card.cmUrlFr + '#cmkey=' + key + '__fr" target="_blank">' + EXT_SVG + ' FR</a>' : '') +
       '</div>' : '') +
       (!card.noCmJP || card.cmUrlCn || card.cmUrlFr ? '<div class="card-actions" style="display:flex;gap:6px">' +
-        '<button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\',event)" style="flex:1">⟳ Sync prix CM</button>' +
-        '<button class="btn-report-card' + (isReported(key) ? ' reported' : '') + '" data-report-key="' + key + '" onclick="onReportClick(\'' + key + '\',event)" title="' + (isReported(key) ? 'Retirer le report' : 'Signaler un lien CM cassé') + '">⚠</button>' +
+        '<button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\')" style="flex:1">⟳ Sync prix CM</button>' +
+        '<button class="btn-report-card' + (isReported(key) ? ' reported' : '') + '" data-report-key="' + key + '" onclick="event.stopPropagation();event.preventDefault();toggleReport(\'' + key + '\')" title="' + (isReported(key) ? 'Retirer le report' : 'Signaler un lien CM cassé') + '">⚠</button>' +
       '</div>' : '') +
       '<div class="card-prices" style="display:' + hidePrices + '">' +
         buildPricesUpdatedLabel(key) +
@@ -2054,8 +2021,8 @@ function buildDiscoverCardEl(dset, c, opts) {
       (cmLinksHtml ? '<div class="card-cm-links" style="grid-column:1/-1;padding:0 12px"><span class="lbl">Ouvrir sur CM</span>' + cmLinksHtml + '</div>' : '') +
       ((c.cmUrl || c.cmUrlFr) && (st === 'owned' || st === 'wanted' || (wishlistCards[key] && wishlistCards[key].length) || opts.removeWlId || opts.showLists) ?
         '<div class="card-actions" style="margin-top:2px;grid-column:1/-1;padding:0 12px;display:flex;gap:6px">' +
-          '<button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\',event)" style="flex:1;justify-content:center">⟳ Sync prix CM</button>' +
-          '<button class="btn-report-card' + (isReported(key) ? ' reported' : '') + '" data-report-key="' + key + '" onclick="onReportClick(\'' + key + '\',event)" title="' + (isReported(key) ? 'Retirer le report' : 'Signaler un lien CM cassé') + '">⚠</button>' +
+          '<button class="btn-sync-card" data-sync-key="' + key + '" onclick="syncSingleCard(this,\'' + key + '\')" style="flex:1;justify-content:center">⟳ Sync prix CM</button>' +
+          '<button class="btn-report-card' + (isReported(key) ? ' reported' : '') + '" data-report-key="' + key + '" onclick="event.stopPropagation();event.preventDefault();toggleReport(\'' + key + '\')" title="' + (isReported(key) ? 'Retirer le report' : 'Signaler un lien CM cassé') + '">⚠</button>' +
         '</div>' : '') +
       removeHtml +
     '<div class="card-prices" style="display:' + (st === 'owned' ? 'none' : 'block') + ';grid-column:1/-1">' +
@@ -2711,30 +2678,18 @@ function showEncyclopedia() {
   renderEncyclopedia();
 }
 
-// v6.2 : Vue Reports — liste des cartes signalées (lien CM cassé)
+// ═══════════════════════════════════════════════════════════════════════════
+// VUE REPORTS — Liste des cartes signalées (réécrit propre v7)
+// ═══════════════════════════════════════════════════════════════════════════
 function showReports() {
-  try {
-    activeView  = 'reports';
-    activeSetId = null;
-    closeNavMenu();
-    setNavActive('nav-reports');
-    renderReportsView();
-  } catch (err) {
-    console.error('[showReports] erreur:', err);
-    var main = document.getElementById('main');
-    if (main) {
-      main.innerHTML = '<div style="padding:30px;color:#fca5a5;font-size:13px">' +
-        '<div style="font-size:24px;margin-bottom:10px">⚠</div>' +
-        'Erreur lors de l\'ouverture de la page Reports.<br>' +
-        'Détail dans la console (F12) :<br>' +
-        '<pre style="background:rgba(255,255,255,0.05);padding:10px;border-radius:4px;font-size:11px;margin-top:10px;overflow:auto">' +
-          (err && err.message ? err.message : String(err)) +
-        '</pre></div>';
-    }
-  }
+  activeView  = 'reports';
+  activeSetId = null;
+  closeNavMenu();
+  setNavActive('nav-reports');
+  renderReportsView();
 }
 
-// v6.2 : Index card pour retrouver un objet card depuis sa clé "setId-num"
+// Trouve la card+set depuis une clé "setId-num"
 function findCardByKey(key) {
   for (var i = 0; i < DISCOVER_DB.length; i++) {
     var s = DISCOVER_DB[i];
@@ -2745,89 +2700,57 @@ function findCardByKey(key) {
   return null;
 }
 
+// Merge les reports de tous les utilisateurs (le mien + les autres) en un seul objet.
+// En cas de doublon de clé, on garde le report avec la date la plus récente.
+function getAllReportsMerged() {
+  var merged = {};
+  // Mes propres reports
+  Object.keys(reports || {}).forEach(function(k) {
+    if (reports[k] && typeof reports[k] === 'object') {
+      merged[k] = Object.assign({ owner: currentUser || '?' }, reports[k]);
+    }
+  });
+  // Reports des autres users
+  Object.keys(otherUsers || {}).forEach(function(uname) {
+    var theirs = (otherUsers[uname] && otherUsers[uname].reports) || {};
+    Object.keys(theirs).forEach(function(k) {
+      var r = theirs[k];
+      if (!r || typeof r !== 'object') return;
+      var existing = merged[k];
+      if (!existing || (r.date || '') > (existing.date || '')) {
+        merged[k] = Object.assign({ owner: uname }, r);
+      }
+    });
+  });
+  return merged;
+}
+
 function renderReportsView() {
   var main = document.getElementById('main');
   if (!main) return;
 
-  // v6.2.3 : nettoyage défensif — supprime les entrées corrompues (null/undefined ou non-objet)
-  // Cela peut arriver suite à un sync foireux ou une vieille structure migrée.
-  var dirty = false;
-  Object.keys(reports).forEach(function(k) {
-    var r = reports[k];
-    if (r === null || r === undefined || typeof r !== 'object') {
-      console.warn('[Reports] entrée corrompue supprimée:', k, r);
-      delete reports[k];
-      dirty = true;
-    }
-  });
-  if (dirty) saveReports();
+  var merged = getAllReportsMerged();
+  var keys = Object.keys(merged);
+  console.log('[Reports] renderReportsView —', keys.length, 'cartes signalées (merged)');
 
-  // v6.3 : merge les reports de TOUS les users (le mien + ceux des autres)
-  // En cas de conflit (même clé reportée par 2 users), la version la plus récente gagne.
-  // L'auteur d'origine et la note sont préservés via reportedBy/noteEditedBy.
-  var merged = {};
-  Object.keys(reports || {}).forEach(function(k) {
-    if (reports[k] && typeof reports[k] === 'object') {
-      merged[k] = reports[k];
-    }
+  // Tri par date de report décroissante
+  keys.sort(function(a, b) {
+    return (merged[b].date || '').localeCompare(merged[a].date || '');
   });
-  Object.keys(otherUsers || {}).forEach(function(uname) {
-    var theirReports = (otherUsers[uname] && otherUsers[uname].reports) || {};
-    Object.keys(theirReports).forEach(function(k) {
-      var r = theirReports[k];
-      if (!r || typeof r !== 'object') return;
-      // Ne pas écraser un report local plus récent
-      var existing = merged[k];
-      if (!existing || (r.reportedAt || '') > (existing.reportedAt || '')) {
-        merged[k] = r;
-      }
-    });
-  });
-
-  // Construit la liste triée par date de report (plus récent d'abord)
-  var entries = Object.keys(merged).map(function(key) {
-    var r = merged[key] || {};
-    var match = findCardByKey(key);
-    // v6.3 : un report m'appartient si je le possède dans MES reports (=> je peux l'éditer)
-    var mine = !!(reports[key] && typeof reports[key] === 'object');
-    return {
-      key: key,
-      reportedAt: r.reportedAt || '',
-      reportedBy: r.reportedBy || '?',
-      reason:     r.reason || 'manual',
-      note:       r.note || '',
-      noteEditedAt: r.noteEditedAt || '',
-      noteEditedBy: r.noteEditedBy || '',
-      mine:       mine,
-      set:        match ? match.set : null,
-      card:       match ? match.card : null,
-    };
-  });
-  entries.sort(function(a, b) {
-    return (b.reportedAt || '').localeCompare(a.reportedAt || '');
-  });
-
-  var nAuto   = entries.filter(function(e) { return e.reason === 'auto'; }).length;
-  var nManual = entries.filter(function(e) { return e.reason === 'manual'; }).length;
-  var total   = entries.length;
 
   var html =
     '<div class="crossset-header">' +
       '<div class="mobile-topbar"><button class="mobile-hamburger" onclick="openNavMenu()">&#9776;</button><span class="mobile-topbar-title">Reports</span></div>' +
       '<div class="page-title">🚩 Cartes signalées</div>' +
-      '<div style="font-size:12px;color:var(--muted);margin-bottom:14px;display:flex;gap:14px;flex-wrap:wrap;">' +
-        '<span><strong style="color:var(--text)">' + total + '</strong> cartes signalées</span>' +
-        '<span><strong style="color:#fca5a5">' + nManual + '</strong> manuelles</span>' +
-        '<span><strong style="color:#fbbf24">' + nAuto + '</strong> auto-détectées</span>' +
+      '<div style="font-size:12px;color:var(--muted);margin-bottom:14px">' +
+        '<strong style="color:var(--text)">' + keys.length + '</strong> carte' + (keys.length > 1 ? 's' : '') + ' signalée' + (keys.length > 1 ? 's' : '') +
       '</div>' +
       '<div style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.5">' +
-        'Les cartes apparaissent ici quand un lien CardMarket ne renvoie aucune offre (auto-détection lors d\'un sync) ' +
-        'ou quand un utilisateur clique sur le bouton ⚠ d\'une carte. ' +
-        'Cliquer sur ⚠ Retirer permet de retirer le report (ex. après mise à jour du lien).' +
+        'Cliquer sur ⚠ une carte pour la signaler. Cliquer dans la zone commentaire pour ajouter une note partagée. Cliquer ✓ Résolu pour retirer le signalement.' +
       '</div>' +
     '</div>';
 
-  if (total === 0) {
+  if (keys.length === 0) {
     html += '<div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px">' +
               '<div style="font-size:36px;margin-bottom:10px">✓</div>' +
               'Aucune carte signalée pour le moment.' +
@@ -2836,34 +2759,35 @@ function renderReportsView() {
     return;
   }
 
-  html += '<div class="reports-list" style="display:flex;flex-direction:column;gap:8px">';
+  html += '<div style="display:flex;flex-direction:column;gap:8px">';
 
-  entries.forEach(function(e) {
+  keys.forEach(function(key) {
+    var r = merged[key];
+    var match = findCardByKey(key);
     var displayName, displayNum, imgUrl, jpUrl, cnUrl, frUrl;
-    if (e.card && e.set) {
-      displayName = e.card.fr || e.card.en || e.card.name || e.key;
-      displayNum  = '#' + e.card.num;
-      imgUrl      = e.card.img || '';
-      jpUrl       = !e.card.noCmJP ? cmCardUrl(e.set, e.card) : '';
-      cnUrl       = e.card.cmUrlCn || '';
-      frUrl       = e.card.cmUrlFr || '';
+    if (match && match.card && match.set) {
+      displayName = match.card.fr || match.card.en || match.card.name || key;
+      displayNum  = '#' + match.card.num;
+      imgUrl      = match.card.img || '';
+      try { jpUrl = !match.card.noCmJP ? cmCardUrl(match.set, match.card) : ''; } catch(_) { jpUrl = ''; }
+      cnUrl       = match.card.cmUrlCn || '';
+      frUrl       = match.card.cmUrlFr || '';
     } else {
       displayName = '(carte introuvable)';
-      displayNum  = e.key;
+      displayNum  = key;
       imgUrl = jpUrl = cnUrl = frUrl = '';
     }
 
-    var dateStr = e.reportedAt ? new Date(e.reportedAt).toLocaleString('fr-FR') : '?';
-    var by = userDisplayName(e.reportedBy);
-    var reasonLabel = e.reason === 'auto' ? 'Auto-détecté' : 'Signalé';
-    var reasonColor = e.reason === 'auto' ? '#fbbf24' : '#fca5a5';
-
-    // v6.2.1 : note partagée + métadonnées d'édition
-    var noteText  = (reports[e.key] && reports[e.key].note) || '';
-    var noteSafe  = noteText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    var editedBy  = reports[e.key] && reports[e.key].noteEditedBy ? userDisplayName(reports[e.key].noteEditedBy) : null;
-    var editedAt  = reports[e.key] && reports[e.key].noteEditedAt ? new Date(reports[e.key].noteEditedAt).toLocaleString('fr-FR') : null;
-    var noteMeta  = (editedBy && noteText) ? ('par ' + editedBy + ' · ' + editedAt) : '';
+    var dateStr = r.date ? new Date(r.date).toLocaleString('fr-FR') : '?';
+    var by = (typeof userDisplayName === 'function') ? userDisplayName(r.user || r.owner) : (r.user || r.owner || '?');
+    var noteText = r.note || '';
+    var noteSafe = noteText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    var noteUserStr = '';
+    if (noteText && r.noteUser) {
+      var noteByName = (typeof userDisplayName === 'function') ? userDisplayName(r.noteUser) : r.noteUser;
+      var noteDateStr = r.noteDate ? new Date(r.noteDate).toLocaleString('fr-FR') : '';
+      noteUserStr = 'par ' + noteByName + (noteDateStr ? ' · ' + noteDateStr : '');
+    }
 
     html +=
       '<div class="report-row" style="display:flex;flex-direction:column;gap:8px;padding:10px 12px;background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.18);border-radius:4px">' +
@@ -2872,28 +2796,24 @@ function renderReportsView() {
                     '<div style="width:50px;height:70px;background:rgba(255,255,255,0.04);border-radius:3px;flex:0 0 auto"></div>') +
           '<div style="flex:1;min-width:0">' +
             '<div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px">' + displayName + ' <span style="color:var(--muted);font-weight:400">' + displayNum + '</span></div>' +
-            '<div style="font-size:10px;color:var(--muted);margin-bottom:4px">' + (e.set ? e.set.name + ' · ' : '') + e.key + '</div>' +
-            '<div style="font-size:10px;display:flex;gap:10px;flex-wrap:wrap">' +
-              '<span style="color:' + reasonColor + '">●</span>' +
-              '<span style="color:var(--muted)">' + reasonLabel + ' par <strong style="color:var(--text)">' + by + '</strong></span>' +
-              '<span style="color:var(--muted)">' + dateStr + '</span>' +
-            '</div>' +
+            '<div style="font-size:10px;color:var(--muted);margin-bottom:4px">' + (match && match.set ? match.set.name + ' · ' : '') + key + '</div>' +
+            '<div style="font-size:10px;color:var(--muted)">Signalé par <strong style="color:var(--text)">' + by + '</strong> · ' + dateStr + '</div>' +
           '</div>' +
           '<div style="display:flex;gap:4px;flex-wrap:wrap;flex:0 0 auto">' +
-            (jpUrl ? '<a class="btn-cm-card" href="' + jpUrl + '#cmkey=' + e.key + '" target="_blank" style="font-size:9px;padding:4px 6px">JP</a>' : '') +
-            (cnUrl ? '<a class="btn-cm-cn btn-cm-card" href="' + cnUrl + '#cmkey=' + e.key + '__cn" target="_blank" style="font-size:9px;padding:4px 6px">CN</a>' : '') +
-            (frUrl ? '<a class="btn-cm-fr btn-cm-card" href="' + frUrl + '#cmkey=' + e.key + '__fr" target="_blank" style="font-size:9px;padding:4px 6px">FR</a>' : '') +
-            '<button onclick="onReportClick(\'' + e.key + '\',event)" title="Retirer le report" style="font-size:10px;padding:4px 8px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.4);color:#86efac;border-radius:2px;cursor:pointer;font-family:DM Mono,monospace">✓ Résolu</button>' +
+            (jpUrl ? '<a class="btn-cm-card" href="' + jpUrl + '#cmkey=' + key + '" target="_blank" style="font-size:9px;padding:4px 6px">JP</a>' : '') +
+            (cnUrl ? '<a class="btn-cm-cn btn-cm-card" href="' + cnUrl + '#cmkey=' + key + '__cn" target="_blank" style="font-size:9px;padding:4px 6px">CN</a>' : '') +
+            (frUrl ? '<a class="btn-cm-fr btn-cm-card" href="' + frUrl + '#cmkey=' + key + '__fr" target="_blank" style="font-size:9px;padding:4px 6px">FR</a>' : '') +
+            '<button onclick="event.stopPropagation();event.preventDefault();toggleReport(\'' + key + '\')" title="Retirer le signalement" style="font-size:10px;padding:4px 8px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.4);color:#86efac;border-radius:2px;cursor:pointer;font-family:DM Mono,monospace">✓ Résolu</button>' +
           '</div>' +
         '</div>' +
-        // v6.2.1 : zone commentaire partagé sous chaque report
-        '<div class="report-note-zone" data-report-note-key="' + e.key + '" style="margin-left:62px">' +
+        // Zone commentaire (cliquable pour éditer)
+        '<div data-report-note-zone="' + key + '" style="margin-left:62px">' +
           (noteText
-            ? '<div class="report-note-display" data-note-display-key="' + e.key + '" style="font-size:11px;color:var(--text);background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:3px;padding:6px 9px;cursor:text;line-height:1.4;white-space:pre-wrap;word-break:break-word" title="Cliquer pour éditer">' +
+            ? '<div class="report-note-display" data-note-key="' + key + '" style="font-size:11px;color:var(--text);background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:3px;padding:6px 9px;cursor:text;line-height:1.4;white-space:pre-wrap;word-break:break-word" title="Cliquer pour éditer">' +
                 noteSafe +
-                (noteMeta ? '<div style="font-size:9px;color:var(--muted);margin-top:4px;font-style:italic">' + noteMeta + '</div>' : '') +
+                (noteUserStr ? '<div style="font-size:9px;color:var(--muted);margin-top:4px;font-style:italic">' + noteUserStr + '</div>' : '') +
               '</div>'
-            : '<div class="report-note-display empty" data-note-display-key="' + e.key + '" style="font-size:10px;color:var(--muted);font-style:italic;cursor:text;padding:4px 0" title="Cliquer pour ajouter un commentaire">+ Ajouter un commentaire partagé</div>'
+            : '<div class="report-note-display empty" data-note-key="' + key + '" style="font-size:10px;color:var(--muted);font-style:italic;cursor:text;padding:4px 0" title="Cliquer pour ajouter un commentaire">+ Ajouter un commentaire</div>'
           ) +
         '</div>' +
       '</div>';
@@ -2902,35 +2822,34 @@ function renderReportsView() {
   html += '</div>';
   main.innerHTML = html;
 
-  // v6.2.1 : attache les handlers d'édition de note (event delegation, post-render)
-  attachReportNoteHandlers();
-}
-
-// v6.2.1 : click-to-edit sur les notes des reports
-// Pattern : div display → click → textarea → blur ou Enter (Ctrl) = save, Esc = cancel
-function attachReportNoteHandlers() {
+  // Wire up click-to-edit pour chaque note
   document.querySelectorAll('.report-note-display').forEach(function(disp) {
-    if (disp.__reportNoteBound) return;
-    disp.__reportNoteBound = true;
-    disp.addEventListener('click', function() {
-      var key = disp.getAttribute('data-note-display-key');
+    disp.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var key = disp.getAttribute('data-note-key');
       if (!key) return;
       var zone = disp.parentNode;
-      if (!zone || zone.querySelector('textarea')) return;  // déjà en édition
-      var existing = (reports[key] && reports[key].note) || '';
+      if (!zone || zone.querySelector('textarea')) return;
+
+      var current = '';
+      if (reports[key] && reports[key].note) current = reports[key].note;
+      else {
+        for (var u in otherUsers) {
+          if (otherUsers[u] && otherUsers[u].reports && otherUsers[u].reports[key] && otherUsers[u].reports[key].note) {
+            current = otherUsers[u].reports[key].note; break;
+          }
+        }
+      }
 
       var ta = document.createElement('textarea');
-      ta.value = existing;
-      ta.placeholder = 'Note partagée pour cette carte (lien CM à corriger, V1 vs V2…)';
-      ta.style.cssText = 'width:100%;min-height:60px;font-size:11px;font-family:inherit;' +
-        'background:rgba(0,0,0,0.3);border:1px solid var(--accent);border-radius:3px;' +
-        'padding:6px 9px;color:var(--text);resize:vertical;line-height:1.4;outline:none';
+      ta.value = current;
+      ta.placeholder = 'Note partagée pour cette carte';
+      ta.style.cssText = 'width:100%;min-height:60px;font-size:11px;font-family:inherit;background:rgba(0,0,0,0.3);border:1px solid var(--accent);border-radius:3px;padding:6px 9px;color:var(--text);resize:vertical;line-height:1.4;outline:none';
 
       var hint = document.createElement('div');
       hint.style.cssText = 'font-size:9px;color:var(--muted);margin-top:3px;font-style:italic';
       hint.textContent = 'Ctrl+Entrée pour enregistrer · Échap pour annuler';
 
-      // Replace display by editor
       disp.style.display = 'none';
       zone.appendChild(ta);
       zone.appendChild(hint);
@@ -2939,21 +2858,18 @@ function attachReportNoteHandlers() {
 
       var saved = false;
       var commit = function() {
-        if (saved) return;
-        saved = true;
+        if (saved) return; saved = true;
         setReportNote(key, ta.value);
-        renderReportsView();  // re-render proprement
+        renderReportsView();
       };
       var cancel = function() {
-        if (saved) return;
-        saved = true;
-        ta.remove();
-        hint.remove();
+        if (saved) return; saved = true;
+        ta.remove(); hint.remove();
         disp.style.display = '';
       };
-      ta.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') { e.preventDefault(); cancel(); }
-        else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); commit(); }
+      ta.addEventListener('keydown', function(ev) {
+        if (ev.key === 'Escape') { ev.preventDefault(); cancel(); }
+        else if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) { ev.preventDefault(); commit(); }
       });
       ta.addEventListener('blur', commit);
     });
@@ -5710,21 +5626,12 @@ window.addEventListener('message', function(event) {
       var forceLang = msg.key.endsWith('__cn') ? 'cn' : msg.key.endsWith('__fr') ? 'fr' : null;
       var priceKey = msg.key.replace(/__cn$/, '').replace(/__fr$/, '');
       applyPriceFromSync(priceKey, msg.data, forceLang);
-      // v6.2 : si la carte était auto-reportée et qu'on récupère enfin un prix → unreport
-      // (mais pas si reportée manuellement — l'utilisateur garde le contrôle)
-      if (reports[priceKey] && reports[priceKey].reason === 'auto') {
-        console.log('[Bridge] auto-unreport', priceKey, '(prix retrouvé)');
-        unreportCard(priceKey);
-      }
       var h = window.__singleSyncHandlers && (window.__singleSyncHandlers[msg.key] || window.__singleSyncHandlers[priceKey]);
       if (h) { h(msg); }
     }
     if (msg.type === 'PRICE_NOT_FOUND') {
-      // v6.2 : auto-report — page CM ouverte mais aucune offre trouvée → lien probablement cassé
-      // priceKey strippé du suffix de langue : on report la carte, pas la langue
-      var pkNotFound = msg.key.replace(/__cn$/, '').replace(/__fr$/, '');
-      console.log('[Bridge] PRICE_NOT_FOUND pour', msg.key, '→ auto-report', pkNotFound);
-      reportCard(pkNotFound, 'auto');
+      // v7 : on ne fait plus d'auto-report ici. L'utilisateur signale manuellement avec le bouton ⚠.
+      console.log('[Bridge] PRICE_NOT_FOUND pour', msg.key);
       var h2 = window.__singleSyncHandlers && window.__singleSyncHandlers[msg.key];
       if (h2) { h2(msg); delete window.__singleSyncHandlers[msg.key]; }
     }
